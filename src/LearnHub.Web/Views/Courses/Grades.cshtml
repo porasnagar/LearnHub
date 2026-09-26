@@ -1,0 +1,84 @@
+@model StudentGradesViewModel
+@{
+    Layout = "_CourseLayout";
+    var ctx = (CourseContext)ViewData["CourseContext"]!;
+    ViewData["Title"] = "Grades · " + ctx.Course.Code;
+    var s = Model.Summary;
+}
+<h2 class="section-title">Grades for @User.Identity!.Name</h2>
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="panel">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr><th>Assignment</th><th class="d-none d-md-table-cell">Due</th><th>Status</th><th class="text-end">Score</th></tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Rows.Count == 0)
+                        {
+                            <tr><td colspan="4" class="text-muted">No assignments yet.</td></tr>
+                        }
+                        @foreach (var row in Model.Rows)
+                        {
+                            var a = row.Assignment;
+                            var st = Ui.WorkStatus(row.MySubmission, a);
+                            <tr>
+                                <td>
+                                    <a class="fw-semibold text-decoration-none" asp-controller="Assignments" asp-action="Details" asp-route-id="@a.Id">@a.Title</a>
+                                    @if (!string.IsNullOrEmpty(row.MySubmission?.Feedback))
+                                    {
+                                        <div class="small text-muted"><i class="bi bi-chat-left-text"></i> Feedback available</div>
+                                    }
+                                </td>
+                                <td class="d-none d-md-table-cell small text-muted">@a.DueDate.ToString("MMM d, h:mm tt")</td>
+                                <td><span class="status status-@st.Css">@st.Label</span></td>
+                                <td class="text-end">
+                                    @if (row.MySubmission?.Score is double sc)
+                                    {
+                                        <span class="score">@Ui.Score(sc)<small> / @a.MaxPoints</small></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">– <small>/ @a.MaxPoints</small></span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    @if (s.GradedCount > 0)
+                    {
+                        <tfoot>
+                            <tr>
+                                <td colspan="3">Total (graded work)</td>
+                                <td class="text-end"><span class="score">@Ui.Score(s.Earned)<small> / @s.Possible</small></span></td>
+                            </tr>
+                        </tfoot>
+                    }
+                </table>
+            </div>
+        </div>
+    </div>
+    <aside class="col-xl-4">
+        <section class="panel">
+            <div class="panel-head"><h3 class="panel-title">Current grade</h3></div>
+            <div class="panel-body">
+                @if (s.Percent is double p)
+                {
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="grade-big">@p.ToString("0.#")<small>%</small></div>
+                        <span class="letter">@s.Letter</span>
+                    </div>
+                    <div class="small text-muted mt-2">@Ui.Score(s.Earned) of @s.Possible points, from @Ui.Plural(s.GradedCount, "graded assignment").</div>
+                }
+                else
+                {
+                    <p class="mb-0 text-muted">No grades yet. Your grade appears once your instructor marks your work.</p>
+                }
+            </div>
+            <div class="panel-foot small text-muted">
+                Only graded assignments count toward the current grade.
+            </div>
+        </section>
+    </aside>
+</div>

@@ -1,0 +1,26 @@
+@model AssignmentFormViewModel
+<div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+<input type="hidden" asp-for="CourseId" />
+<div class="mb-3">
+    <label asp-for="Title" class="form-label"></label>
+    <input asp-for="Title" class="form-control" />
+    <span asp-validation-for="Title" class="small"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="Instructions" class="form-label"></label>
+    <textarea asp-for="Instructions" class="form-control" rows="9" data-counter></textarea>
+    <div class="form-text">Explain what students must do, how to submit, and how the work will be marked.</div>
+    <span asp-validation-for="Instructions" class="small"></span>
+</div>
+<div class="row g-3">
+    <div class="col-md-7">
+        <label asp-for="DueDate" class="form-label"></label>
+        <input asp-for="DueDate" class="form-control" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+        <span asp-validation-for="DueDate" class="small"></span>
+    </div>
+    <div class="col-md-5">
+        <label asp-for="MaxPoints" class="form-label"></label>
+        <input asp-for="MaxPoints" class="form-control" min="1" max="1000" />
+        <span asp-validation-for="MaxPoints" class="small"></span>
+    </div>
+</div>

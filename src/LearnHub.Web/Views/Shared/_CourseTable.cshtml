@@ -1,0 +1,64 @@
+@model List<CourseCardViewModel>
+@{
+    var isStudent = User.IsInRole("Student");
+}
+<div class="panel">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Course</th>
+                    <th class="d-none d-md-table-cell">@(isStudent ? "Instructor" : "Subject")</th>
+                    <th class="d-none d-lg-table-cell">Credits</th>
+                    <th>@(isStudent ? "Progress" : "Enrollment")</th>
+                    <th>@(isStudent ? "" : "Status")</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    var pct = c.AssignmentCount == 0 ? 0 : c.MySubmitted * 100 / c.AssignmentCount;
+                    <tr style="--c: @Ui.CourseColor(c.Id)">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="swatch" style="width: 14px; height: 36px"></span>
+                                <div class="min-w-0">
+                                    <a class="fw-semibold text-decoration-none" asp-controller="Courses" asp-action="Details" asp-route-id="@c.Id">@c.Title</a>
+                                    <div class="small text-muted">@(isStudent ? c.Code : $"{c.Code} · {c.InstructorName}")</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="d-none d-md-table-cell">@(isStudent ? c.InstructorName : c.Category)</td>
+                        <td class="d-none d-lg-table-cell">@c.Credits</td>
+                        <td style="min-width: 150px">
+                            @if (isStudent)
+                            {
+                                <div class="meter" style="max-width: 160px"><span style="width: @pct%"></span></div>
+                                <div class="small text-muted mt-1">@c.MySubmitted of @c.AssignmentCount submitted</div>
+                            }
+                            else
+                            {
+                                <span>@Ui.Plural(c.StudentCount, "student")</span>
+                                @if (c.ToGrade > 0) { <div><span class="status status-pending mt-1">@c.ToGrade to grade</span></div> }
+                            }
+                        </td>
+                        <td class="text-end text-md-start">
+                            @if (isStudent)
+                            {
+                                <a class="btn btn-default btn-sm" asp-controller="Courses" asp-action="Grades" asp-route-id="@c.Id">Grades</a>
+                            }
+                            else if (c.IsPublished)
+                            {
+                                <span class="status status-published">Published</span>
+                            }
+                            else
+                            {
+                                <span class="status status-draft">Unpublished</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

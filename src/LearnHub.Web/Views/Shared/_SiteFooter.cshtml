@@ -1,0 +1,33 @@
+<footer class="site-footer">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-5">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <partial name="_LogoMark" model="30" /><span class="serif fs-5 text-white">LearnHub</span>
+                </div>
+                <p class="mb-0" style="max-width: 26rem">
+                    A learning management system for courses, coursework and grades, used by students, instructors and administrators.
+                </p>
+            </div>
+            <div class="col-6 col-md-3 offset-md-1">
+                <h4>Learn</h4>
+                <ul>
+                    <li><a asp-controller="Courses" asp-action="Index">Course catalog</a></li>
+                    <li><a asp-controller="Account" asp-action="Register">Create an account</a></li>
+                    <li><a asp-controller="Account" asp-action="Login">Sign in</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-md-3">
+                <h4>Platform</h4>
+                <ul>
+                    <li><a asp-controller="Home" asp-action="About">About LearnHub</a></li>
+                    <li><a asp-controller="Home" asp-action="About" asp-fragment="roles">Roles &amp; permissions</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="legal d-flex flex-column flex-md-row justify-content-between gap-2">
+            <span>&copy; @DateTime.Now.Year LearnHub</span>
+            <span>Built with ASP.NET Core MVC and Entity Framework Core</span>
+        </div>
+    </div>
+</footer>

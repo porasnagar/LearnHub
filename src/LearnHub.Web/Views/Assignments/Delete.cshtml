@@ -1,0 +1,17 @@
+@model Assignment
+@{
+    Layout = "_CourseLayout";
+    ViewData["Title"] = "Delete assignment";
+    ViewData["Crumb"] = "Delete";
+}
+<section class="panel panel-danger" style="max-width: 720px">
+    <div class="panel-head"><h2 class="panel-title">Delete assignment</h2></div>
+    <div class="panel-body">
+        <p><strong>@Model.Title</strong> will be deleted, along with @Ui.Plural((int)ViewBag.SubmissionCount, "student submission") and their grades.</p>
+        <p class="mb-0 text-muted">This can't be undone.</p>
+    </div>
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="panel-foot d-flex justify-content-end gap-2">
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-default">Cancel</a>
+        <button type="submit" class="btn btn-danger">Delete permanently</button>
+    </form>
+</section>

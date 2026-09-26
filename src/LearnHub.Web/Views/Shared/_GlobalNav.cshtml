@@ -1,0 +1,44 @@
+﻿@model string
+@{
+    // Rendered twice: as the desktop rail ("rail") and inside the mobile drawer ("drawer").
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var link = Model == "rail" ? "rail-link" : "drawer-link";
+    string Active(bool on) => on ? " active" : "";
+
+    var inCourses = (controller == "Courses" && action != "Index") || controller is "Assignments" or "Submissions";
+    var isStudent = User.IsInRole("Student");
+    var isAdmin = User.IsInRole("Admin");
+}
+<nav class="@(Model == "rail" ? "rail-nav" : "drawer-nav")" aria-label="Global">
+    <a class="@(link + Active(controller == "Account"))" asp-controller="Account" asp-action="Profile">
+        <span class="avatar avatar-xs">@Ui.Initials(User.Identity!.Name!)</span><span>Account</span>
+    </a>
+    <a class="@(link + Active(controller == "Dashboard"))" asp-controller="Dashboard" asp-action="Index">
+        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+    </a>
+    <a class="@(link + Active(inCourses))" asp-controller="Courses" asp-action="Mine">
+        <i class="bi bi-journal-bookmark"></i><span>Courses</span>
+    </a>
+    <a class="@(link + Active(controller == "Calendar"))" asp-controller="Calendar" asp-action="Index">
+        <i class="bi bi-calendar3"></i><span>Calendar</span>
+    </a>
+    @if (isStudent)
+    {
+        <a class="@(link + Active(controller == "Grades"))" asp-controller="Grades" asp-action="Index">
+            <i class="bi bi-clipboard-data"></i><span>Grades</span>
+        </a>
+    }
+    <a class="@(link + Active(controller == "Courses" && action == "Index"))" asp-controller="Courses" asp-action="Index">
+        <i class="bi bi-collection"></i><span>Catalog</span>
+    </a>
+    @if (isAdmin)
+    {
+        <a class="@(link + Active(controller == "Admin"))" asp-controller="Admin" asp-action="Users">
+            <i class="bi bi-shield-lock"></i><span>Admin</span>
+        </a>
+    }
+    <form class="nav-bottom" asp-controller="Account" asp-action="Logout" method="post">
+        <button type="submit" class="@link"><i class="bi bi-box-arrow-left"></i><span>Sign out</span></button>
+    </form>
+</nav>

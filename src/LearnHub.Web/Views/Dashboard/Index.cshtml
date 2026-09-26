@@ -1,0 +1,237 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+<div class="page-head">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-sub">Welcome back, @Ui.FirstName(Model.FullName). Today is @DateTime.Now.ToString("dddd, MMMM d").</p>
+    </div>
+    @if (Model.Role == UserRole.Student)
+    {
+        <a asp-controller="Courses" asp-action="Index" class="btn btn-default"><i class="bi bi-collection"></i> Browse catalog</a>
+    }
+    else
+    {
+        <a asp-controller="Courses" asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New course</a>
+    }
+</div>
+
+@if (Model.Role == UserRole.Admin)
+{
+    <div class="figures mb-4">
+        @foreach (var f in Model.Figures)
+        {
+            <div class="figure"><div class="figure-label">@f.Label</div><div class="figure-value">@f.Value</div></div>
+        }
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        @if (Model.Role == UserRole.Admin)
+        {
+            <div class="section-head">
+                <h2 class="section-title">All courses</h2>
+                <a asp-controller="Admin" asp-action="Courses" class="fw-semibold text-decoration-none small">Manage courses</a>
+            </div>
+            <partial name="_CourseTable" model="Model.Courses" />
+        }
+        else
+        {
+            <div class="section-head">
+                <h2 class="section-title">@(Model.Role == UserRole.Student ? "My courses" : "Courses I teach")</h2>
+                <a asp-controller="Courses" asp-action="Mine" class="fw-semibold text-decoration-none small">All courses</a>
+            </div>
+            @if (Model.Courses.Count == 0)
+            {
+                <div class="panel empty">
+                    @if (Model.Role == UserRole.Student)
+                    {
+                        <p class="mb-2"><strong>You're not enrolled in any courses yet.</strong> Find one in the catalog to get started.</p>
+                        <a asp-controller="Courses" asp-action="Index" class="btn btn-primary btn-sm">Browse the catalog</a>
+                    }
+                    else
+                    {
+                        <p class="mb-2"><strong>You haven't created a course yet.</strong></p>
+                        <a asp-controller="Courses" asp-action="Create" class="btn btn-primary btn-sm">Create a course</a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var c in Model.Courses)
+                    {
+                        <div class="col-sm-6 col-xxl-4"><partial name="_CourseCard" model="c" /></div>
+                    }
+                </div>
+            }
+        }
+    </div>
+
+    <aside class="col-xl-4" aria-label="Activity">
+        @if (Model.Role == UserRole.Student)
+        {
+            @if (Model.Missing.Count > 0)
+            {
+                <section class="panel">
+                    <div class="panel-head"><h2 class="panel-title text-danger">Missing<span class="count">@Model.Missing.Count</span></h2></div>
+                    <ul class="item-list">
+                        @foreach (var a in Model.Missing)
+                        {
+                            <li class="item" style="--c: @Ui.CourseColor(a.CourseId)">
+                                <div class="date-block"><span class="m">@a.DueDate.ToString("MMM")</span><span class="d">@a.DueDate.Day</span></div>
+                                <div class="min-w-0">
+                                    <a class="item-title" asp-controller="Assignments" asp-action="Details" asp-route-id="@a.Id">@a.Title</a>
+                                    <div class="item-meta"><span class="course-tag">@a.Course!.Code</span> · @a.MaxPoints pts</div>
+                                    <span class="status status-missing mt-1">@Ui.DueText(a.DueDate)</span>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </section>
+            }
+
+            <section class="panel">
+                <div class="panel-head">
+                    <h2 class="panel-title">To do</h2>
+                    <a asp-controller="Calendar" asp-action="Index" class="small fw-semibold text-decoration-none">Calendar</a>
+                </div>
+                @if (Model.Todo.Count == 0)
+                {
+                    <div class="empty">Nothing is due. You're all caught up.</div>
+                }
+                else
+                {
+                    <ul class="item-list">
+                        @foreach (var a in Model.Todo)
+                        {
+                            <li class="item" style="--c: @Ui.CourseColor(a.CourseId)">
+                                <div class="date-block"><span class="m">@a.DueDate.ToString("MMM")</span><span class="d">@a.DueDate.Day</span></div>
+                                <div class="min-w-0">
+                                    <a class="item-title" asp-controller="Assignments" asp-action="Details" asp-route-id="@a.Id">@a.Title</a>
+                                    <div class="item-meta"><span class="course-tag">@a.Course!.Code</span> · @a.MaxPoints pts · @a.DueDate.ToString("h:mm tt")</div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section class="panel">
+                <div class="panel-head">
+                    <h2 class="panel-title">Recent feedback</h2>
+                    <a asp-controller="Grades" asp-action="Index" class="small fw-semibold text-decoration-none">All grades</a>
+                </div>
+                @if (Model.RecentGrades.Count == 0)
+                {
+                    <div class="empty">Grades and comments appear here once your instructor marks your work.</div>
+                }
+                else
+                {
+                    <ul class="item-list">
+                        @foreach (var g in Model.RecentGrades)
+                        {
+                            var a = g.Assignment!;
+                            <li class="item" style="--c: @Ui.CourseColor(a.CourseId)">
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="d-flex justify-content-between gap-2">
+                                        <a class="item-title" asp-controller="Assignments" asp-action="Details" asp-route-id="@a.Id">@a.Title</a>
+                                        <span class="score">@Ui.Score(g.Score!.Value)<small>/@a.MaxPoints</small></span>
+                                    </div>
+                                    <div class="item-meta"><span class="course-tag">@a.Course!.Code</span> · graded @g.GradedAt?.ToString("MMM d")</div>
+                                    @if (!string.IsNullOrEmpty(g.Feedback))
+                                    {
+                                        <div class="small text-muted mt-1 fst-italic">“@Ui.Truncate(g.Feedback, 90)”</div>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+        }
+        else
+        {
+            <section class="panel">
+                <div class="panel-head"><h2 class="panel-title">To grade<span class="count">@Model.PendingTotal</span></h2></div>
+                @if (Model.PendingGrading.Count == 0)
+                {
+                    <div class="empty">No submissions are waiting to be graded.</div>
+                }
+                else
+                {
+                    <ul class="item-list">
+                        @foreach (var s in Model.PendingGrading)
+                        {
+                            var a = s.Assignment!;
+                            <li class="item" style="--c: @Ui.CourseColor(a.CourseId)">
+                                <span class="avatar avatar-sm">@Ui.Initials(s.Student!.FullName)</span>
+                                <div class="min-w-0 flex-grow-1">
+                                    <a class="item-title" asp-controller="Submissions" asp-action="Grade" asp-route-id="@s.Id">@s.Student.FullName</a>
+                                    <div class="item-meta"><span class="course-tag">@a.Course!.Code</span> · @a.Title</div>
+                                    <div class="item-meta">
+                                        Submitted @s.SubmittedAt.ToString("MMM d, h:mm tt")
+                                        @if (s.SubmittedAt > a.DueDate) { <span class="status status-late ms-1">Late</span> }
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            @if (Model.Role == UserRole.Instructor)
+            {
+                <section class="panel">
+                    <div class="panel-head">
+                        <h2 class="panel-title">Coming up</h2>
+                        <a asp-controller="Calendar" asp-action="Index" class="small fw-semibold text-decoration-none">Calendar</a>
+                    </div>
+                    @if (Model.ComingUp.Count == 0)
+                    {
+                        <div class="empty">No upcoming due dates in your courses.</div>
+                    }
+                    else
+                    {
+                        <ul class="item-list">
+                            @foreach (var a in Model.ComingUp)
+                            {
+                                <li class="item" style="--c: @Ui.CourseColor(a.CourseId)">
+                                    <div class="date-block"><span class="m">@a.DueDate.ToString("MMM")</span><span class="d">@a.DueDate.Day</span></div>
+                                    <div class="min-w-0">
+                                        <a class="item-title" asp-controller="Assignments" asp-action="Details" asp-route-id="@a.Id">@a.Title</a>
+                                        <div class="item-meta"><span class="course-tag">@a.Course!.Code</span> · @a.MaxPoints pts</div>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
+            }
+            else
+            {
+                <section class="panel">
+                    <div class="panel-head">
+                        <h2 class="panel-title">Newest accounts</h2>
+                        <a asp-controller="Admin" asp-action="Users" class="small fw-semibold text-decoration-none">Manage users</a>
+                    </div>
+                    <ul class="item-list">
+                        @foreach (var u in Model.RecentUsers)
+                        {
+                            <li class="item align-items-center">
+                                <span class="avatar avatar-sm">@Ui.Initials(u.FullName)</span>
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="item-title text-truncate">@u.FullName</div>
+                                    <div class="item-meta text-truncate">@u.Email</div>
+                                </div>
+                                <span class="role role-@Ui.RoleCss(u.Role)">@u.Role</span>
+                            </li>
+                        }
+                    </ul>
+                </section>
+            }
+        }
+    </aside>
+</div>

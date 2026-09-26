@@ -1,0 +1,57 @@
+@model CourseAssignmentsViewModel
+@{
+    Layout = "_CourseLayout";
+    var ctx = (CourseContext)ViewData["CourseContext"]!;
+    ViewData["Title"] = "Assignments · " + ctx.Course.Code;
+    var groups = new[] { ("Upcoming", Model.Upcoming), ("Past", Model.Past) };
+}
+<div class="section-head">
+    <h2 class="section-title">Assignments</h2>
+    @if (ctx.CanManage)
+    {
+        <a asp-controller="Assignments" asp-action="Create" asp-route-courseId="@ctx.Course.Id" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Assignment</a>
+    }
+</div>
+
+@if (Model.Upcoming.Count + Model.Past.Count == 0)
+{
+    <div class="panel empty">
+        No assignments have been posted yet.
+        @if (ctx.CanManage) { <a asp-controller="Assignments" asp-action="Create" asp-route-courseId="@ctx.Course.Id">Create the first one.</a> }
+    </div>
+}
+
+@foreach (var (label, rows) in groups)
+{
+    if (rows.Count == 0) { continue; }
+    <section class="panel">
+        <div class="panel-head"><h3 class="panel-title">@label assignments<span class="count">@rows.Count</span></h3></div>
+        @foreach (var row in rows)
+        {
+            var a = row.Assignment;
+            <div class="assign-row">
+                <i class="bi bi-file-earmark-text assign-icon" aria-hidden="true"></i>
+                <div class="min-w-0">
+                    <a class="assign-title" asp-controller="Assignments" asp-action="Details" asp-route-id="@a.Id">@a.Title</a>
+                    <div class="assign-meta"><strong>Due</strong> @Ui.When(a.DueDate) &nbsp;|&nbsp; @a.MaxPoints pts</div>
+                </div>
+                <div class="assign-side">
+                    @if (ctx.CanManage)
+                    {
+                        <span class="small text-muted">@row.SubmissionCount of @ctx.StudentCount submitted</span>
+                        @if (row.UngradedCount > 0) { <span class="status status-pending">@row.UngradedCount to grade</span> }
+                    }
+                    else
+                    {
+                        var st = Ui.WorkStatus(row.MySubmission, a);
+                        if (row.MySubmission?.Score is double s)
+                        {
+                            <span class="score">@Ui.Score(s)<small>/@a.MaxPoints</small></span>
+                        }
+                        <span class="status status-@st.Css">@st.Label</span>
+                    }
+                </div>
+            </div>
+        }
+    </section>
+}

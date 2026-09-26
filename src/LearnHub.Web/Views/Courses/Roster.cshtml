@@ -1,0 +1,63 @@
+@model RosterViewModel
+@{
+    Layout = "_CourseLayout";
+    var ctx = (CourseContext)ViewData["CourseContext"]!;
+    var c = ctx.Course;
+    ViewData["Title"] = "People · " + c.Code;
+}
+<div class="section-head">
+    <h2 class="section-title">People</h2>
+    <span class="small text-muted">@Ui.Plural(Model.Students.Count, "student") · @Ui.Plural(Model.AssignmentCount, "assignment")</span>
+</div>
+
+<div class="panel">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr><th>Name</th><th>Role</th><th class="d-none d-md-table-cell">Enrolled</th><th>Submissions</th><th class="text-end"><span class="visually-hidden">Actions</span></th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="cell-person">
+                            <span class="avatar avatar-sm">@Ui.Initials(c.Instructor!.FullName)</span>
+                            <div><div class="name">@c.Instructor.FullName</div><div class="sub">@c.Instructor.Email</div></div>
+                        </div>
+                    </td>
+                    <td><span class="role role-instructor">Instructor</span></td>
+                    <td class="d-none d-md-table-cell small text-muted">—</td>
+                    <td class="small text-muted">—</td>
+                    <td></td>
+                </tr>
+                @foreach (var s in Model.Students)
+                {
+                    var pct = Model.AssignmentCount == 0 ? 0 : s.Submitted * 100 / Model.AssignmentCount;
+                    <tr>
+                        <td>
+                            <div class="cell-person">
+                                <span class="avatar avatar-sm">@Ui.Initials(s.Name)</span>
+                                <div><div class="name">@s.Name</div><div class="sub">@s.Email</div></div>
+                            </div>
+                        </td>
+                        <td><span class="role role-student">Student</span></td>
+                        <td class="d-none d-md-table-cell small text-muted">@s.EnrolledAt.ToString("MMM d, yyyy")</td>
+                        <td style="min-width: 150px">
+                            <div class="meter" style="max-width: 150px"><span style="width: @pct%"></span></div>
+                            <div class="small text-muted mt-1">@s.Submitted/@Model.AssignmentCount submitted · @s.Graded graded</div>
+                        </td>
+                        <td class="text-end">
+                            <form asp-action="RemoveStudent" asp-route-id="@c.Id" asp-route-studentId="@s.StudentId" method="post"
+                                  data-confirm="Remove @s.Name from @c.Code? Their submissions are kept.">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Students.Count == 0)
+    {
+        <div class="panel-foot text-muted">No students have enrolled yet. Students join from the course catalog.</div>
+    }
+</div>

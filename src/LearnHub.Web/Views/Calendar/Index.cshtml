@@ -1,0 +1,110 @@
+@model CalendarViewModel
+@{
+    ViewData["Title"] = "Calendar";
+    var prev = Model.Month.AddMonths(-1);
+    var next = Model.Month.AddMonths(1);
+    var today = DateTime.Today;
+    var byDay = Model.Items.GroupBy(a => a.DueDate.Date).ToDictionary(g => g.Key, g => g.ToList());
+    var monthItems = Model.Items.Where(a => a.DueDate.Month == Model.Month.Month && a.DueDate.Year == Model.Month.Year).ToList();
+    string ItemCss(Assignment a) => Model.IsStudent && Model.SubmittedIds.Contains(a.Id) ? "cal-event done" : "cal-event";
+}
+<div class="page-head">
+    <div>
+        <h1 class="page-title">Calendar</h1>
+        <p class="page-sub">Assignment due dates from @(Model.IsStudent ? "the courses you're enrolled in" : User.IsInRole("Admin") ? "every course" : "the courses you teach").</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <a class="btn btn-default" asp-action="Index" asp-route-year="@prev.Year" asp-route-month="@prev.Month" aria-label="Previous month"><i class="bi bi-chevron-left"></i></a>
+        <a class="btn btn-default" asp-action="Index">Today</a>
+        <a class="btn btn-default" asp-action="Index" asp-route-year="@next.Year" asp-route-month="@next.Month" aria-label="Next month"><i class="bi bi-chevron-right"></i></a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-9">
+        <h2 class="month-title mb-3">@Model.Month.ToString("MMMM yyyy")</h2>
+
+        <div class="cal d-none d-md-grid" role="grid" aria-label="@Model.Month.ToString("MMMM yyyy")">
+            @foreach (var dow in new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })
+            {
+                <div class="cal-dow" role="columnheader">@dow</div>
+            }
+            @for (var i = 0; i < Model.Weeks * 7; i++)
+            {
+                var day = Model.GridStart.AddDays(i);
+                var css = "cal-day" + (day.Month != Model.Month.Month ? " other" : "") + (day == today ? " today" : "");
+                <div class="@css" role="gridcell" aria-label="@day.ToString("MMMM d")">
+                    <span class="cal-num">@day.Day</span>
+                    @if (byDay.TryGetValue(day, out var items))
+                    {
+                        foreach (var a in items)
+                        {
+                            <a class="@ItemCss(a)" style="--c: @Ui.CourseColor(a.CourseId)" asp-controller="Assignments" asp-action="Details" asp-route-id="@a.Id"
+                               title="@a.Course!.Code: @a.Title, due @a.DueDate.ToString("h:mm tt")"><span class="t">@a.DueDate.ToString("h:mmt").ToLower()</span>@a.Title</a>
+                        }
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="panel d-md-none">
+            @if (monthItems.Count == 0)
+            {
+                <div class="empty">Nothing is due this month.</div>
+            }
+            @foreach (var group in monthItems.GroupBy(a => a.DueDate.Date))
+            {
+                <div class="agenda-day">@group.Key.ToString("dddd, MMM d")@(group.Key == today ? " · Today" : "")</div>
+                <ul class="item-list">
+                    @foreach (var a in group)
+                    {
+                        <li class="item" style="--c: @Ui.CourseColor(a.CourseId)">
+                            <div class="min-w-0">
+                                <a class="item-title" asp-controller="Assignments" asp-action="Details" asp-route-id="@a.Id">@a.Title</a>
+                                <div class="item-meta"><span class="course-tag">@a.Course!.Code</span> · due @a.DueDate.ToString("h:mm tt")</div>
+                            </div>
+                            @if (Model.IsStudent && Model.SubmittedIds.Contains(a.Id)) { <span class="status status-submitted ms-auto">Submitted</span> }
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+
+    <aside class="col-xl-3" aria-label="Calendars">
+        <section class="panel">
+            <div class="panel-head"><h2 class="panel-title">Calendars</h2></div>
+            @if (Model.Courses.Count == 0)
+            {
+                <div class="empty">No courses yet.</div>
+            }
+            else
+            {
+                <ul class="item-list">
+                    @foreach (var c in Model.Courses)
+                    {
+                        <li class="item align-items-center py-2" style="--c: @Ui.CourseColor(c.Id)">
+                            <span class="swatch"></span>
+                            <a class="min-w-0 text-truncate text-decoration-none text-reset" asp-controller="Courses" asp-action="Details" asp-route-id="@c.Id" title="@c.Title">
+                                <span class="fw-semibold">@c.Code</span> <span class="text-muted small">@c.Title</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+        <section class="panel">
+            <div class="panel-head"><h2 class="panel-title">This month</h2></div>
+            <div class="panel-body">
+                <dl class="facts">
+                    <dt>Due dates</dt><dd>@monthItems.Count</dd>
+                    @if (Model.IsStudent)
+                    {
+                        <dt>Submitted</dt><dd>@monthItems.Count(a => Model.SubmittedIds.Contains(a.Id))</dd>
+                    }
+                </dl>
+                @if (Model.IsStudent) { <p class="small text-muted mt-3 mb-0">Submitted work is shown crossed out.</p> }
+            </div>
+        </section>
+    </aside>
+</div>

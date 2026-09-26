@@ -1,0 +1,52 @@
+@model CourseFormViewModel
+@{
+    var categories = ViewBag.Categories as List<string> ?? [];
+}
+<div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+<div class="row g-3">
+    <div class="col-md-4">
+        <label asp-for="Code" class="form-label"></label>
+        <input asp-for="Code" class="form-control text-uppercase" placeholder="e.g. CS301" />
+        <span asp-validation-for="Code" class="small"></span>
+    </div>
+    <div class="col-md-8">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="small"></span>
+    </div>
+    <div class="col-12">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="7" data-counter></textarea>
+        <div class="form-text">Shown on the course home page and in the catalog. Describe what students will learn and how they'll be assessed.</div>
+        <span asp-validation-for="Description" class="small"></span>
+    </div>
+    <div class="col-md-8">
+        <label asp-for="Category" class="form-label"></label>
+        <input asp-for="Category" class="form-control" list="categoryList" placeholder="e.g. Web Development" />
+        <datalist id="categoryList">
+            @foreach (var cat in categories) { <option value="@cat"></option> }
+        </datalist>
+        <span asp-validation-for="Category" class="small"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="Credits" class="form-label"></label>
+        <input asp-for="Credits" class="form-control" min="1" max="10" />
+        <span asp-validation-for="Credits" class="small"></span>
+    </div>
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="col-12">
+            <label asp-for="InstructorId" class="form-label"></label>
+            <select asp-for="InstructorId" asp-items="Model.Instructors" class="form-select">
+                <option value="">Select an instructor…</option>
+            </select>
+            <span asp-validation-for="InstructorId" class="small"></span>
+        </div>
+    }
+    <div class="col-12">
+        <div class="form-check form-switch">
+            <input asp-for="IsPublished" class="form-check-input" role="switch" />
+            <label asp-for="IsPublished" class="form-check-label"></label>
+        </div>
+    </div>
+</div>

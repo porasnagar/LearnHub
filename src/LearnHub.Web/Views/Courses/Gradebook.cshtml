@@ -1,0 +1,101 @@
+@model GradebookViewModel
+@{
+    Layout = "_CourseLayout";
+    var ctx = (CourseContext)ViewData["CourseContext"]!;
+    ViewData["Title"] = "Gradebook · " + ctx.Course.Code;
+}
+<div class="section-head">
+    <h2 class="section-title">Gradebook</h2>
+    <a asp-action="ExportGrades" asp-route-id="@ctx.Course.Id" class="btn btn-default btn-sm"><i class="bi bi-download"></i> Export CSV</a>
+</div>
+
+@if (Model.Rows.Count == 0 || Model.Assignments.Count == 0)
+{
+    <div class="panel empty">
+        @(Model.Rows.Count == 0 ? "No students are enrolled yet." : "There are no assignments to grade yet.")
+    </div>
+}
+else
+{
+    <div class="panel">
+        <div class="table-responsive">
+            <table class="table gradebook align-middle">
+                <thead>
+                    <tr>
+                        <th class="sticky-col">Student</th>
+                        @foreach (var a in Model.Assignments)
+                        {
+                            <th>
+                                <a class="text-decoration-none text-reset" asp-controller="Assignments" asp-action="Details" asp-route-id="@a.Id" title="@a.Title">@Ui.Truncate(a.Title, 28)</a>
+                                <span class="pts">Out of @a.MaxPoints</span>
+                            </th>
+                        }
+                        <th class="total-col">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Rows)
+                    {
+                        <tr>
+                            <td class="sticky-col">
+                                <div class="cell-person">
+                                    <span class="avatar avatar-sm">@Ui.Initials(row.Student.FullName)</span>
+                                    <div class="min-w-0"><div class="name text-truncate">@row.Student.FullName</div><div class="sub text-truncate">@row.Student.Email</div></div>
+                                </div>
+                            </td>
+                            @foreach (var a in Model.Assignments)
+                            {
+                                var sub = row.Submissions.GetValueOrDefault(a.Id);
+                                <td>
+                                    @if (sub?.Score is double sc)
+                                    {
+                                        <a class="gb-cell" asp-controller="Submissions" asp-action="Grade" asp-route-id="@sub.Id" title="Review grade">@Ui.Score(sc)</a>
+                                    }
+                                    else if (sub is not null)
+                                    {
+                                        <a class="btn btn-default btn-sm" asp-controller="Submissions" asp-action="Grade" asp-route-id="@sub.Id"><i class="bi bi-pencil"></i> Grade</a>
+                                    }
+                                    else if (a.IsOverdue)
+                                    {
+                                        <span class="gb-missing">Missing</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="gb-empty">–</span>
+                                    }
+                                </td>
+                            }
+                            <td class="total-col">
+                                @if (row.Summary.Percent is double p)
+                                {
+                                    <span>@p.ToString("0.#")%</span> <span class="letter letter-sm ms-1">@row.Summary.Letter</span>
+                                }
+                                else
+                                {
+                                    <span class="gb-empty">–</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td class="sticky-col">Class average</td>
+                        @foreach (var a in Model.Assignments)
+                        {
+                            var avg = Model.AverageFor(a.Id);
+                            <td>@(avg is double v ? Ui.Score(Math.Round(v, 1)) : "–")</td>
+                        }
+                        <td class="total-col">@(Model.AverageTotal() is double t ? t.ToString("0.#") + "%" : "–")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap gap-3 mt-3 small text-muted">
+        <span><span class="gb-cell">18</span> graded (select to review)</span>
+        <span><span class="btn btn-default btn-sm disabled py-0"><i class="bi bi-pencil"></i> Grade</span> submitted, waiting for a grade</span>
+        <span><span class="gb-missing">Missing</span> past due, not submitted</span>
+        <span><span class="gb-empty">–</span> not yet due</span>
+    </div>
+}

@@ -1,0 +1,9 @@
+@{
+    ViewData["Title"] = "Access denied";
+}
+<div class="status-page">
+    <div class="status-code">403</div>
+    <h1 class="page-title mt-2">You don't have access to this page</h1>
+    <p class="text-muted mt-2">This page is only available to a different account role, or to the course's own instructor.</p>
+    <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary mt-3">Go to dashboard</a>
+</div>

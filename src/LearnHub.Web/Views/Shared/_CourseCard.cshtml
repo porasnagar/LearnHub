@@ -1,0 +1,39 @@
+@model CourseCardViewModel
+@{
+    var isStudent = User.IsInRole("Student");
+    var pct = Model.AssignmentCount == 0 ? 0 : Model.MySubmitted * 100 / Model.AssignmentCount;
+}
+<article class="course-card" style="--c: @Ui.CourseColor(Model.Id)">
+    <a class="course-banner graph" asp-controller="Courses" asp-action="Details" asp-route-id="@Model.Id" tabindex="-1" aria-hidden="true">
+        <span class="course-banner-code">@Model.Code</span>
+        @if (!Model.IsPublished) { <span class="status status-on-dark">Unpublished</span> }
+    </a>
+    <div class="course-card-body">
+        <a class="course-card-title" asp-controller="Courses" asp-action="Details" asp-route-id="@Model.Id">@Model.Title</a>
+        <div class="course-card-sub">@(isStudent ? Model.InstructorName : $"{Model.Code} · {Model.Category}")</div>
+
+        @if (isStudent)
+        {
+            <div class="meter mt-3" role="progressbar" aria-label="Assignments submitted" aria-valuenow="@pct" aria-valuemin="0" aria-valuemax="100"><span style="width: @pct%"></span></div>
+            <div class="small text-muted mt-1">
+                @(Model.AssignmentCount == 0 ? "No assignments yet" : $"{Model.MySubmitted} of {Model.AssignmentCount} assignments submitted")
+            </div>
+        }
+        else
+        {
+            <div class="d-flex flex-wrap align-items-center gap-2 mt-3 small text-muted">
+                <span>@Ui.Plural(Model.StudentCount, "student")</span><span>·</span><span>@Ui.Plural(Model.AssignmentCount, "assignment")</span>
+                @if (Model.ToGrade > 0) { <span class="status status-pending ms-auto">@Model.ToGrade to grade</span> }
+            </div>
+        }
+    </div>
+    <nav class="course-card-foot" aria-label="@Model.Code shortcuts">
+        <a asp-controller="Courses" asp-action="Assignments" asp-route-id="@Model.Id" title="Assignments" aria-label="Assignments"><i class="bi bi-clipboard-check"></i></a>
+        <a asp-controller="Courses" asp-action="Grades" asp-route-id="@Model.Id" title="Grades" aria-label="Grades"><i class="bi bi-bar-chart-line"></i></a>
+        @if (!isStudent)
+        {
+            <a asp-controller="Courses" asp-action="Roster" asp-route-id="@Model.Id" title="People" aria-label="People"><i class="bi bi-people"></i></a>
+            <a asp-controller="Courses" asp-action="Edit" asp-route-id="@Model.Id" title="Settings" aria-label="Settings"><i class="bi bi-gear"></i></a>
+        }
+    </nav>
+</article>

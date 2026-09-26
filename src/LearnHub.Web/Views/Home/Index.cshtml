@@ -1,0 +1,110 @@
+@model HomeViewModel
+@{
+    ViewData["Title"] = "Learning management system";
+    ViewData["Bleed"] = true;
+}
+<section class="campus-hero graph-dark">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-7">
+                <div class="overline mb-3">LearnHub learning management system</div>
+                <h1 class="hero-title">Courses, coursework and grades, all in one place.</h1>
+                <p class="hero-lead">
+                    Instructors publish courses and set assignments. Students enroll, hand in their work and
+                    read feedback. Administrators look after the whole catalog.
+                </p>
+                <form class="hero-search" method="get" asp-controller="Courses" asp-action="Index" role="search">
+                    <i class="bi bi-search"></i>
+                    <input type="search" name="q" placeholder="Search courses by title, code or topic" aria-label="Search the course catalog" />
+                    <button class="btn btn-gold" type="submit">Search</button>
+                </form>
+                @if (Model.Subjects.Count > 0)
+                {
+                    <div class="hero-links">
+                        Popular subjects:
+                        @foreach (var s in Model.Subjects.Take(3))
+                        {
+                            <a asp-controller="Courses" asp-action="Index" asp-route-category="@s.Name">@s.Name</a>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="col-lg-5">
+                <div class="hero-panel">
+                    <div class="hero-panel-head">Browse by subject</div>
+                    @foreach (var s in Model.Subjects)
+                    {
+                        <a class="subject-link" asp-controller="Courses" asp-action="Index" asp-route-category="@s.Name">
+                            <span>@s.Name</span><span class="count">@Ui.Plural(s.Count, "course")</span>
+                        </a>
+                    }
+                    <a class="subject-link all" asp-controller="Courses" asp-action="Index">View the full catalog <i class="bi bi-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (Model.Featured.Count > 0)
+{
+    <section class="section">
+        <div class="container">
+            <div class="section-head">
+                <div>
+                    <div class="overline-dark">Course catalog</div>
+                    <h2 class="section-title mt-1">Most popular courses</h2>
+                </div>
+                <a asp-controller="Courses" asp-action="Index" class="fw-semibold text-decoration-none">All courses <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="row g-4">
+                @foreach (var course in Model.Featured)
+                {
+                    <div class="col-md-6 col-lg-4"><partial name="_CatalogCard" model="course" /></div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<section class="section section-white">
+    <div class="container">
+        <div class="overline-dark">One platform</div>
+        <h2 class="section-title mt-1 mb-4">Built for everyone in the course</h2>
+        <div class="row g-5">
+            <div class="col-md-4 role-col">
+                <h3><i class="bi bi-backpack2"></i> Students</h3>
+                <ul class="checklist">
+                    <li>Enroll in courses from the catalog</li>
+                    <li>See every due date on one calendar</li>
+                    <li>Submit written answers or upload files</li>
+                    <li>Read feedback and follow your grades</li>
+                </ul>
+            </div>
+            <div class="col-md-4 role-col">
+                <h3><i class="bi bi-person-video3"></i> Instructors</h3>
+                <ul class="checklist">
+                    <li>Create and publish courses</li>
+                    <li>Set assignments with due dates and points</li>
+                    <li>Grade submissions one after another</li>
+                    <li>Keep a gradebook and export it to CSV</li>
+                </ul>
+            </div>
+            <div class="col-md-4 role-col">
+                <h3><i class="bi bi-building"></i> Administrators</h3>
+                <ul class="checklist">
+                    <li>Manage student and instructor accounts</li>
+                    <li>Oversee every course in the catalog</li>
+                    <li>Reassign courses between instructors</li>
+                    <li>See enrollment and grading activity</li>
+                </ul>
+            </div>
+        </div>
+        <div class="cta-strip">
+            <p>Ready to get started?</p>
+            <div class="d-flex gap-2">
+                <a class="btn btn-default" asp-controller="Account" asp-action="Login">Sign in</a>
+                <a class="btn btn-primary" asp-controller="Account" asp-action="Register">Create an account</a>
+            </div>
+        </div>
+    </div>
+</section>
