@@ -5,11 +5,11 @@ import { Router, RouterLink } from '@angular/router';
 import { Api } from '../core/api.service';
 import { Theme } from '../core/services';
 import { IconComponent, LogoComponent } from '../shared/icon.component';
-import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent, RingComponent } from '../shared/ui';
+import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent, RingComponent, ScrollerComponent } from '../shared/ui';
 
 @Component({
   selector: 'lh-landing',
-  imports: [RouterLink, FormsModule, IconComponent, LogoComponent, CourseCardComponent, CourseArtComponent, RingComponent, BarsComponent, AvatarComponent],
+  imports: [RouterLink, FormsModule, IconComponent, LogoComponent, CourseCardComponent, CourseArtComponent, RingComponent, BarsComponent, AvatarComponent, ScrollerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="nav glass">
@@ -32,11 +32,11 @@ import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent
           <input [(ngModel)]="q" name="q" placeholder="What do you want to learn?" aria-label="Search courses" />
           <button class="btn btn-ink" type="submit">Explore <lh-icon name="arrow-right" class="sm" /></button>
         </form>
-        <div class="chips mt-2">
+        <lh-scroller class="chips-row mt-2">
           @for (s of subjects(); track s.name) {
             <a class="chip" routerLink="/catalog" [queryParams]="{ category: s.name }">{{ s.name }} <span class="count">{{ s.count }}</span></a>
           }
-        </div>
+        </lh-scroller>
         <!-- Phone-only call to action, styled like an onboarding "slide to continue" control. -->
         <a routerLink="/register" class="slide-cta glass">
           <span class="knob"><lh-icon name="check" /></span>
@@ -84,9 +84,11 @@ import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent
           <div><div class="kicker">Course catalog</div><h2>Popular right now</h2></div>
           <a routerLink="/catalog" class="btn btn-glass btn-sm">Browse all <lh-icon name="arrow-right" class="sm" /></a>
         </div>
-        <div class="cards-grid stagger">
-          @for (c of featured(); track c.id) { <lh-course-card [c]="c" /> }
-        </div>
+        <lh-scroller class="cards-scroller">
+          <div class="cards-grid stagger">
+            @for (c of featured(); track c.id) { <lh-course-card [c]="c" /> }
+          </div>
+        </lh-scroller>
       </section>
     }
 
@@ -164,12 +166,20 @@ import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent
 
     :host { overflow-x: clip; }
     .copy { min-width: 0; }
+    .chips-row { max-width: 34rem; }
     .arcs, .slide-cta { display: none; }
 
     @media (max-width: 960px) {
       .hero { grid-template-columns: 1fr; padding-top: 2.5rem; }
       .showcase { height: 400px; }
       .roles { grid-template-columns: 1fr; }
+    }
+
+    /* Featured cards: horizontal scroll on mobile */
+    .cards-scroller { display: block; }
+    @media (max-width: 640px) {
+      .cards-scroller .cards-grid { display: flex; flex-wrap: nowrap; gap: .9rem; padding: 4px 2px 8px; }
+      .cards-scroller .cards-grid > * { min-width: 260px; flex-shrink: 0; }
     }
 
     /* ---------- Phones: onboarding-style hero ---------- */
@@ -181,7 +191,7 @@ import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent
       .hero { display: flex; flex-direction: column-reverse; gap: .5rem; padding: 1.2rem 0 1.5rem; }
       .copy { display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; }
       .copy > * { max-width: 100%; }
-      .chips { width: 100%; }
+      .chips-row { width: 100%; }
       .showcase { width: 100%; }
       .eyebrow { font-size: .74rem; }
       h1 { font-size: 2.6rem; margin: .8rem 0 .7rem; }

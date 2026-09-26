@@ -29,7 +29,7 @@ import { EmptyComponent } from '../shared/ui';
           <div class="row between mb-3"><h2 class="serif month">{{ month() | date: 'MMMM y' }}</h2>
             <span class="small muted strong">{{ monthItems().length }} due this month</span></div>
 
-          <div class="grid" role="grid">
+          <div class="grid-wrap"><div class="grid" role="grid">
             @for (d of dow; track d) { <div class="dow">{{ d }}</div> }
             @for (cell of cells(); track cell.key) {
               <div class="day" [class.other]="!cell.inMonth" [class.today]="cell.key === todayKey" [class.sel]="cell.key === selected()" (click)="selected.set(cell.key)">
@@ -42,7 +42,7 @@ import { EmptyComponent } from '../shared/ui';
                 @if (cell.items.length > 3) { <span class="more">+{{ cell.items.length - 3 }} more</span> }
               </div>
             }
-          </div>
+          </div></div>
         </section>
 
         <aside class="stack">
@@ -90,9 +90,19 @@ import { EmptyComponent } from '../shared/ui';
     .legend { display: flex; align-items: center; gap: .6rem; padding: .45rem .3rem; color: inherit; text-decoration: none !important; min-width: 0; }
     .sw { width: 14px; height: 14px; border-radius: 5px; background: var(--c); flex-shrink: 0; }
     @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+    .cal-card { min-width: 0; }
     @media (max-width: 640px) {
-      .day { min-height: 54px; align-items: center; }
-      .ev { width: 7px; height: 7px; padding: 0; border-radius: 50%; font-size: 0; background: var(--c-deep); }
+      /* Seven columns must fit ~340px: slim card padding, gaps and cells. */
+      .cal-card { padding: 1rem .5rem; border-radius: var(--r-lg); }
+      .cal-card > .row { flex-wrap: wrap; gap: .2rem .6rem; padding: 0 .2rem; }
+      .month { font-size: 1.2rem; }
+      /* Allow the calendar grid to scroll horizontally if viewport is very narrow */
+      .grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+      .grid { gap: 2px; min-width: 294px; /* 7 × 42px */ }
+      .dow { font-size: .6rem; letter-spacing: .01em; }
+      .day { min-height: 44px; min-width: 38px; padding: 3px 2px; border-radius: 10px; align-items: center; gap: 2px; }
+      .num { width: 22px; height: 22px; font-size: .72rem; }
+      .ev { width: 6px; height: 6px; padding: 0; border-radius: 50%; font-size: 0; background: var(--c-deep); }
       .more { display: none; }
     }
   `]
