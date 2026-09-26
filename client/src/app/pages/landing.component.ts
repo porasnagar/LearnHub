@@ -17,8 +17,8 @@ import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent
       <nav class="row">
         <a routerLink="/catalog" class="plink">Catalog</a>
         <button class="btn btn-ghost btn-icon btn-sm" (click)="theme.toggle()" aria-label="Switch theme"><lh-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" /></button>
-        <a routerLink="/login" class="btn btn-glass btn-sm">Sign in</a>
-        <a routerLink="/register" class="btn btn-ink btn-sm">Get started</a>
+        <a routerLink="/login" class="btn btn-glass btn-sm signin">Sign in</a>
+        <a routerLink="/register" class="btn btn-ink btn-sm getstarted">Get started</a>
       </nav>
     </header>
 
@@ -37,9 +37,21 @@ import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent
             <a class="chip" routerLink="/catalog" [queryParams]="{ category: s.name }">{{ s.name }} <span class="count">{{ s.count }}</span></a>
           }
         </div>
+        <!-- Phone-only call to action, styled like an onboarding "slide to continue" control. -->
+        <a routerLink="/register" class="slide-cta glass">
+          <span class="knob"><lh-icon name="check" /></span>
+          <span class="grow">Start learning</span>
+          <span class="chev" aria-hidden="true"><lh-icon name="chevron-right" class="sm" /><lh-icon name="chevron-right" class="sm" /><lh-icon name="chevron-right" class="sm" /></span>
+        </a>
       </div>
 
       <div class="showcase" aria-hidden="true">
+        <svg class="arcs" viewBox="0 0 400 220" preserveAspectRatio="xMidYMax meet">
+          <path d="M20 220a180 180 0 0 1 360 0" stroke="#bfe0f5" />
+          <path d="M60 220a140 140 0 0 1 280 0" stroke="#f8b996" />
+          <path d="M100 220a100 100 0 0 1 200 0" stroke="#a9dfc0" />
+          <path d="M140 220a60 60 0 0 1 120 0" stroke="#f0e38f" />
+        </svg>
         <div class="float f1 card card-flush">
           <div class="mini-banner" style="--c:#d9ccff;--c-deep:#5b3fe0"><lh-course-art kind="web" class="mini-art" /><span class="tag">CS301</span></div>
           <div class="mini-body">
@@ -150,16 +162,58 @@ import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent
     .ghost-dark { color: #fff; border-color: rgba(255,255,255,.25); }
     .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.5rem 0; }
 
+    :host { overflow-x: clip; }
+    .copy { min-width: 0; }
+    .arcs, .slide-cta { display: none; }
+
     @media (max-width: 960px) {
       .hero { grid-template-columns: 1fr; padding-top: 2.5rem; }
       .showcase { height: 400px; }
       .roles { grid-template-columns: 1fr; }
     }
-    @media (max-width: 560px) {
-      .plink { display: none; }
-      .showcase { height: 360px; transform: scale(.86); transform-origin: top left; width: 116%; }
+
+    /* ---------- Phones: onboarding-style hero ---------- */
+    @media (max-width: 640px) {
+      :host { padding: 12px 16px 32px; }
+      .nav { padding: 8px 8px 8px 14px; }
+      .plink, .getstarted { display: none; }
+
+      .hero { display: flex; flex-direction: column-reverse; gap: .5rem; padding: 1.2rem 0 1.5rem; }
+      .copy { display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; }
+      .copy > * { max-width: 100%; }
+      .chips { width: 100%; }
+      .showcase { width: 100%; }
+      .eyebrow { font-size: .74rem; }
+      h1 { font-size: 2.6rem; margin: .8rem 0 .7rem; }
+      .lead { font-size: 1rem; }
+      .hero-search { width: 100%; margin-top: 1.3rem; }
       .hero-search .btn { padding: 0 .9rem; }
+      .chips { max-width: 100%; }
+
+      .slide-cta { display: flex; align-items: center; gap: .8rem; width: 100%; height: 64px; margin-top: 1.2rem; padding: 7px 18px 7px 7px;
+        border-radius: 999px; color: var(--ink); font-weight: 700; font-size: 1.05rem; text-decoration: none !important; }
+      .knob { width: 50px; height: 50px; border-radius: 50%; background: var(--btn-bg); color: var(--btn-fg); display: grid; place-items: center;
+        box-shadow: 0 8px 18px -8px rgba(22,21,28,.6); animation: nudge 2.4s var(--ease) infinite; }
+      .chev { display: flex; color: var(--muted); }
+      .chev lh-icon { margin-left: -8px; animation: chev 1.6s ease-in-out infinite; }
+      .chev lh-icon:nth-child(1) { animation-delay: 0s; opacity: .3; }
+      .chev lh-icon:nth-child(2) { animation-delay: .15s; opacity: .6; }
+      .chev lh-icon:nth-child(3) { animation-delay: .3s; }
+
+      /* Showcase: rainbow arcs with the course card and two chips floating in front. */
+      .showcase { height: 300px; }
+      .arcs { display: block; position: absolute; inset: auto 0 0 0; width: 100%; height: 100%; }
+      .arcs path { fill: none; stroke-width: 30; stroke-linecap: round; stroke-dasharray: 600; animation: arc 1.4s var(--ease) both; }
+      .arcs path:nth-child(2) { animation-delay: .1s; } .arcs path:nth-child(3) { animation-delay: .2s; } .arcs path:nth-child(4) { animation-delay: .3s; }
+      .f1 { top: 58px; left: 50%; width: 210px; margin-left: -105px; }
+      .f2 { display: none; }
+      .f3 { display: none; }
+      .f4 { bottom: 0; left: -4px; width: 215px; padding: .8rem; }
+      .f5 { top: 0; left: auto; right: -4px; padding: .7rem .9rem; }
     }
+    @keyframes arc { from { stroke-dashoffset: 600; } }
+    @keyframes nudge { 0%, 60%, 100% { transform: translateX(0); } 30% { transform: translateX(6px); } }
+    @keyframes chev { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
   `]
 })
 export class LandingComponent {
