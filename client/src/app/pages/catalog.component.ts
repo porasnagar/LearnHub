@@ -5,11 +5,11 @@ import { Router, RouterLink } from '@angular/router';
 import { Api } from '../core/api.service';
 import { Auth } from '../core/services';
 import { IconComponent } from '../shared/icon.component';
-import { CourseCardComponent, EmptyComponent } from '../shared/ui';
+import { CourseCardComponent, EmptyComponent, ScrollerComponent } from '../shared/ui';
 
 @Component({
   selector: 'lh-catalog',
-  imports: [FormsModule, RouterLink, IconComponent, CourseCardComponent, EmptyComponent],
+  imports: [FormsModule, RouterLink, IconComponent, CourseCardComponent, EmptyComponent, ScrollerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -27,14 +27,14 @@ import { CourseCardComponent, EmptyComponent } from '../shared/ui';
         </div>
       </section>
 
-      <div class="chips" role="tablist" aria-label="Subjects">
+      <lh-scroller aria-label="Subjects">
         <a class="chip" [class.active]="!category()" [routerLink]="[]" [queryParams]="{ category: null }" queryParamsHandling="merge">All subjects</a>
         @for (s of data.value()?.subjects ?? []; track s.name) {
           <a class="chip" [class.active]="category() === s.name" [routerLink]="[]" [queryParams]="{ category: s.name }" queryParamsHandling="merge">
             {{ s.name }} <span class="count">{{ s.count }}</span>
           </a>
         }
-      </div>
+      </lh-scroller>
 
       @if (data.isLoading() && !data.value()) {
         <div class="cards-grid">@for (i of [1,2,3,4,5,6]; track i) { <div class="skeleton" style="height:300px"></div> }</div>

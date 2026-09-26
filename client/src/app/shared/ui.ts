@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import {
-  AfterViewInit, ChangeDetectionStrategy, Component, Directive, ElementRef, computed, inject, input
+  AfterViewInit, ChangeDetectionStrategy, Component, DestroyRef, Directive, ElementRef, computed, inject, input, signal, viewChild
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CourseCard } from '../core/models';
@@ -274,6 +274,70 @@ export class CourseCardComponent {
   readonly style = computed(() => toneStyle(this.c().id));
   readonly kind = computed(() => artFor(this.c().category));
   readonly pct = computed(() => this.c().assignmentCount ? Math.round(this.c().mySubmitted * 100 / this.c().assignmentCount) : 0);
+}
+
+// ---------- Horizontal scroller with arrow buttons (chip rows) ----------
+
+/**
+ * Wraps a row of chips. Shows ‹ › buttons and edge fades only when the row overflows,
+ * so it works for any number of items.
+ */
+@Component({
+  selector: 'lh-scroller',
+  imports: [IconComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    @if (canLeft()) {
+      <button type="button" class="arrow left glass" (click)="scrollBy(-1)" aria-label="Scroll left"><lh-icon name="chevron-left" class="sm" /></button>
+    }
+    <div #track class="track" [class.fade-l]="canLeft()" [class.fade-r]="canRight()" (scroll)="update()">
+      <ng-content />
+    </div>
+    @if (canRight()) {
+      <button type="button" class="arrow right glass" (click)="scrollBy(1)" aria-label="Scroll right"><lh-icon name="chevron-right" class="sm" /></button>
+    }`,
+  styles: [`
+    :host { position: relative; display: block; min-width: 0; max-width: 100%; }
+    .track { display: flex; gap: .5rem; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; padding: 2px 0; }
+    .track::-webkit-scrollbar { display: none; }
+    .track.fade-r { mask-image: linear-gradient(to right, #000 calc(100% - 64px), transparent); }
+    .track.fade-l { mask-image: linear-gradient(to left, #000 calc(100% - 64px), transparent); }
+    .track.fade-l.fade-r { mask-image: linear-gradient(to right, transparent, #000 64px, #000 calc(100% - 64px), transparent); }
+    .arrow { position: absolute; top: 50%; z-index: 2; width: 34px; height: 34px; margin-top: -17px; border-radius: 50%;
+      display: grid; place-items: center; cursor: pointer; color: var(--ink); background: var(--glass-strong);
+      box-shadow: var(--shadow); animation: pop-in .25s var(--ease) both; }
+    .arrow:hover { transform: scale(1.08); }
+    .left { left: -4px; } .right { right: -4px; }
+    @keyframes pop-in { from { opacity: 0; transform: scale(.8); } }
+  `]
+})
+export class ScrollerComponent implements AfterViewInit {
+  private readonly track = viewChild.required<ElementRef<HTMLElement>>('track');
+  protected readonly canLeft = signal(false);
+  protected readonly canRight = signal(false);
+  private readonly destroyRef = inject(DestroyRef);
+
+  ngAfterViewInit() {
+    const el = this.track().nativeElement;
+    // Re-check when the row resizes or its chips change (e.g. data arrives).
+    const ro = new ResizeObserver(() => this.update());
+    ro.observe(el);
+    const mo = new MutationObserver(() => this.update());
+    mo.observe(el, { childList: true, subtree: true });
+    this.destroyRef.onDestroy(() => { ro.disconnect(); mo.disconnect(); });
+    this.update();
+  }
+
+  update() {
+    const el = this.track().nativeElement;
+    this.canLeft.set(el.scrollLeft > 4);
+    this.canRight.set(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }
+
+  scrollBy(dir: 1 | -1) {
+    const el = this.track().nativeElement;
+    el.scrollBy({ left: dir * el.clientWidth * 0.7 });
+  }
 }
 
 // ---------- Empty state ----------
