@@ -22,7 +22,7 @@
   <PropertyGroup>
     <ClientDir>$(MSBuildProjectDirectory)\..\..\client</ClientDir>
   </PropertyGroup>
-  <Target Name="BuildAngularClient" BeforeTargets="Build" Condition="!Exists('wwwroot\index.html') Or '$(Configuration)' == 'Release'">
+  <Target Name="BuildAngularClient" BeforeTargets="Build" Condition="'$(SkipClientBuild)' != 'true' And (!Exists('wwwroot\index.html') Or '$(Configuration)' == 'Release')">
     <Message Importance="high" Text="Building the Angular client into wwwroot..." />
     <Exec Command="npm install --no-audit --no-fund" WorkingDirectory="$(ClientDir)" Condition="!Exists('$(ClientDir)\node_modules')" />
     <Exec Command="npm run build" WorkingDirectory="$(ClientDir)" />

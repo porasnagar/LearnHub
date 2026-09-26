@@ -7,15 +7,36 @@ using LearnHub.Web.Services;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ---------- Database (Entity Framework Core) ----------
-var dataDirectory = Path.Combine(builder.Environment.ContentRootPath, "App_Data");
+// ---------- Runtime data (database, uploads, login keys) ----------
+// Defaults to App_Data next to the app; in production point DataDirectory (env var) at a persistent disk.
+var dataDirectory = builder.Configuration["DataDirectory"] is { Length: > 0 } configured
+    ? configured
+    : Path.Combine(builder.Environment.ContentRootPath, "App_Data");
 Directory.CreateDirectory(dataDirectory);
+builder.Configuration["Uploads:Directory"] ??= Path.Combine(dataDirectory, "uploads");
+
+// Keep the cookie-encryption keys on the same disk so sign-ins survive restarts and redeploys.
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(dataDirectory, "keys")))
+    .SetApplicationName("LearnHub");
+
+// Hosting platforms terminate HTTPS at a proxy; trust its X-Forwarded-* headers.
+builder.Services.Configure<ForwardedHeadersOptions>(o =>
+{
+    o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    o.KnownNetworks.Clear();
+    o.KnownProxies.Clear();
+});
+
+// ---------- Database (Entity Framework Core) ----------
 var connectionString = builder.Configuration.GetConnectionString("LmsDb")!
     .Replace("|DataDirectory|", dataDirectory);
 builder.Services.AddDbContext<LmsDbContext>(options => options.UseSqlite(connectionString));
@@ -77,9 +98,12 @@ using (var scope = app.Services.CreateScope())
     await DbSeeder.SeedAsync(scope.ServiceProvider);
 }
 
+app.UseForwardedHeaders();
 app.UseExceptionHandler();
 if (!app.Environment.IsDevelopment())
 {
+    // The platform's proxy serves HTTPS; after UseForwardedHeaders the request scheme is correct,
+    // so HSTS applies and plain-http requests are redirected without looping.
     app.UseHsts();
     app.UseHttpsRedirection();
 }

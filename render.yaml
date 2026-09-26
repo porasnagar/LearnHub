@@ -1,0 +1,14 @@
+# Render Blueprint: New > Blueprint > pick this repo. Builds the Dockerfile and mounts a persistent disk.
+services:
+  - type: web
+    name: learnhub
+    runtime: docker
+    plan: starter          # persistent disks need a paid instance; "free" works but data resets on each deploy/restart
+    healthCheckPath: /api/courses/catalog
+    envVars:
+      - key: DataDirectory
+        value: /data
+    disk:
+      name: learnhub-data
+      mountPath: /data
+      sizeGB: 1

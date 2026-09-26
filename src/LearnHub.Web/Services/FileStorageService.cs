@@ -6,6 +6,8 @@ public class UploadOptions
 {
     public int MaxFileSizeMB { get; set; } = 10;
     public string[] AllowedExtensions { get; set; } = [];
+    /// <summary>Where attachments are stored; Program.cs defaults it to &lt;DataDirectory&gt;/uploads.</summary>
+    public string? Directory { get; set; }
 }
 
 /// <summary>
@@ -16,7 +18,7 @@ public class FileStorageService(IWebHostEnvironment env, IOptions<UploadOptions>
 {
     private readonly UploadOptions _options = options.Value;
 
-    private string Root => Path.Combine(env.ContentRootPath, "App_Data", "uploads");
+    private string Root => _options.Directory ?? Path.Combine(env.ContentRootPath, "App_Data", "uploads");
 
     public string AllowedExtensionsText => string.Join(", ", _options.AllowedExtensions);
 

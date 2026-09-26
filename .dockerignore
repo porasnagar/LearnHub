@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/App_Data/
+**/.angular/
+src/LearnHub.Web/wwwroot/
+.git/
+.claude/
+.vs/
+.vscode/
+tests/
+*.md
