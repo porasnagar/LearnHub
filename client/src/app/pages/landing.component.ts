@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -38,11 +38,16 @@ import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent
           }
         </lh-scroller>
         <!-- Phone-only call to action, styled like an onboarding "slide to continue" control. -->
-        <a routerLink="/register" class="slide-cta glass">
-          <span class="knob"><lh-icon name="check" /></span>
-          <span class="grow">Start learning</span>
+        <div class="slide-cta glass" role="button" aria-label="Slide to start learning"
+             (pointerdown)="swipeStart($event)" (pointermove)="swipeMove($event)"
+             (pointerup)="swipeEnd()" (pointercancel)="swipeEnd()" (pointerleave)="swipeEnd()">
+          <span class="knob" #knob [style.transform]="knobX > 0 ? 'translateX(' + knobX + 'px)' : ''"
+                [style.transition]="dragging ? 'none' : 'transform .4s var(--ease)'">
+            <lh-icon [name]="knobX > 60 ? 'arrow-right' : 'check'" />
+          </span>
+          <span class="grow" [style.opacity]="1 - knobX / 120">Slide to start</span>
           <span class="chev" aria-hidden="true"><lh-icon name="chevron-right" class="sm" /><lh-icon name="chevron-right" class="sm" /><lh-icon name="chevron-right" class="sm" /></span>
-        </a>
+        </div>
       </div>
 
       <div class="showcase" aria-hidden="true">
@@ -136,8 +141,9 @@ import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent
     .hero-search { display: flex; align-items: center; gap: .7rem; margin-top: 1.8rem; max-width: 34rem; padding: 7px 7px 7px 18px; border-radius: 999px; color: var(--muted); }
     .hero-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 1rem; color: var(--ink); }
 
-    .showcase { position: relative; height: 470px; }
-    .float { position: absolute; animation: rise .8s var(--ease) both, float 7s ease-in-out infinite; }
+    .showcase { position: relative; height: 470px; contain: layout; }
+    .float { position: absolute; animation: rise .8s var(--ease) both, float 7s ease-in-out infinite;
+      will-change: transform; backface-visibility: hidden; }
     .f1 { top: 20px; left: 8%; width: 250px; animation-delay: .1s, 0s; }
     .f2 { top: 0; right: 4%; animation-delay: .25s, -2s; }
     .f3 { bottom: 26px; right: 0; width: 250px; animation-delay: .4s, -4s; }
@@ -201,10 +207,13 @@ import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent
       .chips { max-width: 100%; }
 
       .slide-cta { display: flex; align-items: center; gap: .8rem; width: 100%; height: 64px; margin-top: 1.2rem; padding: 7px 18px 7px 7px;
-        border-radius: 999px; color: var(--ink); font-weight: 700; font-size: 1.05rem; text-decoration: none !important; }
+        border-radius: 999px; color: var(--ink); font-weight: 700; font-size: 1.05rem;
+        cursor: grab; user-select: none; touch-action: pan-y; overflow: hidden; }
+      .slide-cta:active { cursor: grabbing; }
       .knob { width: 50px; height: 50px; border-radius: 50%; background: var(--btn-bg); color: var(--btn-fg); display: grid; place-items: center;
-        box-shadow: 0 8px 18px -8px rgba(22,21,28,.6); animation: nudge 2.4s var(--ease) infinite; }
-      .chev { display: flex; color: var(--muted); }
+        box-shadow: 0 8px 18px -8px rgba(22,21,28,.6); will-change: transform; flex-shrink: 0;
+        animation: nudge 2.4s var(--ease) infinite; }
+      .chev { display: flex; color: var(--muted); flex-shrink: 0; }
       .chev lh-icon { margin-left: -8px; animation: chev 1.6s ease-in-out infinite; }
       .chev lh-icon:nth-child(1) { animation-delay: 0s; opacity: .3; }
       .chev lh-icon:nth-child(2) { animation-delay: .15s; opacity: .6; }
@@ -246,4 +255,50 @@ export class LandingComponent {
   ];
 
   search() { this.router.navigate(['/catalog'], { queryParams: { q: this.q || null } }); }
+
+  // ---------- Swipe-to-start knob ----------
+  @ViewChild('knob') private knobEl!: ElementRef<HTMLElement>;
+  protected knobX = 0;
+  protected dragging = false;
+  private dragStartX = 0;
+  private trackWidth = 0;
+  private readonly THRESHOLD = 0.6; // 60% of track = navigate
+
+  swipeStart(e: PointerEvent) {
+    const target = e.currentTarget as HTMLElement;
+    target.setPointerCapture(e.pointerId);
+    this.dragging = true;
+    this.dragStartX = e.clientX;
+    this.trackWidth = target.clientWidth - 64; // track minus knob width
+    // Stop the nudge animation while dragging
+    this.knobEl?.nativeElement.style.setProperty('animation', 'none');
+  }
+
+  swipeMove(e: PointerEvent) {
+    if (!this.dragging) return;
+    const raw = e.clientX - this.dragStartX;
+    // Clamp between 0 and trackWidth; add rubber-band resistance beyond 80%
+    const max = this.trackWidth;
+    if (raw < 0) { this.knobX = 0; return; }
+    if (raw > max * 0.8) {
+      this.knobX = max * 0.8 + (raw - max * 0.8) * 0.2; // rubber-band
+    } else {
+      this.knobX = raw;
+    }
+  }
+
+  swipeEnd() {
+    if (!this.dragging) return;
+    this.dragging = false;
+    const pct = this.knobX / this.trackWidth;
+    this.knobEl?.nativeElement.style.removeProperty('animation');
+    if (pct >= this.THRESHOLD) {
+      // Snap fully right then navigate
+      this.knobX = this.trackWidth;
+      setTimeout(() => this.router.navigate(['/register']), 280);
+    } else {
+      // Rubber-band back
+      this.knobX = 0;
+    }
+  }
 }
