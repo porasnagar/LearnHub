@@ -17,4 +17,15 @@
     <None Remove="App_Data\**" />
   </ItemGroup>
 
+  <!-- The Angular client (../../client) builds into wwwroot. Build it automatically the first time,
+       or on publish, so `dotnet run` alone gives a working app. Requires Node.js 18.19+ / 20 / 22. -->
+  <PropertyGroup>
+    <ClientDir>$(MSBuildProjectDirectory)\..\..\client</ClientDir>
+  </PropertyGroup>
+  <Target Name="BuildAngularClient" BeforeTargets="Build" Condition="!Exists('wwwroot\index.html') Or '$(Configuration)' == 'Release'">
+    <Message Importance="high" Text="Building the Angular client into wwwroot..." />
+    <Exec Command="npm install --no-audit --no-fund" WorkingDirectory="$(ClientDir)" Condition="!Exists('$(ClientDir)\node_modules')" />
+    <Exec Command="npm run build" WorkingDirectory="$(ClientDir)" />
+  </Target>
+
 </Project>

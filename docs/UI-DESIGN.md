@@ -1,5 +1,19 @@
 # LearnHub — UI & Product Design Plan
 
+> **Current design (Angular client).** The information architecture below still applies: course shell with
+> Home / Assignments / Grades / People / Settings, calendar, gradebook and grading screen. The visual language
+> has moved on from the navy-and-gold version described in §3. It now follows the reference shots:
+> - **Surfaces:** frosted-glass panels (`backdrop-filter`) over a slowly drifting pastel background, with 22–28px radii.
+> - **Controls:** black pill buttons and pill-shaped tabs.
+> - **Palette:** lilac, lemon, mint, peach and sky pastels, with a violet accent.
+> - **Typography:** the fonts are unchanged: Source Sans 3 for UI text and Source Serif 4 for display text and numbers.
+> - **Icons and art:** a custom duotone icon set, a new "L + hub dot" logo, and flat illustrations on course banners.
+> - **Themes:** light and dark.
+> - **Mobile:** a floating tab bar with an animated active pill.
+> - **Motion:** staggered card entrances, count-up numbers, bars and rings that draw themselves, and view transitions.
+>
+> Tokens live in `client/src/styles.scss`, and the components in `client/src/app/shared/`.
+
 ## 1. Why the first UI felt "AI-generated"
 
 | Symptom | Why it reads as a generic template |

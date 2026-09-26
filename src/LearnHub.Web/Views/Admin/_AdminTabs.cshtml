@@ -1,7 +1,0 @@
-@{
-    var action = ViewContext.RouteData.Values["action"]?.ToString();
-}
-<nav class="tabs-line" aria-label="Administration">
-    <a class="@(action == "Users" ? "active" : "")" asp-controller="Admin" asp-action="Users">Users</a>
-    <a class="@(action == "Courses" ? "active" : "")" asp-controller="Admin" asp-action="Courses">Courses</a>
-</nav>
