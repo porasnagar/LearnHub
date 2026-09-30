@@ -114,26 +114,26 @@ interface NavItem { label: string; icon: string; link: string; exact?: boolean; 
       .topbar { padding: 12px 16px; gap: .6rem; background: color-mix(in srgb, var(--canvas) 70%, transparent); backdrop-filter: blur(16px); }
       .mobile-brand { display: inline-flex; text-decoration: none !important; }
       .search kbd { display: none; }
-      .main { padding: 8px 16px 120px; }
-      .tabbar { position: fixed; z-index: 40; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom)); transform: translateX(-50%);
-        display: flex; gap: 6px; padding: 6px; border-radius: 999px; background: var(--glass); box-shadow: var(--shadow-lg);
-        max-width: calc(100vw - 28px); box-sizing: border-box; }
-      .tab { display: flex; align-items: center; justify-content: center; gap: .4rem; height: 50px; min-width: 50px; padding: 0 12px; border-radius: 999px;
+      .main { padding: 8px 12px 110px; max-width: 100%; min-width: 0; overflow-x: clip; }
+      .tabbar { position: fixed; z-index: 40; left: 50%; bottom: calc(12px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+        display: flex; align-items: center; gap: 4px; padding: 4px 6px; border-radius: 999px; background: var(--glass);
+        box-shadow: var(--shadow-lg); max-width: calc(100vw - 16px); width: auto; box-sizing: border-box; }
+      .tab { display: flex; align-items: center; justify-content: center; gap: .35rem; height: 44px; min-width: 44px; padding: 0 10px; border-radius: 999px;
         color: var(--ink-2); background: var(--glass-strong); border: 1px solid var(--glass-border);
-        text-decoration: none !important; font-weight: 700; font-size: .88rem; flex-shrink: 0;
-        transition: background .35s var(--ease), color .35s, padding .35s var(--ease), transform .2s var(--ease); }
+        text-decoration: none !important; font-weight: 700; font-size: .84rem; flex-shrink: 1;
+        transition: background .3s var(--ease), color .3s, padding .3s var(--ease), transform .2s var(--ease); }
       .tab:active { transform: scale(.94); }
-      .tab span { max-width: 0; overflow: hidden; white-space: nowrap; transition: max-width .4s var(--ease); }
-      .tab.active { background: var(--violet); border-color: transparent; color: #fff; padding: 0 16px; --duo: .35;
+      .tab span { max-width: 0; overflow: hidden; white-space: nowrap; transition: max-width .3s var(--ease); }
+      .tab.active { background: var(--violet); border-color: transparent; color: #fff; padding: 0 14px; flex-shrink: 0;
         box-shadow: 0 10px 22px -10px var(--violet); }
-      .tab.active span { max-width: 80px; }
-      .top-actions .btn-icon, .avatar-link ::ng-deep .avatar { width: 46px; height: 46px; }
-      /* Extra-narrow phones (≤380px): shrink tabs further */
-      @media (max-width: 380px) {
-        .tabbar { gap: 4px; padding: 5px; }
-        .tab { height: 46px; min-width: 44px; padding: 0 10px; font-size: .8rem; }
-        .tab.active { padding: 0 12px; }
-        .tab.active span { max-width: 60px; }
+      .tab.active span { max-width: 72px; }
+      .top-actions .btn-icon, .avatar-link ::ng-deep .avatar { width: 44px; height: 44px; }
+      /* Narrow phones (≤375px): shrink tabs further */
+      @media (max-width: 375px) {
+        .tabbar { gap: 2px; padding: 3px 4px; max-width: calc(100vw - 10px); }
+        .tab { height: 40px; min-width: 38px; padding: 0 7px; font-size: .78rem; }
+        .tab.active { padding: 0 10px; }
+        .tab.active span { max-width: 52px; }
       }
     }
     @media (max-width: 560px) { .search { display: none; } .top-actions { margin-left: auto; } }

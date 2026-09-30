@@ -17,15 +17,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ---------- Runtime data (database, uploads, login keys) ----------
 // Defaults to App_Data next to the app; in production point DataDirectory (env var) at a persistent disk.
-var dataDirectory = builder.Configuration["DataDirectory"] is { Length: > 0 } configured
-    ? configured
+var rawDataDir = builder.Configuration["DataDirectory"];
+var dataDirectory = !string.IsNullOrWhiteSpace(rawDataDir)
+    ? rawDataDir.Trim()
     : Path.Combine(builder.Environment.ContentRootPath, "App_Data");
 Directory.CreateDirectory(dataDirectory);
+var keysDir = Path.Combine(dataDirectory, "keys");
+Directory.CreateDirectory(keysDir);
 builder.Configuration["Uploads:Directory"] ??= Path.Combine(dataDirectory, "uploads");
 
 // Keep the cookie-encryption keys on the same disk so sign-ins survive restarts and redeploys.
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(dataDirectory, "keys")))
+    .PersistKeysToFileSystem(new DirectoryInfo(keysDir))
     .SetApplicationName("LearnHub");
 
 // Hosting platforms terminate HTTPS at a proxy; trust its X-Forwarded-* headers.
@@ -118,8 +121,28 @@ app.UseExceptionHandler(exHandler => exHandler.Run(async ctx =>
 {
     var logger = ctx.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("UnhandledException");
     var feature = ctx.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
-    if (feature?.Error is not null)
-        logger.LogError(feature.Error, "Unhandled exception on {Method} {Path}", ctx.Request.Method, ctx.Request.Path);
+    var ex = feature?.Error;
+    if (ex is not null)
+        logger.LogError(ex, "Unhandled exception on {Method} {Path}", ctx.Request.Method, ctx.Request.Path);
+
+    // If an antiforgery or cryptographic exception was thrown (e.g. from an old cookie from prior deploy):
+    if (ex is AntiforgeryValidationException || ex is System.Security.Cryptography.CryptographicException)
+    {
+        foreach (var key in ctx.Request.Cookies.Keys)
+        {
+            if (key.StartsWith(".AspNetCore.Antiforgery", StringComparison.OrdinalIgnoreCase)
+                || key == XsrfCookie.CookieName
+                || key == "lh.auth")
+            {
+                ctx.Response.Cookies.Delete(key);
+            }
+        }
+        ctx.Response.StatusCode = StatusCodes.Status400BadRequest;
+        ctx.Response.ContentType = "application/problem+json";
+        await ctx.Response.WriteAsJsonAsync(new { title = "Session expired. Please refresh the page.", status = 400 });
+        return;
+    }
+
     ctx.Response.StatusCode = 500;
     ctx.Response.ContentType = "application/problem+json";
     await ctx.Response.WriteAsJsonAsync(new { title = "An unexpected error occurred.", status = 500 });
@@ -154,7 +177,17 @@ app.UseAuthorization();
 app.Use(async (context, next) =>
 {
     if (HttpMethods.IsGet(context.Request.Method) && context.Request.Path.StartsWithSegments("/api"))
-        XsrfCookie.Issue(context, context.RequestServices.GetRequiredService<IAntiforgery>());
+    {
+        try
+        {
+            XsrfCookie.Issue(context, context.RequestServices.GetRequiredService<IAntiforgery>());
+        }
+        catch (Exception ex)
+        {
+            var logger = context.RequestServices.GetService<ILogger<Program>>();
+            logger?.LogWarning(ex, "Could not issue XSRF token on {Path}", context.Request.Path);
+        }
+    }
     await next();
 });
 

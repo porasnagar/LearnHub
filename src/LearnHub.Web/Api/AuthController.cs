@@ -84,8 +84,51 @@ public static class XsrfCookie
 
     public static void Issue(HttpContext context, IAntiforgery antiforgery)
     {
-        var tokens = antiforgery.GetAndStoreTokens(context);
-        context.Response.Cookies.Append(CookieName, tokens.RequestToken!,
-            new CookieOptions { HttpOnly = false, SameSite = SameSiteMode.Strict, Path = "/" });
+        try
+        {
+            var tokens = antiforgery.GetAndStoreTokens(context);
+            if (!string.IsNullOrEmpty(tokens.RequestToken))
+            {
+                context.Response.Cookies.Append(CookieName, tokens.RequestToken,
+                    new CookieOptions { HttpOnly = false, SameSite = SameSiteMode.Strict, Path = "/" });
+            }
+        }
+        catch (Exception)
+        {
+            // If the incoming cookie was encrypted with an old/missing key from a previous deployment,
+            // GetAndStoreTokens throws AntiforgeryValidationException / CryptographicException.
+            // Strip the stale antiforgery cookie and generate a fresh token pair so GET requests never 500.
+            try
+            {
+                var cookieHeader = context.Request.Headers.Cookie.ToString();
+                if (!string.IsNullOrEmpty(cookieHeader))
+                {
+                    var cleaned = cookieHeader
+                        .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Where(c => !c.StartsWith(".AspNetCore.Antiforgery", StringComparison.OrdinalIgnoreCase)
+                                 && !c.StartsWith(CookieName, StringComparison.OrdinalIgnoreCase));
+                    context.Request.Headers.Cookie = string.Join("; ", cleaned);
+                }
+
+                foreach (var key in context.Request.Cookies.Keys)
+                {
+                    if (key.StartsWith(".AspNetCore.Antiforgery", StringComparison.OrdinalIgnoreCase) || key == CookieName)
+                    {
+                        context.Response.Cookies.Delete(key);
+                    }
+                }
+
+                var tokens = antiforgery.GetAndStoreTokens(context);
+                if (!string.IsNullOrEmpty(tokens.RequestToken))
+                {
+                    context.Response.Cookies.Append(CookieName, tokens.RequestToken,
+                        new CookieOptions { HttpOnly = false, SameSite = SameSiteMode.Strict, Path = "/" });
+                }
+            }
+            catch
+            {
+                // Fallback: never let token issuing crash a request
+            }
+        }
     }
 }

@@ -26,20 +26,30 @@ import { EmptyComponent } from '../shared/ui';
 
       <div class="layout">
         <section class="card card-lg cal-card">
-          <div class="row between mb-3"><h2 class="serif month">{{ month() | date: 'MMMM y' }}</h2>
-            <span class="small muted strong">{{ monthItems().length }} due this month</span></div>
+          <div class="row between mb-3 cal-head">
+            <h2 class="serif month">{{ month() | date: 'MMMM y' }}</h2>
+            <span class="small muted strong due-count">{{ monthItems().length }} due</span>
+          </div>
 
           <div class="grid-wrap"><div class="grid" role="grid">
             @for (d of dow; track d) { <div class="dow">{{ d }}</div> }
             @for (cell of cells(); track cell.key) {
               <div class="day" [class.other]="!cell.inMonth" [class.today]="cell.key === todayKey" [class.sel]="cell.key === selected()" (click)="selected.set(cell.key)">
                 <span class="num">{{ cell.date.getDate() }}</span>
-                @for (a of cell.items.slice(0, 3); track a.id) {
-                  <a class="ev" [class.done]="a.submitted" [attr.style]="tone(a.courseId)" [routerLink]="['/courses', a.courseId, 'assignments', a.id]" [title]="a.courseCode + ': ' + a.title">
-                    {{ a.title }}
-                  </a>
-                }
-                @if (cell.items.length > 3) { <span class="more">+{{ cell.items.length - 3 }} more</span> }
+                <div class="dots">
+                  @for (a of cell.items.slice(0, 3); track a.id) {
+                    <span class="dot" [class.done]="a.submitted" [attr.style]="tone(a.courseId)" [title]="a.courseCode + ': ' + a.title"></span>
+                  }
+                  @if (cell.items.length > 3) { <span class="dot-more">+</span> }
+                </div>
+                <div class="evs">
+                  @for (a of cell.items.slice(0, 3); track a.id) {
+                    <a class="ev" [class.done]="a.submitted" [attr.style]="tone(a.courseId)" [routerLink]="['/courses', a.courseId, 'assignments', a.id]" [title]="a.courseCode + ': ' + a.title">
+                      {{ a.title }}
+                    </a>
+                  }
+                  @if (cell.items.length > 3) { <span class="more">+{{ cell.items.length - 3 }} more</span> }
+                </div>
               </div>
             }
           </div></div>
@@ -68,9 +78,11 @@ import { EmptyComponent } from '../shared/ui';
       </div>
     </div>`,
   styles: [`
-    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 1.25rem; align-items: start; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 1.25rem; align-items: start; min-width: 0; max-width: 100%; }
     .month { font-size: 1.6rem; }
-    .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+    .due-count { white-space: nowrap; font-size: .84rem; }
+    .grid-wrap { width: 100%; min-width: 0; overflow: hidden; }
+    .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; width: 100%; }
     .dow { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); text-align: center; padding-bottom: .3rem; }
     .day { min-height: 108px; padding: 6px; border-radius: 16px; background: var(--glass-strong); border: 1px solid transparent; cursor: pointer;
       display: flex; flex-direction: column; gap: 3px; transition: border-color .2s, transform .2s var(--ease); min-width: 0; }
@@ -79,6 +91,8 @@ import { EmptyComponent } from '../shared/ui';
     .day.sel { border-color: var(--violet); }
     .num { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: .8rem; font-weight: 800; }
     .day.today .num { background: var(--violet); color: #fff; }
+    .dots { display: none; }
+    .evs { display: flex; flex-direction: column; gap: 3px; width: 100%; }
     .ev { display: block; padding: 3px 8px; border-radius: 8px; background: var(--c); color: #16151c; font-size: .72rem; font-weight: 700;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none !important; }
     .ev.done { opacity: .55; text-decoration: line-through !important; }
@@ -90,30 +104,21 @@ import { EmptyComponent } from '../shared/ui';
     .legend { display: flex; align-items: center; gap: .6rem; padding: .45rem .3rem; color: inherit; text-decoration: none !important; min-width: 0; }
     .sw { width: 14px; height: 14px; border-radius: 5px; background: var(--c); flex-shrink: 0; }
     @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
-    .cal-card { min-width: 0; overflow: hidden; }
+    .cal-card { min-width: 0; max-width: 100%; overflow: hidden; box-sizing: border-box; }
     @media (max-width: 640px) {
-      /* Seven columns must fit viewport: slim card padding, gaps and cells. */
-      .cal-card { padding: .85rem .4rem; border-radius: var(--r-lg); }
-      .cal-card > .row { flex-wrap: nowrap; gap: .15rem; padding: 0 .2rem; overflow: hidden; }
-      .month { font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-      .cal-card > .row > span { display: none; } /* hide the "N due" count so the row doesn't wrap */
-      /* grid-wrap fills card width; inner grid sets a safe minimum */
-      .grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; width: 100%; }
-      .grid { gap: 2px; min-width: 266px; /* 7 × 38px */ width: 100%; }
-      .dow { font-size: .58rem; letter-spacing: 0; }
-      .day { min-height: 40px; min-width: 0; width: 100%; padding: 3px 1px; border-radius: 8px; align-items: center; gap: 2px; }
-      .num { width: 20px; height: 20px; font-size: .68rem; }
-      .ev { width: 5px; height: 5px; padding: 0; border-radius: 50%; font-size: 0; background: var(--c-deep); }
-      .more { display: none; }
-    }
-    /* Phones wider than 380 but still tight — restore the count label */
-    @media (min-width: 420px) and (max-width: 640px) {
-      .cal-card { padding: 1rem .5rem; }
-      .cal-card > .row > span { display: inline; }
-      .month { font-size: 1.15rem; }
-      .grid { min-width: 280px; }
-      .day { min-height: 44px; }
+      .cal-card { padding: .75rem .35rem; border-radius: var(--r-lg); width: 100%; }
+      .cal-head { gap: .5rem; margin-bottom: .75rem !important; }
+      .month { font-size: 1.15rem; min-width: 0; }
+      .due-count { font-size: .75rem; }
+      .grid { gap: 2px; width: 100%; min-width: 0; }
+      .dow { font-size: .62rem; letter-spacing: 0; padding-bottom: 2px; }
+      .day { min-height: 46px; min-width: 0; width: 100%; padding: 3px 1px; border-radius: 8px; align-items: center; justify-content: flex-start; gap: 2px; }
       .num { width: 22px; height: 22px; font-size: .72rem; }
+      .evs { display: none; }
+      .dots { display: flex; gap: 2px; align-items: center; justify-content: center; flex-wrap: wrap; max-width: 100%; }
+      .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--c-deep); display: block; flex-shrink: 0; }
+      .dot.done { opacity: .4; }
+      .dot-more { font-size: .65rem; color: var(--muted); font-weight: 700; line-height: 1; }
     }
   `]
 })

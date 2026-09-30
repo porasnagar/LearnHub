@@ -37,8 +37,8 @@ WORKDIR /app
 COPY --from=build /out ./
 # Database, uploads and login keys live here — mount a persistent volume/disk at /data.
 # (Runs as root because platform-mounted disks are often root-owned.)
-ENV DataDirectory=/data \
-    ASPNETCORE_ENVIRONMENT=Production
+ENV DataDirectory=/data
+ENV ASPNETCORE_ENVIRONMENT=Production
 RUN mkdir -p /data
 EXPOSE 8080
 # Listen on the platform-provided $PORT (Render, Railway, SnapDeploy…), defaulting to 8080.
