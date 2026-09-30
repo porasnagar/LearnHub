@@ -93,19 +93,54 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// Apply / verify the DB schema, then seed demo data.
 using (var scope = app.Services.CreateScope())
 {
-    await DbSeeder.SeedAsync(scope.ServiceProvider);
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<LmsDbContext>();
+        await db.Database.EnsureCreatedAsync();
+        await DbSeeder.SeedAsync(scope.ServiceProvider);
+        logger.LogInformation("Database ready.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogCritical(ex, "Startup failed: database seed/migration threw an exception.");
+        throw; // Let the process exit so Render knows the deploy failed.
+    }
 }
 
 app.UseForwardedHeaders();
-app.UseExceptionHandler();
+
+// Log unhandled exceptions so they appear in the container logs.
+app.UseExceptionHandler(exHandler => exHandler.Run(async ctx =>
+{
+    var logger = ctx.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("UnhandledException");
+    var feature = ctx.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+    if (feature?.Error is not null)
+        logger.LogError(feature.Error, "Unhandled exception on {Method} {Path}", ctx.Request.Method, ctx.Request.Path);
+    ctx.Response.StatusCode = 500;
+    ctx.Response.ContentType = "application/problem+json";
+    await ctx.Response.WriteAsJsonAsync(new { title = "An unexpected error occurred.", status = 500 });
+}));
+
 if (!app.Environment.IsDevelopment())
 {
-    // The platform's proxy serves HTTPS; after UseForwardedHeaders the request scheme is correct,
-    // so HSTS applies and plain-http requests are redirected without looping.
     app.UseHsts();
-    app.UseHttpsRedirection();
+    // Render terminates TLS externally; only redirect if the scheme is genuinely http
+    // (i.e. someone hit the raw internal port). Skip if we can't determine the https port
+    // to avoid a redirect loop or 500 on health checks.
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Scheme == "http")
+        {
+            var host = context.Request.Host.Host;
+            context.Response.Redirect($"https://{host}{context.Request.PathBase}{context.Request.Path}{context.Request.QueryString}", permanent: true);
+            return;
+        }
+        await next();
+    });
 }
 
 // The Angular app is built into wwwroot (see client/angular.json).
