@@ -100,7 +100,8 @@ body {
   font-size: 15px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
-  -webkit-text-size-adjust: 100%; /* prevent iOS from auto-resizing text */
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none; /* kills Android glow-effect repaints on bounce */
   transition: background-color 0.4s var(--ease), color 0.4s var(--ease);
 }
 h1, h2, h3, h4 { margin: 0; line-height: 1.2; color: var(--ink); }
@@ -152,6 +153,16 @@ img, svg { display: block; }
   0% { transform: translate3d(0, 0, 0) scale(1); }
   50% { transform: translate3d(6vmax, 4vmax, 0) scale(1.08); }
   100% { transform: translate3d(-4vmax, 6vmax, 0) scale(0.95); }
+}
+/* ---- Android GPU budget: cut aurora to 2 blobs, halve blur, reduce backdrop-filter ---- */
+@media (max-width: 1023px) {
+  :root { --blur: blur(10px) saturate(140%); }
+  .aurora span { filter: blur(50px); animation-play-state: paused; }
+  .aurora span:nth-child(1),
+  .aurora span:nth-child(2) { animation-play-state: running; }
+  /* Hide the two most expensive blobs on narrow phones */
+  .aurora span:nth-child(3),
+  .aurora span:nth-child(4) { display: none; }
 }
 
 /* ---------- Glass ---------- */
@@ -345,6 +356,11 @@ img, svg { display: block; }
 ::view-transition-new(root) { animation: 0.32s var(--ease) both vt-in; }
 @keyframes vt-out { to { opacity: 0; } }
 @keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
+/* Disable view transitions on mobile — they're expensive and cause jank on Android */
+@media (max-width: 1023px) {
+  @view-transition { navigation: none; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
