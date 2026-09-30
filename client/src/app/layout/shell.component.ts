@@ -116,17 +116,25 @@ interface NavItem { label: string; icon: string; link: string; exact?: boolean; 
       .search kbd { display: none; }
       .main { padding: 8px 16px 120px; }
       .tabbar { position: fixed; z-index: 40; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom)); transform: translateX(-50%);
-        display: flex; gap: 8px; padding: 8px; border-radius: 999px; background: var(--glass); box-shadow: var(--shadow-lg); }
-      .tab { display: flex; align-items: center; justify-content: center; gap: .45rem; height: 52px; min-width: 52px; padding: 0 15px; border-radius: 999px;
+        display: flex; gap: 6px; padding: 6px; border-radius: 999px; background: var(--glass); box-shadow: var(--shadow-lg);
+        max-width: calc(100vw - 28px); box-sizing: border-box; }
+      .tab { display: flex; align-items: center; justify-content: center; gap: .4rem; height: 50px; min-width: 50px; padding: 0 12px; border-radius: 999px;
         color: var(--ink-2); background: var(--glass-strong); border: 1px solid var(--glass-border);
-        text-decoration: none !important; font-weight: 700; font-size: .92rem;
+        text-decoration: none !important; font-weight: 700; font-size: .88rem; flex-shrink: 0;
         transition: background .35s var(--ease), color .35s, padding .35s var(--ease), transform .2s var(--ease); }
       .tab:active { transform: scale(.94); }
       .tab span { max-width: 0; overflow: hidden; white-space: nowrap; transition: max-width .4s var(--ease); }
-      .tab.active { background: var(--violet); border-color: transparent; color: #fff; padding: 0 20px; --duo: .35;
+      .tab.active { background: var(--violet); border-color: transparent; color: #fff; padding: 0 16px; --duo: .35;
         box-shadow: 0 10px 22px -10px var(--violet); }
-      .tab.active span { max-width: 90px; }
+      .tab.active span { max-width: 80px; }
       .top-actions .btn-icon, .avatar-link ::ng-deep .avatar { width: 46px; height: 46px; }
+      /* Extra-narrow phones (≤380px): shrink tabs further */
+      @media (max-width: 380px) {
+        .tabbar { gap: 4px; padding: 5px; }
+        .tab { height: 46px; min-width: 44px; padding: 0 10px; font-size: .8rem; }
+        .tab.active { padding: 0 12px; }
+        .tab.active span { max-width: 60px; }
+      }
     }
     @media (max-width: 560px) { .search { display: none; } .top-actions { margin-left: auto; } }
 

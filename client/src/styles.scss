@@ -296,7 +296,8 @@ img, svg { display: block; }
 
 /* ---------- Page scaffolding ---------- */
 .page { display: flex; flex-direction: column; gap: 1.25rem; }
-.page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .75rem; }
+@media (max-width: 400px) { .page-head { gap: .5rem; } }
 .page-title { font-size: clamp(1.7rem, 3vw, 2.3rem); }
 .page-sub { color: var(--muted); margin-top: 0.3rem; }
 .crumbs { display: flex; flex-wrap: wrap; gap: 0.4rem; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.35rem; }

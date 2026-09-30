@@ -90,20 +90,30 @@ import { EmptyComponent } from '../shared/ui';
     .legend { display: flex; align-items: center; gap: .6rem; padding: .45rem .3rem; color: inherit; text-decoration: none !important; min-width: 0; }
     .sw { width: 14px; height: 14px; border-radius: 5px; background: var(--c); flex-shrink: 0; }
     @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
-    .cal-card { min-width: 0; }
+    .cal-card { min-width: 0; overflow: hidden; }
     @media (max-width: 640px) {
-      /* Seven columns must fit ~340px: slim card padding, gaps and cells. */
-      .cal-card { padding: 1rem .5rem; border-radius: var(--r-lg); }
-      .cal-card > .row { flex-wrap: wrap; gap: .2rem .6rem; padding: 0 .2rem; }
-      .month { font-size: 1.2rem; }
-      /* Allow the calendar grid to scroll horizontally if viewport is very narrow */
-      .grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
-      .grid { gap: 2px; min-width: 294px; /* 7 × 42px */ }
-      .dow { font-size: .6rem; letter-spacing: .01em; }
-      .day { min-height: 44px; min-width: 38px; padding: 3px 2px; border-radius: 10px; align-items: center; gap: 2px; }
-      .num { width: 22px; height: 22px; font-size: .72rem; }
-      .ev { width: 6px; height: 6px; padding: 0; border-radius: 50%; font-size: 0; background: var(--c-deep); }
+      /* Seven columns must fit viewport: slim card padding, gaps and cells. */
+      .cal-card { padding: .85rem .4rem; border-radius: var(--r-lg); }
+      .cal-card > .row { flex-wrap: nowrap; gap: .15rem; padding: 0 .2rem; overflow: hidden; }
+      .month { font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+      .cal-card > .row > span { display: none; } /* hide the "N due" count so the row doesn't wrap */
+      /* grid-wrap fills card width; inner grid sets a safe minimum */
+      .grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; width: 100%; }
+      .grid { gap: 2px; min-width: 266px; /* 7 × 38px */ width: 100%; }
+      .dow { font-size: .58rem; letter-spacing: 0; }
+      .day { min-height: 40px; min-width: 0; width: 100%; padding: 3px 1px; border-radius: 8px; align-items: center; gap: 2px; }
+      .num { width: 20px; height: 20px; font-size: .68rem; }
+      .ev { width: 5px; height: 5px; padding: 0; border-radius: 50%; font-size: 0; background: var(--c-deep); }
       .more { display: none; }
+    }
+    /* Phones wider than 380 but still tight — restore the count label */
+    @media (min-width: 420px) and (max-width: 640px) {
+      .cal-card { padding: 1rem .5rem; }
+      .cal-card > .row > span { display: inline; }
+      .month { font-size: 1.15rem; }
+      .grid { min-width: 280px; }
+      .day { min-height: 44px; }
+      .num { width: 22px; height: 22px; font-size: .72rem; }
     }
   `]
 })
