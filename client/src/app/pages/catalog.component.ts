@@ -13,19 +13,18 @@ import { CourseCardComponent, EmptyComponent, ScrollerComponent } from '../share
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
-      <section class="hero card card-lg fade-in">
-        <div class="hero-copy">
-          <div class="kicker">Course catalog</div>
-          <h1 class="page-title">Find your next course</h1>
-          <p class="page-sub">{{ data.value()?.totalPublished ?? '…' }} courses open for enrollment{{ auth.signedIn() ? '' : ' — sign in as a student to enroll' }}.</p>
-          <form class="search glass" (ngSubmit)="apply()" role="search">
-            <lh-icon name="search" />
-            <input [(ngModel)]="text" name="q" placeholder="Search by title, code or topic" aria-label="Search courses" />
-            @if (text) { <button type="button" class="btn btn-ghost btn-icon btn-sm" (click)="text = ''; apply()" aria-label="Clear search"><lh-icon name="x" class="sm" /></button> }
-            <button class="btn btn-ink" type="submit">Search</button>
-          </form>
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Course catalog</h1>
+          <p class="page-sub">{{ data.value()?.totalPublished ?? '…' }} courses open for enrollment{{ auth.signedIn() ? '' : '. Sign in with a student account to enroll' }}.</p>
         </div>
-      </section>
+      </div>
+      <form class="search" (ngSubmit)="apply()" role="search">
+        <lh-icon name="search" />
+        <input [(ngModel)]="text" name="q" placeholder="Search by title, code or subject" aria-label="Search courses" />
+        @if (text) { <button type="button" class="btn btn-ghost btn-icon btn-sm" (click)="text = ''; apply()" aria-label="Clear search"><lh-icon name="x" class="sm" /></button> }
+        <button class="btn btn-ink" type="submit">Search</button>
+      </form>
 
       <lh-scroller aria-label="Subjects">
         <a class="chip" [class.active]="!category()" [routerLink]="[]" [queryParams]="{ category: null }" queryParamsHandling="merge">All subjects</a>
@@ -50,11 +49,11 @@ import { CourseCardComponent, EmptyComponent, ScrollerComponent } from '../share
       }
     </div>`,
   styles: [`
-    .hero { overflow: hidden; background: linear-gradient(120deg, color-mix(in srgb, var(--lilac) 70%, transparent), color-mix(in srgb, var(--sky) 55%, transparent)); }
-    .hero-copy { max-width: 640px; }
-    .kicker { font-size: .78rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--violet); }
-    .search { display: flex; align-items: center; gap: .6rem; margin-top: 1.3rem; padding: 6px 6px 6px 16px; border-radius: 999px; color: var(--muted); }
+    .search { display: flex; align-items: center; gap: .6rem; max-width: 640px; padding: 5px 5px 5px 14px; border-radius: var(--r-ctl);
+      background: var(--surface); border: 1px solid var(--line-strong); color: var(--muted); }
+    .search:focus-within { border-color: var(--violet); box-shadow: 0 0 0 3px var(--violet-soft); }
     .search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; color: var(--ink); }
+    .search input::placeholder { color: var(--faint); }
   `]
 })
 export class CatalogComponent {

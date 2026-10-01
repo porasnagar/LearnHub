@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Api } from '../core/api.service';
@@ -17,7 +17,7 @@ import { AvatarComponent } from '../shared/ui';
   template: `
     @if (g(); as g) {
       <div class="page">
-        <header class="bar card fade-in">
+        <header class="bar card">
           <div class="grow">
             <nav class="crumbs"><a [routerLink]="['/courses', g.courseId]">{{ g.courseCode }}</a><span>/</span>
               <a [routerLink]="['/courses', g.courseId, 'assignments', g.assignmentId]">{{ g.assignmentTitle }}</a><span>/</span><span>Grading</span></nav>
@@ -29,8 +29,9 @@ import { AvatarComponent } from '../shared/ui';
               @for (q of g.queue; track q.submissionId) { <option [ngValue]="q.submissionId">{{ q.studentName }} {{ q.isGraded ? '✓' : '• needs grading' }}</option> }
             </select>
             <a class="btn btn-glass btn-icon" [class.disabled]="!next()" [routerLink]="next() ? ['/grade', next()] : null" aria-label="Next student"><lh-icon name="chevron-right" /></a>
-            <span class="small muted nowrap">{{ position() }} of {{ g.queue.length }}</span>
+            <span class="small muted nowrap tabnum">{{ position() }} of {{ g.queue.length }}</span>
           </div>
+          <p class="keys tiny muted">Keyboard: <kbd>K</kbd> previous · <kbd>J</kbd> next · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> save &amp; next</p>
         </header>
 
         <div class="layout">
@@ -42,9 +43,9 @@ import { AvatarComponent } from '../shared/ui';
             </div>
             <article class="paper pre" [class.empty]="!g.submission.textAnswer">{{ g.submission.textAnswer || 'No text entry — see the attached file.' }}</article>
             @if (g.submission.originalFileName) {
-              <a class="file glass" [href]="'/api/assignments/download/' + g.submission.id" download>
-                <span class="fi"><lh-icon name="file" /></span><span class="grow truncate strong">{{ g.submission.originalFileName }}</span>
-                <span class="btn btn-ink btn-sm"><lh-icon name="download" class="sm" /> Download</span>
+              <a class="file" [href]="'/api/assignments/download/' + g.submission.id" download>
+                <lh-icon name="file" /><span class="grow truncate strong">{{ g.submission.originalFileName }}</span>
+                <span class="btn btn-secondary btn-sm"><lh-icon name="download" class="sm" /> Download</span>
               </a>
             }
           </section>
@@ -57,9 +58,9 @@ import { AvatarComponent } from '../shared/ui';
                 <input class="score-input serif" type="number" name="score" [ngModel]="scoreValue()" (ngModelChange)="scoreValue.set($event)" required min="0" [max]="g.maxPoints" step="0.5" aria-label="Score" />
                 <span class="of">/ {{ g.maxPoints }}</span>
               </div>
-              <div class="letter-badge serif" [class.pop]="letter() !== '–'">{{ letter() }}</div>
+              <div class="letter-badge serif" aria-live="polite" [attr.aria-label]="'Letter grade ' + letter()">{{ letter() }}</div>
             </div>
-            <input type="range" class="range" name="slider" [ngModel]="scoreValue()" (ngModelChange)="scoreValue.set(+$event)" min="0" [max]="g.maxPoints" step="0.5" aria-label="Score slider" />
+            <input type="range" class="range" name="slider" [ngModel]="scoreValue() ?? 0" (ngModelChange)="scoreValue.set(+$event)" min="0" [max]="g.maxPoints" step="0.5" aria-label="Score slider" />
             <div class="quick">@for (p of [100, 90, 80, 70]; track p) { <button type="button" class="chip" (click)="scoreValue.set(g.maxPoints * p / 100)">{{ p }}%</button> }</div>
             <div class="field"><label for="fb">Comment for the student</label>
               <textarea id="fb" class="textarea" rows="7" name="feedback" [(ngModel)]="feedback" maxlength="2000" placeholder="What went well, and what to improve next time"></textarea></div>
@@ -74,25 +75,29 @@ import { AvatarComponent } from '../shared/ui';
       <div class="skeleton" style="height: 420px"></div>
     }`,
   styles: [`
-    .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
-    .h { font-size: 1.5rem; }
+    .bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
+    .h { font-size: 1.4rem; }
     .switch-row { display: flex; align-items: center; gap: .5rem; }
     .picker { min-width: 240px; }
+    .keys { width: 100%; margin-top: -.2rem; }
+    kbd { font-family: var(--sans); font-size: .76rem; font-weight: 700; padding: 1px 6px; border-radius: 5px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--ink-2); }
     .disabled { opacity: .4; pointer-events: none; }
-    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 1.25rem; align-items: start; }
-    .viewer { display: flex; flex-direction: column; gap: 1.2rem; min-height: 460px; }
-    .paper { font-family: var(--serif); font-size: 1.06rem; line-height: 1.85; padding: 2.4rem 2.6rem; border-radius: 20px; background: var(--glass-strong); box-shadow: inset 0 0 0 1px var(--line); min-height: 280px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 1rem; align-items: start; }
+    .viewer { display: flex; flex-direction: column; gap: 1rem; min-height: 460px; background: var(--surface-2); }
+    /* The submission reads like a page of paper. */
+    .paper { font-family: var(--serif); font-size: 1.06rem; line-height: 1.8; padding: 2.2rem 2.4rem; border-radius: var(--r-ctl);
+      background: var(--surface); border: 1px solid var(--line); min-height: 280px; max-width: 72ch; }
     .paper.empty { color: var(--muted); font-style: italic; font-family: var(--sans); }
-    .file { display: flex; align-items: center; gap: .8rem; padding: .7rem .8rem; border-radius: 18px; color: var(--ink); text-decoration: none !important; }
-    .fi { width: 40px; height: 40px; border-radius: 12px; background: var(--violet-soft); color: var(--violet); display: grid; place-items: center; }
-    .assess { position: sticky; top: 90px; display: flex; flex-direction: column; gap: 1rem; }
+    .file { display: flex; align-items: center; gap: .7rem; padding: .55rem .6rem .55rem .85rem; border-radius: var(--r-ctl); border: 1px solid var(--line);
+      background: var(--surface); color: var(--ink); text-decoration: none !important; }
+    .assess { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 1rem; }
     .score-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-    .score-box { display: flex; align-items: baseline; gap: .4rem; }
-    .score-input { width: 120px; border: 0; background: transparent; font-size: 3.2rem; font-weight: 600; color: var(--ink); outline: 0; padding: 0; }
+    .score-box { display: flex; align-items: baseline; gap: .4rem; border-bottom: 2px solid var(--line-strong); }
+    .score-box:focus-within { border-color: var(--violet); }
+    .score-input { width: 120px; border: 0; background: transparent; font-size: 3rem; font-weight: 600; color: var(--ink); outline: 0; padding: 0; font-variant-numeric: tabular-nums; }
     .of { font-size: 1.2rem; color: var(--muted); font-weight: 600; }
-    .letter-badge { width: 72px; height: 72px; border-radius: 22px; display: grid; place-items: center; font-size: 1.8rem; font-weight: 700; background: var(--lemon); color: #16151c; transition: transform .3s var(--ease); }
-    .letter-badge.pop { animation: pop .4s var(--ease); }
-    @keyframes pop { 50% { transform: scale(1.1) rotate(-4deg); } }
+    .letter-badge { width: 64px; height: 64px; border-radius: var(--r-ctl); display: grid; place-items: center; font-size: 1.7rem; font-weight: 700;
+      background: var(--surface-2); border: 1px solid var(--line); color: var(--ink); }
     .range { width: 100%; accent-color: var(--violet); }
     .quick { display: flex; gap: .4rem; flex-wrap: wrap; }
     @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } .assess { position: static; } .paper { padding: 1.4rem; } }
@@ -126,6 +131,22 @@ export class GradingComponent {
   });
 
   go(id: number) { this.router.navigate(['/grade', id]); }
+
+  /** Grading-session shortcuts: J/K move between students (outside text fields); Ctrl/Cmd+Enter saves and moves on. */
+  @HostListener('document:keydown', ['$event'])
+  onKey(e: KeyboardEvent) {
+    const g = this.g();
+    if (!g || this.busy()) return;
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      const s = this.scoreValue();
+      if (s !== null && `${s}` !== '' && s >= 0 && s <= g.maxPoints) { e.preventDefault(); this.save(true); }
+      return;
+    }
+    const tag = (e.target as HTMLElement | null)?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'j' && this.next()) { e.preventDefault(); this.go(this.next()!); }
+    if (e.key === 'k' && this.prev()) { e.preventDefault(); this.go(this.prev()!); }
+  }
 
   save(andNext: boolean) {
     const g = this.g()!;

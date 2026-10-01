@@ -63,12 +63,13 @@ import { AvatarComponent } from '../shared/ui';
     .stats { display: flex; justify-content: center; gap: 2rem; padding: 1rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); width: 100%; }
     .n { font-size: 1.5rem; font-weight: 600; }
     .themes { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-    .theme-opt { display: flex; flex-direction: column; gap: .5rem; padding: .7rem; border-radius: 20px; border: 1px solid var(--line); background: var(--glass-strong); cursor: pointer; text-align: left; transition: box-shadow .25s; }
-    .theme-opt.on { box-shadow: 0 0 0 2px var(--violet); }
-    .sw { height: 70px; border-radius: 14px; padding: 10px; display: flex; }
-    .sw span { width: 40%; border-radius: 8px; }
-    .sw.light { background: linear-gradient(135deg, #edeef6, #d9ccff); } .sw.light span { background: #fff; }
-    .sw.dark { background: linear-gradient(135deg, #0d0c13, #3a2a80); } .sw.dark span { background: #26243a; }
+    .theme-opt { display: flex; flex-direction: column; gap: .5rem; padding: .6rem; border-radius: var(--r-ctl); border: 1px solid var(--line-strong); background: var(--surface); cursor: pointer; text-align: left; }
+    .theme-opt.on { border-color: var(--violet); box-shadow: 0 0 0 1px var(--violet); }
+    .sw { height: 64px; border-radius: 9px; padding: 9px; display: flex; }
+    .sw span { width: 40%; border-radius: 6px; }
+    /* Swatches show the real canvas + surface colours of each theme. */
+    .sw.light { background: #f3f2f7; border: 1px solid #e6e4ed; } .sw.light span { background: #fff; border: 1px solid #e6e4ed; }
+    .sw.dark { background: #111016; } .sw.dark span { background: #1a1921; border: 1px solid #2d2c36; }
   `]
 })
 export class ProfileComponent {

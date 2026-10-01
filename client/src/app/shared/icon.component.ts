@@ -95,9 +95,7 @@ export class IconComponent {
     :host { display: inline-flex; align-items: center; gap: .6rem; }
     .bg { fill: #16151c; }
     :host-context([data-theme="dark"]) .bg { fill: #2a2838; }
-    .dot { transform-origin: 26px 14px; animation: pulse 3.2s ease-in-out infinite; }
-    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(.78); } }
-    .word { font-weight: 800; font-size: 1.28rem; letter-spacing: -.03em; color: var(--ink); }
+    .word { font-weight: 800; font-size: 1.22rem; letter-spacing: -.02em; color: var(--ink); }
     .word b { color: var(--violet); font-weight: 800; }
   `]
 })

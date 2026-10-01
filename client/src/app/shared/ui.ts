@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import {
-  AfterViewInit, ChangeDetectionStrategy, Component, DestroyRef, Directive, ElementRef, computed, inject, input, signal, viewChild
+  AfterViewInit, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, inject, input, signal, viewChild
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CourseCard } from '../core/models';
@@ -82,7 +82,7 @@ export class AvatarComponent {
   styles: [`
     :host { display: block; }
     svg { width: 100%; height: 100%; overflow: visible; }
-    .halo { fill: #fff; opacity: .35; }
+    .halo { fill: #fff; opacity: .3; }
     .w { fill: #fff; } .w-s { fill: #fff; stroke: #16151c; stroke-width: 2; }
     .ink { fill: #16151c; } .lemon { fill: #e9e58e; } .pastel { fill: var(--c); }
     .deep { fill: var(--c-deep); }
@@ -116,13 +116,12 @@ export class CourseArtComponent {
   styles: [`
     .ring { position: relative; }
     svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-    circle { fill: none; stroke-width: 11; }
-    .track { stroke: var(--line); }
-    .bar { stroke-linecap: round; animation: draw 1.3s cubic-bezier(.2,.8,.2,1) both .15s; }
-    @keyframes draw { from { stroke-dashoffset: var(--len); } }
+    circle { fill: none; stroke-width: 10; }
+    .track { stroke: var(--surface-2); }
+    .bar { stroke-linecap: round; }
     .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-    .big { font-size: 1.9rem; font-weight: 600; line-height: 1; }
-    .cap { font-size: .74rem; color: var(--muted); margin-top: .3rem; font-weight: 600; }
+    .big { font-size: 1.8rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+    .cap { font-size: .8rem; color: var(--muted); margin-top: .3rem; font-weight: 600; }
   `]
 })
 export class RingComponent {
@@ -130,7 +129,7 @@ export class RingComponent {
   readonly center = input('');
   readonly caption = input<string | null>(null);
   readonly size = input(140);
-  readonly color = input('var(--violet)');
+  readonly color = input('var(--ink)');
   readonly len = 2 * Math.PI * 50;
   readonly offset = computed(() => this.len * (1 - Math.max(0, Math.min(100, this.percent())) / 100));
 }
@@ -148,21 +147,22 @@ export interface Bar { label: string; value: number; highlight?: boolean; }
         <div class="col" [attr.title]="b.label + ': ' + b.value">
           <span class="val">{{ b.value }}</span>
           <div class="track">
-            <div class="fill" [class.hl]="b.highlight" [style.height.%]="pct(b.value)" [style.animation-delay.ms]="150 + i * 70"></div>
+            <div class="fill" [class.hl]="b.highlight" [style.height.%]="pct(b.value)"></div>
           </div>
-          <span class="lbl">{{ b.label }}</span>
+          <span class="lbl" [class.hl]="b.highlight">{{ b.label }}</span>
         </div>
       }
     </div>`,
   styles: [`
-    .bars { display: flex; align-items: stretch; gap: 10px; }
+    .bars { display: flex; align-items: stretch; gap: 8px; }
     .col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
-    .track { flex: 1; width: 100%; display: flex; align-items: flex-end; border-radius: 14px; background: var(--line); overflow: hidden; }
-    .fill { width: 100%; min-height: 6px; border-radius: 14px; background: var(--lemon); transform-origin: bottom; animation: grow 1s cubic-bezier(.2,.8,.2,1) both; }
+    .track { flex: 1; width: 100%; display: flex; align-items: flex-end; border-radius: 8px; background: var(--surface-2); overflow: hidden; }
+    .fill { width: 100%; min-height: 3px; border-radius: 8px; background: var(--line-strong); }
+    /* Today is the current selection → violet; other days stay neutral. */
     .fill.hl { background: var(--violet); }
-    @keyframes grow { from { transform: scaleY(0); } }
-    .lbl { font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-    .val { font-size: .75rem; font-weight: 700; color: var(--ink-2); }
+    .lbl { font-size: .78rem; font-weight: 600; color: var(--muted); }
+    .lbl.hl { color: var(--ink); font-weight: 700; }
+    .val { font-size: .78rem; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }
   `]
 })
 export class BarsComponent {
@@ -172,40 +172,18 @@ export class BarsComponent {
   pct(v: number) { return (v / this.max()) * 100; }
 }
 
-// ---------- Count-up number ----------
-
-@Directive({ selector: '[lhCountUp]' })
-export class CountUpDirective implements AfterViewInit {
-  readonly lhCountUp = input.required<number>();
-  readonly decimals = input(0);
-  private el = inject(ElementRef<HTMLElement>);
-
-  ngAfterViewInit() {
-    const target = this.lhCountUp();
-    const el = this.el.nativeElement;
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches || target === 0) { el.textContent = target.toFixed(this.decimals()); return; }
-    const start = performance.now(), dur = 1100;
-    const step = (t: number) => {
-      const p = Math.min(1, (t - start) / dur), eased = 1 - Math.pow(1 - p, 3);
-      el.textContent = (target * eased).toFixed(this.decimals());
-      if (p < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }
-}
-
-// ---------- Date tile (mini calendar leaf) ----------
+// ---------- Date tile (mini calendar leaf, tinted with the course colour) ----------
 
 @Component({
   selector: 'lh-date-tile',
   imports: [DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<span class="m">{{ date() | date: 'MMM' }}</span><span class="d serif">{{ date() | date: 'd' }}</span>`,
+  template: `<span class="m">{{ date() | date: 'MMM' }}</span><span class="d">{{ date() | date: 'd' }}</span>`,
   styles: [`
-    :host { width: 50px; height: 54px; flex-shrink: 0; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: var(--c, var(--lilac)); color: #16151c; line-height: 1; }
-    .m { font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
-    .d { font-size: 1.35rem; font-weight: 700; margin-top: 3px; }
+    :host { width: 46px; height: 50px; flex-shrink: 0; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: var(--c, var(--surface-2)); color: #17161d; line-height: 1; }
+    .m { font-size: .72rem; font-weight: 600; opacity: .72; }
+    .d { font-size: 1.25rem; font-weight: 700; margin-top: 3px; font-variant-numeric: tabular-nums; }
   `]
 })
 export class DateTileComponent {
@@ -229,15 +207,14 @@ export class DateTileComponent {
         <lh-course-art class="art" [kind]="kind()" />
       </div>
       <div class="body">
-        <div class="cat">{{ c().category }}</div>
         <h3 class="title">{{ c().title }}</h3>
-        <div class="sub">{{ c().instructorName }}</div>
+        <div class="sub">{{ c().instructorName }} · {{ c().category }}</div>
         @if (auth.isStudent() && mine()) {
           <div class="prog">
             <div class="meter grow" [style.--fill]="'var(--c-deep)'"><span [style.width.%]="pct()"></span></div>
-            <span class="small strong">{{ pct() }}%</span>
+            <span class="small strong tabnum">{{ c().mySubmitted }}/{{ c().assignmentCount }}</span>
           </div>
-          <div class="tiny muted">{{ c().mySubmitted }} of {{ c().assignmentCount }} assignments submitted</div>
+          <div class="tiny muted">assignments handed in</div>
         } @else {
           <div class="meta">
             <span><lh-icon name="people" class="sm" /> {{ c().studentCount }}</span>
@@ -250,20 +227,17 @@ export class DateTileComponent {
     </a>`,
   styles: [`
     .cc { display: flex; flex-direction: column; height: 100%; color: inherit; text-decoration: none !important; }
-    .banner { position: relative; height: 128px; background: var(--c); overflow: hidden; }
-    .banner::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 15% 0%, rgba(255,255,255,.55), transparent 55%); }
-    .tags { position: absolute; top: 14px; left: 14px; display: flex; gap: 6px; z-index: 2; }
-    .code { display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px; border-radius: 999px; background: #16151c; color: #fff; font-size: .74rem; font-weight: 800; letter-spacing: .04em; }
-    .code.ghost { background: rgba(255,255,255,.7); color: #16151c; }
-    .art { position: absolute; right: -6px; bottom: -14px; width: 170px; height: 128px; transition: transform .5s cubic-bezier(.2,.8,.2,1); }
-    .cc:hover .art { transform: translate(-6px, -6px) rotate(-3deg) scale(1.04); }
-    .body { padding: 1rem 1.15rem 1.2rem; display: flex; flex-direction: column; gap: .3rem; flex: 1; }
-    .cat { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
-    .title { font-size: 1.12rem; font-weight: 700; line-height: 1.3; letter-spacing: -.01em; }
+    .banner { position: relative; height: 112px; background: var(--c); overflow: hidden; }
+    .tags { position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; z-index: 2; }
+    .code { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 9px; border-radius: 7px; background: #17161d; color: #fff; font-size: .76rem; font-weight: 700; }
+    .code.ghost { background: rgba(255,255,255,.78); color: #17161d; }
+    .art { position: absolute; right: -6px; bottom: -14px; width: 160px; height: 120px; }
+    .body { padding: .9rem 1rem 1rem; display: flex; flex-direction: column; gap: .25rem; flex: 1; }
+    .title { font-size: 1.05rem; font-weight: 700; line-height: 1.3; }
     .sub { font-size: .86rem; color: var(--muted); }
-    .prog { display: flex; align-items: center; gap: .6rem; margin-top: auto; padding-top: .6rem; }
-    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .9rem; margin-top: auto; padding-top: .6rem; font-size: .84rem; color: var(--muted); }
-    .meta span { display: inline-flex; align-items: center; gap: .3rem; }
+    .prog { display: flex; align-items: center; gap: .6rem; margin-top: auto; padding-top: .7rem; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .9rem; margin-top: auto; padding-top: .7rem; font-size: .86rem; color: var(--muted); }
+    .meta span { display: inline-flex; align-items: center; gap: .3rem; font-variant-numeric: tabular-nums; }
   `]
 })
 export class CourseCardComponent {
@@ -304,11 +278,10 @@ export class CourseCardComponent {
     .track.fade-l { mask-image: linear-gradient(to left, #000 calc(100% - 64px), transparent); }
     .track.fade-l.fade-r { mask-image: linear-gradient(to right, transparent, #000 64px, #000 calc(100% - 64px), transparent); }
     .arrow { position: absolute; top: 50%; z-index: 2; width: 34px; height: 34px; margin-top: -17px; border-radius: 50%;
-      display: grid; place-items: center; cursor: pointer; color: var(--ink); background: var(--glass-strong);
-      box-shadow: var(--shadow); animation: pop-in .25s var(--ease) both; }
-    .arrow:hover { transform: scale(1.08); }
-    .left { left: -4px; } .right { right: -4px; }
-    @keyframes pop-in { from { opacity: 0; transform: scale(.8); } }
+      display: grid; place-items: center; cursor: pointer; color: var(--ink); background: var(--surface);
+      border: 1px solid var(--line-strong); box-shadow: var(--shadow-float); }
+    .arrow:hover { background: var(--surface-2); }
+    .left { left: -2px; } .right { right: -2px; }
   `]
 })
 export class ScrollerComponent implements AfterViewInit {
@@ -362,18 +335,17 @@ export class EmptyComponent {
   template: `
     <div class="toasts" aria-live="polite">
       @for (t of toasts.items(); track t.id) {
-        <div class="toast glass" [class]="t.kind" role="status">
-          <span class="dot"><lh-icon [name]="t.kind === 'error' ? 'alert' : t.kind === 'info' ? 'info' : 'check-circle'" /></span>
+        <div class="toast" [class]="t.kind" role="status">
+          <lh-icon class="dot" [name]="t.kind === 'error' ? 'alert' : t.kind === 'info' ? 'info' : 'check-circle'" />
           <span class="grow">{{ t.text }}</span>
           <button class="btn btn-ghost btn-icon btn-sm" (click)="toasts.dismiss(t.id)" aria-label="Dismiss"><lh-icon name="x" class="sm" /></button>
         </div>
       }
     </div>
     @if (confirm.request(); as r) {
-      <div class="scrim" (click)="confirm.close(false)">
+      <div class="scrim frost" (click)="confirm.close(false)">
         <div class="dialog card card-lg" role="alertdialog" aria-modal="true" [attr.aria-label]="r.title" (click)="$event.stopPropagation()">
-          <div class="dicon" [class.danger]="r.danger"><lh-icon [name]="r.danger ? 'alert' : 'info'" class="lg" /></div>
-          <h2 class="serif">{{ r.title }}</h2>
+          <h2 class="row" [class.danger]="r.danger"><lh-icon [name]="r.danger ? 'alert' : 'info'" />{{ r.title }}</h2>
           <p class="muted mt-1">{{ r.message }}</p>
           <div class="row mt-3" style="justify-content:flex-end">
             <button class="btn btn-glass" (click)="confirm.close(false)">Cancel</button>
@@ -383,20 +355,20 @@ export class EmptyComponent {
       </div>
     }`,
   styles: [`
-    .toasts { position: fixed; z-index: 2000; top: 18px; right: 18px; display: flex; flex-direction: column; gap: 10px; width: min(380px, calc(100vw - 36px)); }
-    .toast { display: flex; align-items: center; gap: .7rem; padding: .7rem .6rem .7rem .8rem; border-radius: 18px; background: var(--glass-strong); font-weight: 600; font-size: .92rem;
-      animation: in .45s cubic-bezier(.2,.8,.2,1) both; }
-    @keyframes in { from { opacity: 0; transform: translateY(-10px) scale(.96); } }
-    .dot { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--ok-soft); color: var(--ok); flex-shrink: 0; }
-    .error .dot { background: var(--bad-soft); color: var(--bad); }
-    .info .dot { background: var(--info-soft); color: var(--info); }
-    .scrim { position: fixed; inset: 0; z-index: 1900; display: grid; place-items: center; padding: 1rem; background: rgba(14, 12, 24, .35); backdrop-filter: blur(6px); animation: fade .25s both; }
+    .toasts { position: fixed; z-index: 2000; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; width: min(380px, calc(100vw - 32px)); }
+    @media (max-width: 640px) { .toasts { right: 16px; left: 16px; width: auto; top: calc(10px + env(safe-area-inset-top)); } }
+    .toast { display: flex; align-items: center; gap: .65rem; padding: .55rem .4rem .55rem .85rem; border-radius: var(--r-ctl);
+      background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-float); font-weight: 600; font-size: .92rem;
+      animation: in var(--dur) var(--ease) both; }
+    @keyframes in { from { opacity: 0; transform: translateY(-6px); } }
+    .dot { color: var(--ok); }
+    .error .dot { color: var(--bad); }
+    .info .dot { color: var(--info); }
+    .scrim { position: fixed; inset: 0; z-index: 1900; display: grid; place-items: center; padding: 1rem; background: rgba(17, 16, 22, .4); animation: fade var(--dur) both; }
     @keyframes fade { from { opacity: 0; } }
-    .dialog { width: min(440px, 100%); background: var(--glass-strong); animation: pop .4s cubic-bezier(.2,.8,.2,1) both; }
-    @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(.96); } }
-    .dialog h2 { font-size: 1.4rem; margin-top: .9rem; }
-    .dicon { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: var(--violet-soft); color: var(--violet); }
-    .dicon.danger { background: var(--bad-soft); color: var(--bad); }
+    .dialog { width: min(440px, 100%); box-shadow: var(--shadow-float); }
+    .dialog h2 { font-size: 1.2rem; gap: .55rem; }
+    .dialog h2.danger lh-icon { color: var(--bad); }
   `]
 })
 export class OverlaysComponent {

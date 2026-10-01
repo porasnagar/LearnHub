@@ -22,7 +22,7 @@ import { CourseStore } from './course.routes';
           <a [routerLink]="store.canSeeContent() ? '/courses' : '/catalog'">{{ store.canSeeContent() ? 'My courses' : 'Catalog' }}</a><span>/</span><span>{{ c.code }}</span>
         </nav>
 
-        <header class="banner fade-in">
+        <header class="banner pastel">
           <div class="copy">
             <div class="row wrap">
               <span class="code">{{ c.code }}</span><span class="pill">{{ c.category }}</span><span class="pill">{{ c.credits }} credits</span>
@@ -66,23 +66,22 @@ import { CourseStore } from './course.routes';
       <div class="skeleton" style="height: 280px"></div>
     }`,
   styles: [`
-    .banner { position: relative; display: flex; justify-content: space-between; gap: 1rem; min-height: 280px; padding: 2rem; border-radius: var(--r-xl);
-      background: var(--c); color: #16151c; overflow: hidden; box-shadow: var(--shadow); }
-    .banner::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 0 0, rgba(255,255,255,.65), transparent 55%),
-      radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--c-deep) 25%, transparent), transparent 50%); }
-    .copy { position: relative; z-index: 1; display: flex; flex-direction: column; gap: .9rem; max-width: 640px; }
-    .code { height: 30px; padding: 0 12px; border-radius: 999px; background: #16151c; color: #fff; font-weight: 800; font-size: .8rem; display: inline-flex; align-items: center; }
-    .pill { height: 30px; padding: 0 12px; border-radius: 999px; background: rgba(255,255,255,.65); font-weight: 700; font-size: .8rem; display: inline-flex; align-items: center; }
-    .pill.dark { background: #16151c; color: #e9e58e; }
-    h1 { font-size: clamp(1.8rem, 3.6vw, 2.8rem); color: #16151c; }
-    .meta { display: flex; flex-wrap: wrap; gap: .6rem 1.4rem; font-weight: 600; font-size: .92rem; }
-    .actions { margin-top: .4rem; }
-    .enrolled { display: inline-flex; align-items: center; gap: .5rem; height: 46px; padding: 0 1.1rem; border-radius: 999px; background: rgba(255,255,255,.7); font-weight: 800; }
-    .art { position: relative; z-index: 1; width: 340px; height: 250px; align-self: flex-end; margin: 0 -20px -46px 0; flex-shrink: 0; animation: rise 1s var(--ease) both .15s; }
+    /* Flat course pastel: the colour says which course. Text is dark ink in both themes. */
+    .banner { position: relative; display: flex; justify-content: space-between; gap: 1rem; min-height: 210px; padding: 1.6rem 1.75rem;
+      border-radius: var(--r-card); background: var(--c); color: #17161d; overflow: hidden; }
+    .copy { position: relative; z-index: 1; display: flex; flex-direction: column; gap: .75rem; max-width: 640px; min-width: 0; }
+    .code { height: 26px; padding: 0 9px; border-radius: 7px; background: #17161d; color: #fff; font-weight: 700; font-size: .8rem; display: inline-flex; align-items: center; }
+    .pill { height: 26px; padding: 0 9px; border-radius: 7px; background: rgba(255,255,255,.7); font-weight: 600; font-size: .82rem; display: inline-flex; align-items: center; }
+    .pill.dark { background: #17161d; color: #fff; }
+    h1 { font-size: clamp(1.7rem, 3.2vw, 2.4rem); color: #17161d; }
+    .meta { display: flex; flex-wrap: wrap; gap: .5rem 1.3rem; font-weight: 600; font-size: .92rem; }
+    .actions { margin-top: .2rem; }
+    .enrolled { display: inline-flex; align-items: center; gap: .45rem; height: 40px; padding: 0 .9rem; border-radius: var(--r-ctl); background: rgba(255,255,255,.72); font-weight: 700; }
+    .art { position: relative; z-index: 1; width: 300px; height: 220px; align-self: flex-end; margin: 0 -18px -42px 0; flex-shrink: 0; }
     .tabs { align-self: flex-start; }
     @media (max-width: 860px) {
-      .banner { flex-direction: column; padding: 1.5rem; }
-      .art { width: 220px; height: 160px; margin: -10px -20px -40px auto; }
+      .banner { flex-direction: column; padding: 1.25rem; min-height: 0; }
+      .art { width: 190px; height: 140px; margin: -24px -16px -36px auto; }
     }
   `]
 })

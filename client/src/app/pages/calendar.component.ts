@@ -83,13 +83,15 @@ import { EmptyComponent } from '../shared/ui';
     .due-count { white-space: nowrap; font-size: .84rem; }
     .grid-wrap { width: 100%; min-width: 0; overflow: hidden; }
     .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; width: 100%; }
-    .dow { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); text-align: center; padding-bottom: .3rem; }
-    .day { min-height: 108px; padding: 6px; border-radius: 16px; background: var(--glass-strong); border: 1px solid transparent; cursor: pointer;
-      display: flex; flex-direction: column; gap: 3px; transition: border-color .2s, transform .2s var(--ease); min-width: 0; }
-    .day:hover { transform: translateY(-2px); border-color: var(--line); }
-    .day.other { background: transparent; opacity: .55; }
-    .day.sel { border-color: var(--violet); }
-    .num { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: .8rem; font-weight: 800; }
+    .dow { font-size: .8rem; font-weight: 600; color: var(--muted); text-align: center; padding-bottom: .3rem; }
+    .day { min-height: 104px; padding: 6px; border-radius: var(--r-sm); background: var(--surface-2); border: 1px solid transparent; cursor: pointer;
+      display: flex; flex-direction: column; gap: 3px; transition: border-color var(--dur) var(--ease); min-width: 0; }
+    .day:hover { border-color: var(--line-strong); }
+    .day.other { background: transparent; }
+    .day.other .num { color: var(--faint); }
+    /* Selected day = current selection → violet outline; today = violet filled number. */
+    .day.sel { border-color: var(--violet); box-shadow: inset 0 0 0 1px var(--violet); }
+    .num { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: .82rem; font-weight: 700; font-variant-numeric: tabular-nums; }
     .day.today .num { background: var(--violet); color: #fff; }
     .dots { display: none; }
     .evs { display: flex; flex-direction: column; gap: 3px; width: 100%; }
@@ -98,9 +100,10 @@ import { EmptyComponent } from '../shared/ui';
     .ev.done { opacity: .55; text-decoration: line-through !important; }
     .more { font-size: .7rem; color: var(--muted); font-weight: 700; padding-left: 4px; }
     .list { display: flex; flex-direction: column; gap: .3rem; }
-    .agenda { display: flex; align-items: center; gap: .8rem; padding: .7rem .5rem; border-radius: 16px; color: inherit; text-decoration: none !important; }
-    .agenda:hover { background: var(--glass-strong); }
-    .accent { width: 6px; align-self: stretch; border-radius: 4px; background: var(--c-deep); }
+    .agenda { display: flex; align-items: center; gap: .8rem; padding: .65rem .5rem; border-radius: var(--r-ctl); color: inherit; text-decoration: none !important; }
+    .agenda + .agenda { border-top: 1px solid var(--line); border-radius: 0; }
+    .agenda:hover { background: var(--surface-2); }
+    .accent { width: 12px; height: 12px; border-radius: 4px; background: var(--c); flex-shrink: 0; }
     .legend { display: flex; align-items: center; gap: .6rem; padding: .45rem .3rem; color: inherit; text-decoration: none !important; min-width: 0; }
     .sw { width: 14px; height: 14px; border-radius: 5px; background: var(--c); flex-shrink: 0; }
     @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
@@ -111,7 +114,7 @@ import { EmptyComponent } from '../shared/ui';
       .month { font-size: 1.15rem; min-width: 0; }
       .due-count { font-size: .75rem; }
       .grid { gap: 2px; width: 100%; min-width: 0; }
-      .dow { font-size: .62rem; letter-spacing: 0; padding-bottom: 2px; }
+      .dow { font-size: .7rem; padding-bottom: 2px; }
       .day { min-height: 46px; min-width: 0; width: 100%; padding: 3px 1px; border-radius: 8px; align-items: center; justify-content: flex-start; gap: 2px; }
       .num { width: 22px; height: 22px; font-size: .72rem; }
       .evs { display: none; }

@@ -56,7 +56,7 @@ import { CourseCardComponent } from '../shared/ui';
     .fields { display: flex; flex-direction: column; gap: 1.1rem; }
     .upper { text-transform: uppercase; }
     .preview { position: sticky; top: 90px; }
-    .preview .upper { text-transform: uppercase; letter-spacing: .08em; }
+    .preview .upper { text-transform: none; }
     @media (max-width: 960px) { .editor { grid-template-columns: 1fr; } .preview { position: static; } }
   `]
 })

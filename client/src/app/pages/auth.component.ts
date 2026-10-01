@@ -5,61 +5,63 @@ import { Role } from '../core/models';
 import { Auth, Toasts } from '../core/services';
 import { firstName } from '../core/util';
 import { IconComponent, LogoComponent } from '../shared/icon.component';
-import { RingComponent } from '../shared/ui';
 
-/** Left-hand brand panel shared by sign-in and registration. */
+/** Left-hand panel shared by sign-in and registration: what you'll see after signing in. */
 @Component({
   selector: 'lh-auth-aside',
-  imports: [LogoComponent, IconComponent, RingComponent, RouterLink],
+  imports: [LogoComponent, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <aside class="aside">
-      <a routerLink="/" class="brand"><lh-logo /></a>
-      <div class="art" aria-hidden="true">
-        <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
-        <div class="glass card g1"><lh-ring [percent]="92" center="A-" caption="Current grade" [size]="120" color="#6c4dff" /></div>
-        <div class="glass card g2">
-          <div class="row"><span class="ic"><lh-icon name="calendar" /></span><div><div class="strong small">Due Thursday</div><div class="tiny muted">Responsive Portfolio · 100 pts</div></div></div>
-        </div>
-        <div class="glass card g3">
-          <div class="tiny muted strong">FEEDBACK</div>
-          <div class="small mt-1">“Excellent attention to detail. This is a model answer.”</div>
-        </div>
-      </div>
+      <a routerLink="/" class="brand" aria-label="LearnHub home"><lh-logo [size]="32" /></a>
       <div>
-        <h2>Your courses, coursework and grades, in one calm place.</h2>
-        <p class="muted mt-1">Join thousands of learners and instructors on LearnHub.</p>
+        <h2>Every due date in one list. Every grade with a comment.</h2>
+        <p class="lead">After you sign in, this is the first thing you see.</p>
+        <div class="list" aria-hidden="true">
+          @for (r of rows; track r.title) {
+            <div class="item">
+              <span class="tile" [style.background]="r.c"><span>{{ r.mon }}</span><b>{{ r.day }}</b></span>
+              <div class="grow"><div class="t">{{ r.title }}</div><div class="m">{{ r.meta }}</div></div>
+              <span class="s" [class.ok]="r.ok">{{ r.status }}</span>
+            </div>
+          }
+        </div>
       </div>
+      <p class="foot">Demo data · a sample term with 7 courses</p>
     </aside>`,
   styles: [`
-    .aside { position: relative; height: 100%; min-height: 640px; border-radius: 32px; padding: 2rem; display: flex; flex-direction: column; justify-content: space-between;
-      background: #16151c; color: #fff; overflow: hidden; }
-    .brand { position: relative; z-index: 2; text-decoration: none !important; }
+    .aside { height: 100%; min-height: 600px; border-radius: 20px; padding: 2rem 2.2rem; display: flex; flex-direction: column; justify-content: space-between; gap: 2rem;
+      background: #17161d; color: #fff; }
+    .brand { text-decoration: none !important; }
     .brand ::ng-deep .word { color: #fff; }
-    h2 { color: #fff; font-family: var(--serif); font-size: 2rem; line-height: 1.2; position: relative; z-index: 2; }
-    .muted { color: rgba(255,255,255,.6); position: relative; z-index: 2; }
-    .art { position: relative; flex: 1; margin: 1rem 0; }
-    .blob { position: absolute; border-radius: 50%; filter: blur(2px); }
-    .b1 { width: 240px; height: 240px; background: #cfc0ff; top: 20px; left: 8%; animation: float 9s ease-in-out infinite; }
-    .b2 { width: 150px; height: 150px; background: #e9e58e; bottom: 30px; right: 12%; animation: float 7s ease-in-out infinite -2s; }
-    .b3 { width: 90px; height: 90px; background: #bfebd4; top: 40%; right: 30%; animation: float 8s ease-in-out infinite -4s; }
-    .card { position: absolute; color: var(--ink); background: rgba(255,255,255,.55); border-color: rgba(255,255,255,.6); }
-    :host-context([data-theme="dark"]) .card { background: rgba(40,38,56,.6); }
-    .g1 { top: 60px; left: 22%; animation: rise .8s var(--ease) both .1s, float 8s ease-in-out infinite -1s; }
-    .g2 { bottom: 70px; left: 4%; width: 260px; animation: rise .8s var(--ease) both .3s, float 7s ease-in-out infinite -3s; }
-    .g3 { top: 44%; right: 2%; width: 230px; animation: rise .8s var(--ease) both .5s, float 9s ease-in-out infinite -5s; }
-    .ic { width: 38px; height: 38px; border-radius: 12px; background: #16151c; color: #e9e58e; display: grid; place-items: center; }
+    h2 { color: #fff; font-family: var(--serif); font-weight: 600; font-size: 1.9rem; line-height: 1.2; max-width: 24ch; }
+    .lead { color: rgba(255,255,255,.66); margin-top: .6rem; }
+    .list { margin-top: 1.6rem; border-top: 1px solid rgba(255,255,255,.12); }
+    .item { display: flex; align-items: center; gap: .85rem; padding: .8rem 0; border-bottom: 1px solid rgba(255,255,255,.12); }
+    .tile { width: 44px; height: 48px; flex-shrink: 0; border-radius: 11px; color: #17161d; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; font-size: .72rem; }
+    .tile b { font-size: 1.15rem; margin-top: 2px; }
+    .t { font-weight: 700; }
+    .m { font-size: .84rem; color: rgba(255,255,255,.62); }
+    .s { font-size: .8rem; font-weight: 700; color: rgba(255,255,255,.72); white-space: nowrap; }
+    .s.ok { color: #8fe0b4; }
+    .foot { font-size: .82rem; color: rgba(255,255,255,.5); }
   `]
 })
-export class AuthAsideComponent {}
+export class AuthAsideComponent {
+  protected rows = [
+    { c: '#c3ebd5', mon: 'Oct', day: 14, title: 'Flexbox Navigation Bar', meta: 'WD101 · graded 36 / 40', status: 'B+', ok: true },
+    { c: '#eeea9e', mon: 'Oct', day: 15, title: 'EF Core Relationships', meta: 'DB201 · 60 points', status: 'Due Tue', ok: false },
+    { c: '#d9ccff', mon: 'Oct', day: 17, title: 'Authentication with Cookies', meta: 'CS301 · 100 points', status: 'Due Thu', ok: false },
+  ];
+}
 
 const authStyles = `
   :host { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 16px; min-height: 100vh; padding: 16px; }
   .panel { display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
-  .form { width: min(420px, 100%); }
+  .form { width: min(400px, 100%); }
   .mobile-brand { display: none; margin-bottom: 2rem; text-decoration: none !important; }
-  h1 { font-size: 2.4rem; }
-  .sub { color: var(--muted); margin: .4rem 0 1.8rem; }
+  h1 { font-size: 2.2rem; }
+  .sub { color: var(--muted); margin: .4rem 0 1.6rem; }
   form { display: flex; flex-direction: column; gap: 1rem; }
   .pw { position: relative; }
   .pw button { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); }
@@ -107,8 +109,8 @@ const authStyles = `
         </form>
         <p class="alt">New here? <a routerLink="/register" class="strong">Create an account</a></p>
 
-        <div class="demo glass">
-          <div class="demo-head"><lh-icon name="bolt" class="sm" /> Demo accounts — tap one to fill the form</div>
+        <div class="demo card card-flush">
+          <div class="demo-head">Demo accounts — choose one to fill in the form</div>
           @for (d of demos; track d.email) {
             <button type="button" class="demo-row" (click)="fill(d.email, d.password)">
               <span class="role {{ d.role }}">{{ d.role }}</span><span class="grow truncate">{{ d.email }}</span><lh-icon name="arrow-right" class="sm" />
@@ -118,11 +120,13 @@ const authStyles = `
       </div>
     </section>`,
   styles: [authStyles + `
-    .demo { margin-top: 1.8rem; border-radius: 20px; overflow: hidden; }
-    .demo-head { display: flex; align-items: center; gap: .5rem; padding: .75rem 1rem; font-size: .82rem; font-weight: 700; color: var(--ink-2); border-bottom: 1px solid var(--line); }
-    .demo-row { display: flex; align-items: center; gap: .8rem; width: 100%; padding: .7rem 1rem; border: 0; background: transparent; cursor: pointer; text-align: left; font-size: .9rem; color: var(--ink-2); transition: background .2s; }
+    .demo { margin-top: 1.8rem; }
+    .demo-head { padding: .7rem 1rem; font-size: .86rem; font-weight: 700; color: var(--ink-2); border-bottom: 1px solid var(--line); }
+    .demo-row { display: flex; align-items: center; gap: .8rem; width: 100%; min-height: 46px; padding: .55rem 1rem; border: 0; background: transparent; cursor: pointer;
+      text-align: left; font-size: .92rem; color: var(--ink-2); transition: background var(--dur) var(--ease); }
     .demo-row + .demo-row { border-top: 1px solid var(--line); }
-    .demo-row:hover { background: var(--glass-strong); }
+    .demo-row:hover { background: var(--surface-2); }
+    .demo-row .role { width: 92px; flex-shrink: 0; }
   `]
 })
 export class LoginComponent {
@@ -172,9 +176,8 @@ export class LoginComponent {
         <form (ngSubmit)="submit()" #f="ngForm">
           <div class="roles" role="radiogroup" aria-label="Account type">
             @for (r of roles; track r.value) {
-              <button type="button" class="role-opt glass" [class.on]="role() === r.value" (click)="role.set(r.value)" role="radio" [attr.aria-checked]="role() === r.value">
-                <span class="ri"><lh-icon [name]="r.icon" /></span>
-                <span class="strong">{{ r.value }}</span><span class="tiny muted">{{ r.text }}</span>
+              <button type="button" class="role-opt" [class.on]="role() === r.value" (click)="role.set(r.value)" role="radio" [attr.aria-checked]="role() === r.value">
+                <span class="row strong"><lh-icon [name]="r.icon" /> {{ r.value }}</span><span class="small muted">{{ r.text }}</span>
               </button>
             }
           </div>
@@ -193,12 +196,14 @@ export class LoginComponent {
       </div>
     </section>`,
   styles: [authStyles + `
-    .roles { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
-    .role-opt { display: flex; flex-direction: column; align-items: flex-start; gap: .2rem; padding: 1rem; border-radius: 20px; cursor: pointer; text-align: left; transition: box-shadow .25s, transform .2s; }
-    .role-opt:hover { transform: translateY(-2px); }
-    .role-opt.on { box-shadow: 0 0 0 2px var(--violet), var(--shadow); }
-    .ri { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--violet-soft); color: var(--violet); margin-bottom: .4rem; }
-    .role-opt.on .ri { background: var(--violet); color: #fff; }
+    .roles { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+    .role-opt { display: flex; flex-direction: column; align-items: flex-start; gap: .25rem; padding: .85rem .9rem; border-radius: var(--r-ctl);
+      background: var(--surface); border: 1px solid var(--line-strong); cursor: pointer; text-align: left;
+      transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+    .role-opt .row { gap: .45rem; }
+    .role-opt:hover { border-color: var(--ink-2); }
+    /* Current selection → violet. */
+    .role-opt.on { border-color: var(--violet); box-shadow: 0 0 0 1px var(--violet); }
   `]
 })
 export class RegisterComponent {

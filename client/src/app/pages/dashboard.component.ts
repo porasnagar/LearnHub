@@ -7,281 +7,279 @@ import { AssignmentMini } from '../core/models';
 import { Auth } from '../core/services';
 import { artFor, dueText, firstName, greeting, isoDate, letterGrade, score, toneStyle } from '../core/util';
 import { IconComponent } from '../shared/icon.component';
-import {
-  AvatarComponent, BarsComponent, CountUpDirective, CourseArtComponent, CourseCardComponent, DateTileComponent, EmptyComponent, RingComponent
-} from '../shared/ui';
+import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent, DateTileComponent, EmptyComponent } from '../shared/ui';
 
 @Component({
   selector: 'lh-dashboard',
-  imports: [RouterLink, DatePipe, NgTemplateOutlet, IconComponent, AvatarComponent, BarsComponent, CountUpDirective, CourseArtComponent, CourseCardComponent,
-    DateTileComponent, EmptyComponent, RingComponent],
+  imports: [RouterLink, DatePipe, NgTemplateOutlet, IconComponent, AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent,
+    DateTileComponent, EmptyComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
-      <div class="page-head fade-in">
+      <div class="page-head">
         <div>
-          <p class="muted strong small">{{ today | date: 'EEEE, MMMM d' }}</p>
+          <p class="muted small">{{ today | date: 'EEEE, MMMM d' }}</p>
           <h1 class="page-title">{{ hello }}, {{ name() }}</h1>
+          @if (d(); as data) { <p class="page-sub">{{ summary() }}</p> }
         </div>
         @if (auth.isStudent()) {
-          <a routerLink="/catalog" class="btn btn-glass"><lh-icon name="explore" /> Find a course</a>
+          <a routerLink="/catalog" class="btn btn-secondary"><lh-icon name="explore" class="sm" /> Find a course</a>
         } @else {
-          <a routerLink="/courses/new" class="btn btn-ink"><lh-icon name="plus" /> New course</a>
+          <a routerLink="/courses/new" class="btn btn-ink"><lh-icon name="plus" class="sm" /> New course</a>
         }
       </div>
 
       @if (!d()) {
-        <div class="bento">
-          <div class="skeleton span-7" style="height:230px"></div><div class="skeleton span-5" style="height:230px"></div>
-          <div class="skeleton span-4" style="height:260px"></div><div class="skeleton span-4" style="height:260px"></div><div class="skeleton span-4" style="height:260px"></div>
+        <div class="bento" aria-busy="true">
+          <div class="skeleton span-7" style="height:220px"></div><div class="skeleton span-5" style="height:220px"></div>
+          <div class="skeleton span-7" style="height:300px"></div><div class="skeleton span-5" style="height:300px"></div>
         </div>
       } @else {
         @let data = d()!;
         @if (data.role === 'Student') {
           <!-- ================= STUDENT ================= -->
-          <div class="bento stagger">
+          <div class="bento">
             @if (data.nextUp; as n) {
-              <a class="card card-lg next span-7 link-card" [routerLink]="['/courses', n.courseId, 'assignments', n.id]" [attr.style]="tone(n.courseId)">
+              <a class="card card-lg next pastel span-7" [routerLink]="['/courses', n.courseId, 'assignments', n.id]" [attr.style]="tone(n.courseId)">
                 <div class="next-copy">
-                  <span class="pill-live"><span class="live-dot"></span>{{ due(n.dueDate) }}</span>
-                  <div class="tiny strong upper mt-3">Up next · {{ n.courseCode }}</div>
+                  <span class="due-pill"><lh-icon name="clock" class="sm" /> {{ due(n.dueDate) }}</span>
+                  <p class="small strong mt-3">Up next · {{ n.courseCode }}</p>
                   <h2 class="next-title serif">{{ n.title }}</h2>
-                  <p class="small">{{ n.courseTitle }} · {{ n.maxPoints }} points</p>
+                  <p class="small">{{ n.courseTitle }} · {{ n.maxPoints }} points · {{ n.dueDate | date: 'EEE, MMM d, h:mm a' }}</p>
                   <span class="btn btn-ink mt-3">Open assignment <lh-icon name="arrow-right" class="sm" /></span>
                 </div>
                 <lh-course-art class="next-art" [kind]="art(n.courseCategory)" />
               </a>
             } @else {
-              <div class="card card-lg span-7 tone" style="--tone: var(--mint)">
-                <lh-empty icon="check-circle" title="You're all caught up" text="Nothing is due right now. Enjoy the calm, or explore a new course." />
+              <div class="card card-lg span-7 caught-up">
+                <lh-empty icon="check-circle" title="Nothing due right now" text="Everything you've been set is handed in. New assignments will appear here." />
               </div>
             }
 
-            <div class="card card-lg span-5">
-              <div class="card-head"><div><div class="card-title">Progress</div><div class="card-sub">All coursework this term</div></div></div>
-              <div class="row">
-                <div class="big-num serif"><span [lhCountUp]="completion()"></span><small>%</small></div>
-                <div class="small muted">of assignments<br>handed in</div>
+            <section class="card card-lg span-5 term" aria-labelledby="term-title">
+              <div class="card-head">
+                <h2 id="term-title" class="card-title">This term</h2>
+                <a routerLink="/grades" class="small strong">All grades</a>
               </div>
-              <div class="segbar mt-3" aria-hidden="true">
-                @for (s of segments(); track s.label) { <span [style.flex]="s.value || 0.0001" [style.background]="s.color"></span> }
-              </div>
-              <div class="legend mt-3">
-                @for (s of segments(); track s.label) {
-                  <div class="lg-item"><span class="lg-dot" [style.background]="s.color"></span><span class="grow small">{{ s.label }}</span><span class="strong">{{ s.value }}</span></div>
-                }
-              </div>
-            </div>
-
-            <div class="card span-4">
-              <div class="card-head"><div><div class="card-title">Activity</div><div class="card-sub">Submissions, last 7 days</div></div>
-                <span class="big-sm serif" [lhCountUp]="weekTotal()"></span></div>
-              <lh-bars [bars]="bars()" [height]="170" />
-            </div>
-
-            <div class="card span-4 grade-card">
-              <div class="card-head"><div><div class="card-title">Current grade</div><div class="card-sub">Across graded work</div></div>
-                <a routerLink="/grades" class="btn btn-glass btn-sm">All grades</a></div>
-              <div class="ring-wrap">
-                <lh-ring [percent]="overall() ?? 0" [center]="overall() === null ? '–' : (overall()!.toFixed(0) + '%')"
-                         [caption]="overall() === null ? 'No grades yet' : 'Letter grade ' + letter(overall()!)" [size]="176" />
-              </div>
-            </div>
-
-            <div class="card span-4">
-              <div class="card-head"><div><div class="card-title">This week</div><div class="card-sub">{{ weekItems().length }} due in the next 7 days</div></div>
-                <a routerLink="/calendar" class="btn btn-glass btn-icon btn-sm" aria-label="Open calendar"><lh-icon name="calendar" class="sm" /></a></div>
-              <ng-container [ngTemplateOutlet]="weekStrip" />
-            </div>
-          </div>
-
-          <section class="stack">
-            <div class="row between"><h2 class="section-title">My courses</h2><a routerLink="/courses" class="small strong">View all</a></div>
-            @if (data.courses.length) {
-              <div class="cards-grid stagger">@for (c of data.courses; track c.id) { <lh-course-card [c]="c" [mine]="true" /> }</div>
-            } @else {
-              <div class="card"><lh-empty icon="courses" title="No courses yet" text="Browse the catalog to enroll in your first course."><a routerLink="/catalog" class="btn btn-ink btn-sm">Browse catalog</a></lh-empty></div>
-            }
-          </section>
-
-          <div class="bento stagger">
-            <div class="card" [class.span-7]="data.missing.length" [class.span-12]="!data.missing.length">
-              <div class="card-head"><div class="card-title">Recent feedback</div></div>
-              @for (g of data.recentGrades; track g.submissionId) {
-                <a class="fb" [routerLink]="['/courses', g.courseId, 'assignments', g.assignmentId]" [attr.style]="tone(g.courseId)">
-                  <div class="fb-score serif">{{ fmt(g.score) }}<small>/{{ g.maxPoints }}</small></div>
-                  <div class="grow">
-                    <div class="row between"><span class="strong">{{ g.assignmentTitle }}</span><span class="code-chip">{{ g.courseCode }}</span></div>
-                    @if (g.feedback) { <p class="small muted mt-1">“{{ g.feedback }}” — {{ g.instructorName }}</p> }
-                  </div>
-                </a>
-              } @empty { <lh-empty icon="chat" title="No feedback yet" text="Comments from instructors will appear here." /> }
-            </div>
-            @if (data.missing.length) {
-              <div class="card span-5 missing-card">
-                <div class="card-head"><div class="card-title">Missing work</div><span class="status missing">{{ data.missing.length }}</span></div>
-                @for (m of data.missing; track m.id) {
-                  <a class="list-row" [routerLink]="['/courses', m.courseId, 'assignments', m.id]" [attr.style]="tone(m.courseId)">
-                    <lh-date-tile [date]="m.dueDate" />
-                    <div class="grow"><div class="strong">{{ m.title }}</div><div class="tiny muted">{{ m.courseCode }} · {{ due(m.dueDate) }}</div></div>
-                    <lh-icon name="chevron-right" class="sm muted" />
-                  </a>
-                }
-              </div>
-            }
-          </div>
-        } @else {
-          <!-- ================= INSTRUCTOR / ADMIN ================= -->
-          <div class="figures stagger">
-            @for (f of figures(); track f.key; let i = $index) {
-              <div class="card figure" [class.tone]="i === 0 || f.key === 'toGrade'" [style.--tone]="f.key === 'toGrade' ? 'var(--lemon)' : 'var(--lilac)'">
-                <div class="fig-ico"><lh-icon [name]="f.icon" /></div>
-                <div class="fig-num serif" [lhCountUp]="f.value"></div>
-                <div class="fig-label">{{ f.label }}</div>
-              </div>
-            }
-          </div>
-
-          <div class="bento stagger">
-            <div class="card span-7">
-              <div class="card-head"><div><div class="card-title">Submissions received</div><div class="card-sub">Last 7 days</div></div>
-                <div class="row"><span class="big-sm serif" [lhCountUp]="weekTotal()"></span><lh-icon name="trend" class="muted" /></div></div>
-              <lh-bars [bars]="bars()" [height]="200" />
-            </div>
-
-            <div class="card span-5">
-              <div class="card-head"><div><div class="card-title">To grade</div><div class="card-sub">{{ data.pendingTotal }} waiting</div></div></div>
-              @for (p of data.pendingGrading; track p.submissionId) {
-                <a class="list-row" [routerLink]="['/grade', p.submissionId]">
-                  <lh-avatar [name]="p.studentName" size="sm" />
-                  <div class="grow"><div class="strong truncate">{{ p.studentName }}</div><div class="tiny muted truncate">{{ p.courseCode }} · {{ p.assignmentTitle }}</div></div>
-                  @if (p.isLate) { <span class="status late">Late</span> }
-                  <lh-icon name="chevron-right" class="sm muted" />
-                </a>
-              } @empty { <lh-empty icon="check-circle" title="Inbox zero" text="Every submission has been graded." /> }
-            </div>
-
-            <div class="card span-6">
-              <div class="card-head"><div><div class="card-title">Assignment completion</div><div class="card-sub">Recent and upcoming work</div></div></div>
-              @for (c of data.completion; track c.assignment.id) {
-                <a class="comp" [routerLink]="['/courses', c.assignment.courseId, 'assignments', c.assignment.id]" [attr.style]="tone(c.assignment.courseId)">
-                  <div class="row between"><span class="strong truncate">{{ c.assignment.title }}</span><span class="small muted nowrap">{{ c.submitted }}/{{ c.enrolled }}</span></div>
-                  <div class="meter mt-1" [style.--fill]="'var(--c-deep)'"><span [style.width.%]="c.enrolled ? c.submitted * 100 / c.enrolled : 0"></span></div>
-                  <div class="tiny muted mt-1">{{ c.assignment.courseCode }} · due {{ c.assignment.dueDate | date: 'MMM d' }}</div>
-                </a>
-              } @empty { <lh-empty icon="assignment" title="Nothing scheduled" /> }
-            </div>
-
-            <div class="card span-6">
-              <div class="card-head"><div><div class="card-title">Coming up</div><div class="card-sub">Next 7 days</div></div>
-                <a routerLink="/calendar" class="btn btn-glass btn-icon btn-sm" aria-label="Open calendar"><lh-icon name="calendar" class="sm" /></a></div>
-              <ng-container [ngTemplateOutlet]="weekStrip" />
-            </div>
-
-            @if (data.role === 'Admin') {
-              <div class="card span-12">
-                <div class="card-head"><div class="card-title">Newest accounts</div><a routerLink="/admin" class="btn btn-glass btn-sm">Manage users</a></div>
-                <div class="users">
-                  @for (u of data.recentUsers; track u.id) {
-                    <div class="user-chip glass"><lh-avatar [name]="u.fullName" size="sm" /><div class="grow"><div class="strong small truncate">{{ u.fullName }}</div><span class="role {{ u.role }}">{{ u.role }}</span></div></div>
-                  }
+              <div class="term-top">
+                <div>
+                  <div class="big serif tabnum">{{ overall() === null ? '–' : overall()!.toFixed(0) + '%' }}</div>
+                  <div class="small muted">{{ overall() === null ? 'No grades yet' : 'Current grade · ' + letter(overall()!) }}</div>
+                </div>
+                <div class="handed">
+                  <div class="big serif tabnum">{{ handedIn() }}<span class="of">/{{ totalWork() }}</span></div>
+                  <div class="small muted">handed in</div>
                 </div>
               </div>
+              <div class="segbar mt-3" role="img" [attr.aria-label]="segmentsLabel()">
+                @for (s of segments(); track s.label) { @if (s.value) { <span [style.flex]="s.value" [style.background]="s.color"></span> } }
+              </div>
+              <ul class="legend mt-2">
+                @for (s of segments(); track s.label) {
+                  <li><span class="lg-dot" [style.background]="s.color"></span><span class="grow">{{ s.label }}</span><span class="strong tabnum">{{ s.value }}</span></li>
+                }
+              </ul>
+            </section>
+
+            <section class="card span-7" aria-labelledby="week-title">
+              <div class="card-head">
+                <div><h2 id="week-title" class="card-title">This week</h2><p class="card-sub">{{ data.week.length }} due in the next 7 days</p></div>
+                <a routerLink="/calendar" class="btn btn-ghost btn-sm"><lh-icon name="calendar" class="sm" /> Calendar</a>
+              </div>
+              <ng-container [ngTemplateOutlet]="weekStrip" />
+            </section>
+
+            <div class="span-5 stack">
+              @if (data.missing.length) {
+                <section class="card" aria-labelledby="missing-title">
+                  <div class="card-head"><h2 id="missing-title" class="card-title">Missing</h2><span class="status missing">{{ data.missing.length }}</span></div>
+                  <div class="due-list">
+                    @for (m of data.missing; track m.id) {
+                      <a class="due-row" [routerLink]="['/courses', m.courseId, 'assignments', m.id]" [attr.style]="tone(m.courseId)">
+                        <lh-date-tile [date]="m.dueDate" />
+                        <div class="grow"><div class="title truncate">{{ m.title }}</div><div class="meta">{{ m.courseCode }} · {{ due(m.dueDate) }}</div></div>
+                        <lh-icon name="chevron-right" class="sm muted" />
+                      </a>
+                    }
+                  </div>
+                </section>
+              }
+              <section class="card" aria-labelledby="fb-title">
+                <div class="card-head"><h2 id="fb-title" class="card-title">Recent grades</h2></div>
+                <div class="due-list">
+                  @for (g of data.recentGrades; track g.submissionId) {
+                    <a class="due-row fb" [routerLink]="['/courses', g.courseId, 'assignments', g.assignmentId]" [attr.style]="tone(g.courseId)">
+                      <div class="score-tile"><span class="serif tabnum">{{ fmt(g.score) }}</span><span class="out">/{{ g.maxPoints }}</span></div>
+                      <div class="grow">
+                        <div class="title truncate">{{ g.assignmentTitle }}</div>
+                        <div class="meta"><span class="code-chip">{{ g.courseCode }}</span> · {{ letter(g.score / g.maxPoints * 100) }}</div>
+                        @if (g.feedback) { <p class="quote">“{{ g.feedback }}”</p> }
+                      </div>
+                    </a>
+                  } @empty { <lh-empty icon="chat" title="No grades yet" text="Scores and comments from your instructors appear here." /> }
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <section class="stack" aria-labelledby="courses-title">
+            <div class="row between"><h2 id="courses-title" class="section-title">My courses</h2><a routerLink="/courses" class="small strong">All courses</a></div>
+            @if (data.courses.length) {
+              <div class="cards-grid">@for (c of data.courses; track c.id) { <lh-course-card [c]="c" [mine]="true" /> }</div>
+            } @else {
+              <div class="card"><lh-empty icon="courses" title="You're not enrolled in any courses" text="Find one in the catalog and enroll to see its assignments here."><a routerLink="/catalog" class="btn btn-ink btn-sm">Browse catalog</a></lh-empty></div>
+            }
+          </section>
+        } @else {
+          <!-- ================= INSTRUCTOR / ADMIN ================= -->
+          <div class="bento">
+            <section class="card span-7" aria-labelledby="grade-title">
+              <div class="card-head">
+                <div><h2 id="grade-title" class="card-title">To grade</h2><p class="card-sub">{{ data.pendingTotal }} submissions waiting, oldest first</p></div>
+                @if (data.pendingGrading.length) {
+                  <a class="btn btn-ink btn-sm" [routerLink]="['/grade', data.pendingGrading[0].submissionId]"><lh-icon name="pencil" class="sm" /> Start grading</a>
+                }
+              </div>
+              <div class="due-list">
+                @for (p of data.pendingGrading; track p.submissionId) {
+                  <a class="due-row" [routerLink]="['/grade', p.submissionId]" [attr.style]="tone(p.courseId)">
+                    <lh-avatar [name]="p.studentName" size="sm" />
+                    <div class="grow">
+                      <div class="title truncate">{{ p.studentName }}</div>
+                      <div class="meta truncate"><span class="code-chip">{{ p.courseCode }}</span> {{ p.assignmentTitle }}</div>
+                    </div>
+                    <div class="end">
+                      @if (p.isLate) { <span class="status late">Late</span> }
+                      <span class="tiny muted nowrap">{{ p.submittedAt | date: 'MMM d' }}</span>
+                    </div>
+                  </a>
+                } @empty { <lh-empty icon="check-circle" title="Nothing to grade" text="Every submission in your courses has a grade." /> }
+              </div>
+            </section>
+
+            <section class="card span-5" aria-labelledby="subs-title">
+              <div class="card-head">
+                <div><h2 id="subs-title" class="card-title">Submissions received</h2><p class="card-sub">{{ weekTotal() }} in the last 7 days · today highlighted</p></div>
+              </div>
+              <lh-bars [bars]="bars()" [height]="190" />
+            </section>
+
+            <section class="card span-7" aria-labelledby="comp-title">
+              <div class="card-head"><div><h2 id="comp-title" class="card-title">Assignment completion</h2><p class="card-sub">Handed in, out of enrolled students</p></div></div>
+              <div class="due-list">
+                @for (c of data.completion; track c.assignment.id) {
+                  <a class="due-row" [routerLink]="['/courses', c.assignment.courseId, 'assignments', c.assignment.id]" [attr.style]="tone(c.assignment.courseId)">
+                    <lh-date-tile [date]="c.assignment.dueDate" />
+                    <div class="grow">
+                      <div class="row between"><span class="title truncate">{{ c.assignment.title }}</span><span class="small strong tabnum nowrap">{{ c.submitted }}/{{ c.enrolled }}</span></div>
+                      <div class="meter mt-1" [style.--fill]="'var(--c-deep)'"><span [style.width.%]="c.enrolled ? c.submitted * 100 / c.enrolled : 0"></span></div>
+                    </div>
+                  </a>
+                } @empty { <lh-empty icon="assignment" title="Nothing due recently" text="Assignments due in the last 10 days or next 2 weeks show here." /> }
+              </div>
+            </section>
+
+            <section class="card span-5" aria-labelledby="up-title">
+              <div class="card-head">
+                <div><h2 id="up-title" class="card-title">Coming up</h2><p class="card-sub">Due in the next 7 days</p></div>
+                <a routerLink="/calendar" class="btn btn-ghost btn-sm"><lh-icon name="calendar" class="sm" /> Calendar</a>
+              </div>
+              <ng-container [ngTemplateOutlet]="weekStrip" />
+            </section>
+
+            @if (data.role === 'Admin') {
+              <section class="card span-12" aria-labelledby="users-title">
+                <div class="card-head"><h2 id="users-title" class="card-title">Newest accounts</h2><a routerLink="/admin" class="small strong">Manage users</a></div>
+                <div class="users">
+                  @for (u of data.recentUsers; track u.id) {
+                    <div class="user"><lh-avatar [name]="u.fullName" size="sm" /><div class="grow"><div class="strong small truncate">{{ u.fullName }}</div><span class="role {{ u.role }}">{{ u.role }}</span></div></div>
+                  }
+                </div>
+              </section>
             }
           </div>
 
-          <section class="stack">
-            <div class="row between"><h2 class="section-title">{{ data.role === 'Admin' ? 'All courses' : 'Courses I teach' }}</h2><a routerLink="/courses" class="small strong">View all</a></div>
-            <div class="cards-grid stagger">@for (c of data.courses; track c.id) { <lh-course-card [c]="c" [mine]="true" /> }</div>
+          <section class="stack" aria-labelledby="teach-title">
+            <div class="row between"><h2 id="teach-title" class="section-title">{{ data.role === 'Admin' ? 'All courses' : 'Courses you teach' }}</h2><a routerLink="/courses" class="small strong">All courses</a></div>
+            <div class="cards-grid">@for (c of data.courses; track c.id) { <lh-course-card [c]="c" [mine]="true" /> }</div>
           </section>
         }
       }
     </div>
 
     <ng-template #weekStrip>
-      <div class="days">
+      <div class="days" role="group" aria-label="Filter by day">
         @for (day of days(); track day.key) {
-          <button class="day" [class.on]="selected() === day.key" [class.today]="day.isToday" (click)="selected.set(selected() === day.key ? null : day.key)">
+          <button class="day" [class.on]="selected() === day.key" [class.today]="day.isToday" (click)="selected.set(selected() === day.key ? null : day.key)"
+                  [attr.aria-pressed]="selected() === day.key" [attr.aria-label]="(day.date | date: 'EEEE d') + ', ' + day.items.length + ' due'">
             <span class="dname">{{ day.date | date: 'EEE' }}</span><span class="dnum">{{ day.date | date: 'd' }}</span>
-            <span class="dots">@for (x of day.items.slice(0, 3); track x.id) { <i></i> }</span>
+            <span class="dots" aria-hidden="true">@for (x of day.items.slice(0, 3); track x.id) { <i></i> }</span>
           </button>
         }
       </div>
-      <div class="week-list">
+      <div class="due-list mt-2">
         @for (w of weekItems(); track w.id) {
-          <a class="list-row" [routerLink]="['/courses', w.courseId, 'assignments', w.id]" [attr.style]="tone(w.courseId)">
-            <span class="bar-accent"></span>
-            <div class="grow"><div class="strong truncate">{{ w.title }}</div><div class="tiny muted">{{ w.courseCode }} · {{ w.dueDate | date: 'EEE, h:mm a' }}</div></div>
-            @if (w.submitted) { <span class="status submitted">Done</span> } @else { <span class="small strong nowrap">{{ w.maxPoints }} pts</span> }
+          <a class="due-row" [routerLink]="['/courses', w.courseId, 'assignments', w.id]" [attr.style]="tone(w.courseId)">
+            <lh-date-tile [date]="w.dueDate" />
+            <div class="grow"><div class="title truncate">{{ w.title }}</div><div class="meta">{{ w.courseCode }} · {{ w.dueDate | date: 'EEE h:mm a' }} · {{ w.maxPoints }} pts</div></div>
+            @if (w.submitted) { <span class="status submitted">Handed in</span> }
           </a>
-        } @empty { <p class="small muted empty-week">Nothing due {{ selected() ? 'that day' : 'this week' }}.</p> }
+        } @empty { <p class="small muted empty-week">Nothing due {{ selected() ? 'that day' : 'in the next 7 days' }}.</p> }
       </div>
     </ng-template>
   `,
   styles: [`
-    .upper { text-transform: uppercase; letter-spacing: .08em; }
-    .next { display: flex; justify-content: space-between; gap: 1rem; min-height: 230px; overflow: hidden; background: var(--c); border-color: transparent; color: #16151c; text-decoration: none !important; }
-    .next::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 0 0, rgba(255,255,255,.6), transparent 60%); pointer-events: none; }
-    .next-copy { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; }
-    .next-title { font-size: clamp(1.5rem, 2.6vw, 2.1rem); line-height: 1.15; margin: .35rem 0 .35rem; color: #16151c; }
-    .next-art { width: 250px; height: 190px; flex-shrink: 0; align-self: flex-end; margin: -10px -20px -30px 0; transition: transform .6s var(--ease); }
-    .next:hover .next-art { transform: rotate(-4deg) scale(1.05); }
-    .pill-live { display: inline-flex; align-items: center; gap: .45rem; height: 30px; padding: 0 12px; border-radius: 999px; background: rgba(255,255,255,.7); font-size: .8rem; font-weight: 800; }
-    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #16151c; animation: blink 1.6s infinite; }
-    @keyframes blink { 50% { opacity: .25; } }
+    /* Filled with the course's pastel: the colour says which course, the text stays dark ink in both themes. */
+    .next { display: flex; justify-content: space-between; gap: 1rem; min-height: 220px; overflow: hidden; text-decoration: none !important;
+      background: var(--c); border-color: transparent; color: #17161d; }
+    .next:hover { text-decoration: none; }
+    .next-copy { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+    .next-title { font-size: clamp(1.45rem, 2.4vw, 1.95rem); line-height: 1.15; margin: .3rem 0 .4rem; color: #17161d; }
+    .next-art { width: 230px; height: 176px; flex-shrink: 0; align-self: flex-end; margin: -10px -18px -28px 0; }
+    .due-pill { display: inline-flex; align-items: center; gap: .4rem; height: 28px; padding: 0 10px; border-radius: 999px; background: rgba(255,255,255,.72); font-size: .82rem; font-weight: 700; }
+    .caught-up { display: flex; align-items: center; }
 
-    .big-num { font-size: 4rem; font-weight: 600; line-height: 1; letter-spacing: -.03em; }
-    .big-num small { font-size: 1.6rem; color: var(--muted); }
-    .big-sm { font-size: 2rem; font-weight: 600; line-height: 1; }
-    .legend { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem 1.2rem; }
-    .lg-item { display: flex; align-items: center; gap: .5rem; }
-    .lg-dot { width: 10px; height: 10px; border-radius: 4px; }
-    .grade-card { display: flex; flex-direction: column; }
-    .ring-wrap { flex: 1; display: grid; place-items: center; padding: .5rem 0; }
+    .term { display: flex; flex-direction: column; }
+    .term-top { display: flex; justify-content: space-between; gap: 1rem; }
+    .handed { text-align: right; }
+    .big { font-size: 2.6rem; font-weight: 600; line-height: 1; }
+    .of { font-size: 1.3rem; color: var(--muted); }
+    .legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: .4rem 1.2rem; font-size: .9rem; }
+    .legend li { display: flex; align-items: center; gap: .5rem; }
+    .lg-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
 
-    .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-    .day { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0 6px; border-radius: 18px; border: 1px solid var(--glass-border);
-      background: var(--glass-strong); cursor: pointer; transition: background .25s, color .25s, transform .2s var(--ease); }
-    .day:hover { transform: translateY(-2px); }
-    .day.today { box-shadow: inset 0 0 0 2px var(--violet); }
-    .day.on { background: var(--violet); color: #fff; border-color: transparent; }
-    .dname { font-size: .66rem; font-weight: 700; text-transform: uppercase; opacity: .7; }
-    .dnum { font-size: 1.1rem; font-weight: 800; }
+    .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+    .day { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 0 6px; border-radius: var(--r-ctl);
+      border: 1px solid var(--line); background: var(--surface); cursor: pointer; min-width: 0;
+      transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease); }
+    .day:hover { border-color: var(--line-strong); }
+    .dname { font-size: .74rem; font-weight: 600; color: var(--muted); }
+    .dnum { font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .day.today .dnum { color: var(--violet); }
+    .day.on { background: var(--btn-bg); border-color: var(--btn-bg); color: var(--btn-fg); }
+    .day.on .dname, .day.on .dnum { color: inherit; }
     .dots { display: flex; gap: 2px; height: 5px; }
-    .dots i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .7; }
-    .week-list { margin-top: .8rem; display: flex; flex-direction: column; }
-    .bar-accent { width: 5px; align-self: stretch; border-radius: 4px; background: var(--c-deep); }
-    .empty-week { padding: .8rem .2rem; }
+    .dots i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .55; }
+    .empty-week { padding: .9rem .4rem; }
 
-    .list-row { display: flex; align-items: center; gap: .8rem; padding: .7rem .5rem; border-radius: 16px; color: inherit; text-decoration: none !important; transition: background .2s; }
-    .list-row:hover { background: var(--glass-strong); }
-    .list-row lh-date-tile { width: 46px; height: 50px; }
+    .score-tile { width: 68px; height: 52px; flex-shrink: 0; border-radius: var(--r-ctl); background: var(--c); color: #17161d;
+      display: flex; align-items: baseline; justify-content: center; padding-top: 12px; line-height: 1; }
+    .score-tile .serif { font-size: 1.3rem; font-weight: 700; }
+    .score-tile .out { font-size: .72rem; opacity: .65; margin-left: 1px; }
+    .fb { align-items: flex-start; }
+    .quote { font-size: .86rem; color: var(--ink-2); margin-top: .3rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-    .fb { display: flex; gap: 1rem; padding: .9rem .6rem; border-radius: 18px; color: inherit; text-decoration: none !important; transition: background .2s; }
-    .fb:hover { background: var(--glass-strong); }
-    .fb + .fb { border-top: 1px solid var(--line); }
-    .fb-score { min-width: 76px; height: 64px; border-radius: 18px; background: var(--c); color: #16151c; display: grid; place-items: center; font-size: 1.5rem; font-weight: 700; }
-    .fb-score small { font-size: .8rem; opacity: .6; }
-    .code-chip { font-size: .72rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: var(--c); color: #16151c; }
+    .users { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: .5rem 1rem; }
+    .user { display: flex; align-items: center; gap: .65rem; padding: .4rem 0; min-width: 0; }
 
-    .figures { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
-    .figure { display: flex; flex-direction: column; gap: .2rem; min-height: 150px; }
-    .fig-ico { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: var(--glass-strong); margin-bottom: auto; }
-    .figure.tone .fig-ico { background: rgba(255,255,255,.6); }
-    .fig-num { font-size: 2.6rem; font-weight: 600; line-height: 1; margin-top: 1rem; }
-    .fig-label { font-weight: 700; color: var(--muted); }
-    .figure.tone .fig-label { color: rgba(22,21,28,.62); }
-    .comp { display: block; padding: .75rem .5rem; border-radius: 16px; color: inherit; text-decoration: none !important; }
-    .comp:hover { background: var(--glass-strong); }
-    .users { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: .75rem; }
-    .user-chip { display: flex; align-items: center; gap: .7rem; padding: .7rem; border-radius: 18px; }
-
-    @media (max-width: 1180px) { .figures { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 720px) {
-      .next { flex-direction: column; }
-      .next-art { width: 190px; height: 140px; margin: -20px -20px -30px auto; }
-      .big-num { font-size: 3.2rem; }
-      .figure { min-height: 130px; }
+      /* Phones: illustration tucks into the bottom-right corner beside the button instead of adding height. */
+      .next { min-height: 0; position: relative; }
+      .next-art { position: absolute; right: -14px; bottom: -22px; width: 140px; height: 106px; margin: 0; }
+      .next-copy .btn { position: relative; z-index: 1; }
+      .big { font-size: 2.2rem; }
+      .day { padding: 6px 0 5px; }
+      .dname { font-size: .7rem; }
     }
   `]
 })
@@ -300,8 +298,26 @@ export class DashboardComponent {
   protected letter = letterGrade;
   protected art = artFor;
 
+  /** One sentence of numbers in context, instead of a row of KPI tiles. */
+  protected summary = computed(() => {
+    const d = this.d();
+    if (!d) return '';
+    const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
+    if (d.role === 'Student') {
+      const parts = [`${d.week.filter(w => !w.submitted).length} due this week`];
+      if (d.missing.length) parts.push(`${d.missing.length} missing`);
+      parts.push(plural(d.courses.length, 'course'));
+      return parts.join(' · ');
+    }
+    if (d.role === 'Admin') {
+      const f = d.figures;
+      return `${plural(f['users'] ?? 0, 'account')} · ${plural(f['courses'] ?? 0, 'course')} · ${f['enrollments'] ?? 0} enrollments · ${d.pendingTotal} waiting to be graded`;
+    }
+    return `${d.pendingTotal} waiting to be graded · ${plural(d.week.length, 'assignment')} due this week · ${plural(d.figures['students'] ?? 0, 'student')}`;
+  });
+
   protected bars = computed(() => (this.d()?.activity ?? []).map((a, i, all) => ({
-    label: new Date(a.day).toLocaleDateString('en-US', { weekday: 'narrow' }), value: a.count, highlight: i === all.length - 1
+    label: new Date(a.day).toLocaleDateString('en-US', { weekday: 'short' }), value: a.count, highlight: i === all.length - 1
   })));
   protected weekTotal = computed(() => (this.d()?.activity ?? []).reduce((s, a) => s + a.count, 0));
 
@@ -309,28 +325,17 @@ export class DashboardComponent {
   protected segments = computed(() => {
     const d = this.d();
     if (!d) return [];
+    // Status colours carry their fixed meaning: green graded, blue submitted/waiting, red missing; grey = not yet due.
     return [
-      { label: 'Graded', value: d.gradedCount, color: '#7fd1a4' },
-      { label: 'In review', value: d.awaitingCount, color: 'var(--lilac)' },
-      { label: 'Upcoming', value: d.upcomingCount, color: 'var(--lemon)' },
-      { label: 'Missing', value: d.missing.length, color: '#ff9fb2' },
+      { label: 'Graded', value: d.gradedCount, color: 'var(--ok)' },
+      { label: 'Waiting for grade', value: d.awaitingCount, color: 'var(--info)' },
+      { label: 'Not yet due', value: d.upcomingCount, color: 'var(--line-strong)' },
+      { label: 'Missing', value: d.missing.length, color: 'var(--bad)' },
     ];
   });
-  protected completion = computed(() => {
-    const d = this.d();
-    if (!d) return 0;
-    const total = d.gradedCount + d.awaitingCount + d.upcomingCount + d.missing.length;
-    return total ? Math.round((d.gradedCount + d.awaitingCount) * 100 / total) : 0;
-  });
-
-  protected figures = computed(() => {
-    const f = this.d()?.figures ?? {};
-    const meta: Record<string, [string, string]> = {
-      courses: ['Courses', 'courses'], students: ['Students', 'people'], assignments: ['Assignments', 'assignment'],
-      toGrade: ['To grade', 'inbox'], users: ['Users', 'people'], enrollments: ['Enrollments', 'check-circle'], submissions: ['Submissions', 'inbox'],
-    };
-    return Object.entries(f).map(([key, value]) => ({ key, value, label: meta[key]?.[0] ?? key, icon: meta[key]?.[1] ?? 'info' }));
-  });
+  protected totalWork = computed(() => this.segments().reduce((s, x) => s + x.value, 0));
+  protected handedIn = computed(() => { const d = this.d(); return d ? d.gradedCount + d.awaitingCount : 0; });
+  protected segmentsLabel = computed(() => this.segments().map(s => `${s.label}: ${s.value}`).join(', '));
 
   /** Seven day pills starting today; each carries the items due that day. */
   protected days = computed(() => {

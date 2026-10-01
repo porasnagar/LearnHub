@@ -88,7 +88,8 @@ import { CourseStore } from './course.routes';
     .gb th { text-transform: none; letter-spacing: 0; font-size: .8rem; vertical-align: bottom; }
     .th-link { display: block; color: var(--ink-2); max-width: 150px; margin: 0 auto; white-space: normal; line-height: 1.3; }
     .pts { display: block; font-weight: 600; color: var(--faint); font-size: .72rem; }
-    .sticky { position: sticky; left: 0; z-index: 1; background: var(--glass-strong); backdrop-filter: blur(12px); }
+    .sticky { position: sticky; left: 0; z-index: 1; background: var(--surface); box-shadow: 1px 0 0 var(--line); }
+    tbody tr:hover .sticky { background: var(--surface-2); }
     .cell { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 56px; height: 32px; padding: 0 10px; border-radius: 999px; font-weight: 700; text-decoration: none !important; }
     .cell.graded { background: var(--ok-soft); color: var(--ok); font-size: 1rem; }
     .cell.todo { background: var(--warn-soft); color: var(--warn); font-size: .8rem; }

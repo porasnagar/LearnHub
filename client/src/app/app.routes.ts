@@ -19,7 +19,7 @@ const page = {
 };
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', canActivate: [guestGuard], loadComponent: page.landing, title: 'LearnHub — learning, organised' },
+  { path: '', pathMatch: 'full', canActivate: [guestGuard], loadComponent: page.landing, title: 'LearnHub — assignments, due dates and grades for your courses' },
   { path: 'login', canActivate: [guestGuard], loadComponent: page.login, title: 'Sign in · LearnHub' },
   { path: 'register', canActivate: [guestGuard], loadComponent: page.register, title: 'Create account · LearnHub' },
   {

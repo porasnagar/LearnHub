@@ -10,8 +10,8 @@ import { IconComponent } from '../shared/icon.component';
   template: `
     <section class="card card-lg wrap fade-in">
       <div class="code serif">404</div>
-      <h1>This page wandered off</h1>
-      <p class="muted">The page you're looking for doesn't exist or has moved.</p>
+      <h1>Page not found</h1>
+      <p class="muted">There's nothing at this address. If you followed a link to a course or assignment, it may have been deleted or unpublished.</p>
       <div class="row mt-3">
         <a class="btn btn-ink" [routerLink]="auth.signedIn() ? '/dashboard' : '/'"><lh-icon name="home" class="sm" /> Go home</a>
         <a class="btn btn-glass" routerLink="/catalog">Browse catalog</a>
@@ -19,7 +19,7 @@ import { IconComponent } from '../shared/icon.component';
     </section>`,
   styles: [`
     .wrap { max-width: 560px; margin: 3rem auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: .5rem; }
-    .code { font-size: 6rem; font-weight: 700; line-height: 1; background: linear-gradient(135deg, var(--violet), #e0569b); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .code { font-size: 5rem; font-weight: 600; line-height: 1; color: var(--faint); font-family: var(--serif); }
     h1 { font-size: 1.8rem; }
   `]
 })

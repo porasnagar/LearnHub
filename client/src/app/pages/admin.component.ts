@@ -6,11 +6,11 @@ import { Api } from '../core/api.service';
 import { Role, UserRow } from '../core/models';
 import { Auth, Confirm, Toasts } from '../core/services';
 import { IconComponent } from '../shared/icon.component';
-import { AvatarComponent, CountUpDirective, CourseCardComponent, EmptyComponent } from '../shared/ui';
+import { AvatarComponent, CourseCardComponent, EmptyComponent } from '../shared/ui';
 
 @Component({
   selector: 'lh-admin',
-  imports: [DatePipe, FormsModule, IconComponent, AvatarComponent, CountUpDirective, CourseCardComponent, EmptyComponent],
+  imports: [DatePipe, FormsModule, IconComponent, AvatarComponent, CourseCardComponent, EmptyComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -23,20 +23,18 @@ import { AvatarComponent, CountUpDirective, CourseCardComponent, EmptyComponent 
       </div>
 
       @if (tab() === 'users') {
-        <div class="figs stagger">
-          @for (f of figs; track f.key) {
-            <button class="card fig" [class.tone]="role() === f.key" [style.--tone]="f.tone" (click)="role.set(role() === f.key ? '' : f.key)">
-              <span class="strong small">{{ f.label }}</span>
-              <span class="n serif" [lhCountUp]="count(f.key)"></span>
-            </button>
-          }
-        </div>
-
-        <section class="card card-flush fade-in">
+        <section class="card card-flush">
           <div class="toolbar">
-            <div class="input-wrap grow"><lh-icon name="search" class="sm" />
+            <!-- Role filter doubles as the account counts (no separate KPI tiles). -->
+            <div class="chips" role="group" aria-label="Filter by role">
+              @for (f of figs; track f.key) {
+                <button class="chip" [class.active]="role() === f.key" (click)="role.set(f.key)" [attr.aria-pressed]="role() === f.key">
+                  {{ f.label }} <span class="count">{{ count(f.key) }}</span>
+                </button>
+              }
+            </div>
+            <div class="input-wrap search"><lh-icon name="search" class="sm" />
               <input class="input sm" [ngModel]="q()" (ngModelChange)="q.set($event)" placeholder="Search name or email" aria-label="Search users" /></div>
-            <span class="small muted">{{ users.value()?.users?.length ?? 0 }} shown</span>
           </div>
           <div class="table-wrap">
             <table class="table">
@@ -66,19 +64,15 @@ import { AvatarComponent, CountUpDirective, CourseCardComponent, EmptyComponent 
           @if (users.value()?.users?.length === 0) { <lh-empty icon="search" title="No accounts match" /> }
         </section>
       } @else {
-        <div class="cards-grid stagger">@for (c of courses() ?? []; track c.id) { <lh-course-card [c]="c" [mine]="true" /> }</div>
+        <div class="cards-grid">@for (c of courses() ?? []; track c.id) { <lh-course-card [c]="c" [mine]="true" /> }</div>
       }
     </div>`,
   styles: [`
-    .figs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-    .fig { display: flex; flex-direction: column; align-items: flex-start; gap: .4rem; text-align: left; cursor: pointer; font: inherit; color: inherit; transition: transform .2s var(--ease); }
-    .fig:hover { transform: translateY(-2px); }
-    .n { font-size: 2.4rem; font-weight: 600; line-height: 1; }
-    .toolbar { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.2rem; }
-    .toolbar .input-wrap { max-width: 360px; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; padding: .9rem 1rem; border-bottom: 1px solid var(--line); }
+    .toolbar .chips { flex-wrap: wrap; }
+    .search { width: min(320px, 100%); }
     .actions { display: inline-flex; gap: .4rem; }
     .actions .select { width: 130px; }
-    @media (max-width: 800px) { .figs { grid-template-columns: repeat(2, 1fr); } }
   `]
 })
 export class AdminComponent {

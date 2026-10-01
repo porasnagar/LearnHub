@@ -4,235 +4,232 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Api } from '../core/api.service';
 import { Theme } from '../core/services';
+import { toneStyle } from '../core/util';
 import { IconComponent, LogoComponent } from '../shared/icon.component';
-import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent, RingComponent, ScrollerComponent } from '../shared/ui';
+import { CourseCardComponent, ScrollerComponent } from '../shared/ui';
 
 @Component({
   selector: 'lh-landing',
-  imports: [RouterLink, FormsModule, IconComponent, LogoComponent, CourseCardComponent, CourseArtComponent, RingComponent, BarsComponent, AvatarComponent, ScrollerComponent],
+  imports: [RouterLink, FormsModule, IconComponent, LogoComponent, CourseCardComponent, ScrollerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <header class="nav glass">
-      <lh-logo />
-      <nav class="row">
-        <a routerLink="/catalog" class="plink">Catalog</a>
-        <button class="btn btn-ghost btn-icon btn-sm" (click)="theme.toggle()" aria-label="Switch theme"><lh-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" /></button>
-        <a routerLink="/login" class="btn btn-glass btn-sm signin">Sign in</a>
-        <a routerLink="/register" class="btn btn-ink btn-sm getstarted">Get started</a>
-      </nav>
+    <header class="top frost">
+      <div class="top-in">
+        <a routerLink="/" aria-label="LearnHub home" class="brand"><lh-logo [size]="32" /></a>
+        <nav class="row">
+          <a routerLink="/catalog" class="plink">Catalog</a>
+          <button class="btn btn-ghost btn-icon btn-sm" (click)="theme.toggle()" [attr.aria-label]="theme.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'">
+            <lh-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" />
+          </button>
+          <a routerLink="/login" class="btn btn-ghost btn-sm">Sign in</a>
+          <a routerLink="/register" class="btn btn-ink btn-sm getstarted">Create account</a>
+        </nav>
+      </div>
     </header>
 
-    <section class="hero">
-      <div class="copy stagger">
-        <span class="eyebrow glass"><span class="pulse"></span> Learning management system</span>
-        <h1>Learning, <em>beautifully</em> organised.</h1>
-        <p class="lead">Courses, assignments, feedback and grades in one calm workspace for students, instructors and administrators.</p>
-        <form class="hero-search glass" (ngSubmit)="search()" role="search">
-          <lh-icon name="search" />
-          <input [(ngModel)]="q" name="q" placeholder="What do you want to learn?" aria-label="Search courses" />
-          <button class="btn btn-ink" type="submit">Explore <lh-icon name="arrow-right" class="sm" /></button>
-        </form>
-        <lh-scroller class="chips-row mt-2">
-          @for (s of subjects(); track s.name) {
-            <a class="chip" routerLink="/catalog" [queryParams]="{ category: s.name }">{{ s.name }} <span class="count">{{ s.count }}</span></a>
-          }
-        </lh-scroller>
-        <!-- Phone-only call to action, styled like an onboarding "slide to continue" control. -->
-        <div class="slide-cta glass" role="button" aria-label="Slide to start learning"
-             (pointerdown)="swipeStart($event)" (pointermove)="swipeMove($event)"
-             (pointerup)="swipeEnd()" (pointercancel)="swipeEnd()" (pointerleave)="swipeEnd()">
-          <span class="knob" #knob [style.transform]="knobX > 0 ? 'translateX(' + knobX + 'px)' : ''"
-                [style.transition]="dragging ? 'none' : 'transform .4s var(--ease)'">
-            <lh-icon [name]="knobX > 60 ? 'arrow-right' : 'check'" />
-          </span>
-          <span class="grow" [style.opacity]="1 - knobX / 120">Slide to start</span>
-          <span class="chev" aria-hidden="true"><lh-icon name="chevron-right" class="sm" /><lh-icon name="chevron-right" class="sm" /><lh-icon name="chevron-right" class="sm" /></span>
-        </div>
-      </div>
+    <div class="wrap-in">
+      <section class="hero">
+        <div class="copy">
+          <h1>Know what's due.<br>Hand it in.<br>See your grade.</h1>
+          <p class="lead">
+            LearnHub is the course site for your classes. Every due date sits in one list, you submit text or files
+            from your phone, and your instructor's grade and comments appear as soon as they're saved.
+          </p>
 
-      <div class="showcase" aria-hidden="true">
-        <svg class="arcs" viewBox="0 0 400 220" preserveAspectRatio="xMidYMax meet">
-          <path d="M20 220a180 180 0 0 1 360 0" stroke="#bfe0f5" />
-          <path d="M60 220a140 140 0 0 1 280 0" stroke="#f8b996" />
-          <path d="M100 220a100 100 0 0 1 200 0" stroke="#a9dfc0" />
-          <path d="M140 220a60 60 0 0 1 120 0" stroke="#f0e38f" />
-        </svg>
-        <div class="float f1 card card-flush">
-          <div class="mini-banner" style="--c:#d9ccff;--c-deep:#5b3fe0"><lh-course-art kind="web" class="mini-art" /><span class="tag">CS301</span></div>
-          <div class="mini-body">
-            <div class="strong">ASP.NET Core MVC</div>
-            <div class="tiny muted">Dr. Priya Sharma</div>
-            <div class="meter mt-2"><span style="width:72%"></span></div>
+          <form class="search" (ngSubmit)="search()" role="search">
+            <lh-icon name="search" />
+            <input [(ngModel)]="q" name="q" placeholder="Search {{ total() }} courses by title, code or subject" aria-label="Search the course catalog" />
+            <button class="btn btn-ink" type="submit">Search</button>
+          </form>
+          <lh-scroller class="chips-row mt-2" aria-label="Browse by subject">
+            @for (s of subjects(); track s.name) {
+              <a class="chip" routerLink="/catalog" [queryParams]="{ category: s.name }">{{ s.name }} <span class="count">{{ s.count }}</span></a>
+            }
+          </lh-scroller>
+
+          <div class="cta-row">
+            <a routerLink="/register" class="btn btn-ink btn-lg">Create a free account</a>
+            <a routerLink="/login" class="btn btn-secondary btn-lg">Sign in</a>
+          </div>
+
+          <!-- Phones: the onboarding-style slider from the owner's reference (drag to the right, or tap). -->
+          <div class="slide-cta" role="link" tabindex="0" aria-label="Create a free account"
+               (keydown.enter)="go()" (click)="!moved && go()"
+               (pointerdown)="swipeStart($event)" (pointermove)="swipeMove($event)"
+               (pointerup)="swipeEnd()" (pointercancel)="swipeEnd()">
+            <span class="knob" #knob [style.transform]="knobX ? 'translateX(' + knobX + 'px)' : ''"
+                  [style.transition]="dragging ? 'none' : 'transform 200ms var(--ease)'">
+              <lh-icon [name]="knobX > 60 ? 'arrow-right' : 'check'" />
+            </span>
+            <span class="grow" [style.opacity]="1 - knobX / 140">Slide to create an account</span>
+            <span class="chev" aria-hidden="true"><lh-icon name="chevron-right" class="sm" /><lh-icon name="chevron-right" class="sm" /></span>
           </div>
         </div>
-        <div class="float f2 card">
-          <lh-ring [percent]="88" center="88%" caption="Grade · B+" [size]="118" />
-        </div>
-        <div class="float f3 card">
-          <div class="card-title small">This week</div>
-          <lh-bars [bars]="demoBars" [height]="96" />
-        </div>
-        <div class="float f4 card tone" style="--tone:#e9e58e">
-          <div class="row"><span class="ok-dot"><lh-icon name="check" class="sm" /></span>
-            <div><div class="strong small">Submission received</div><div class="tiny">EF Core Relationships · on time</div></div></div>
-        </div>
-        <div class="float f5 card">
-          <div class="row"><div class="avatar-stack"><lh-avatar name="Aarav Mehta" size="sm" /><lh-avatar name="Diya Kapoor" size="sm" /><lh-avatar name="Kabir Singh" size="sm" /></div>
-            <span class="tiny strong">+24 enrolled</span></div>
-        </div>
-      </div>
-    </section>
 
-    @if (featured().length) {
-      <section class="section">
-        <div class="section-head">
-          <div><div class="kicker">Course catalog</div><h2>Popular right now</h2></div>
-          <a routerLink="/catalog" class="btn btn-glass btn-sm">Browse all <lh-icon name="arrow-right" class="sm" /></a>
-        </div>
-        <lh-scroller class="cards-scroller">
-          <div class="cards-grid stagger">
-            @for (c of featured(); track c.id) { <lh-course-card [c]="c" /> }
+        <!-- An honest preview of the product's main screen: the student's week. -->
+        <div class="preview-wrap" aria-hidden="true">
+          <svg class="arcs" viewBox="0 0 400 220" preserveAspectRatio="xMidYMax meet">
+            <path d="M20 220a180 180 0 0 1 360 0" stroke="var(--sky)" />
+            <path d="M60 220a140 140 0 0 1 280 0" stroke="var(--peach)" />
+            <path d="M100 220a100 100 0 0 1 200 0" stroke="var(--mint)" />
+            <path d="M140 220a60 60 0 0 1 120 0" stroke="var(--lemon)" />
+          </svg>
+          <div class="preview card">
+            <div class="row between">
+              <div><div class="card-title">This week</div><div class="card-sub">3 due · 1 graded today</div></div>
+              <span class="avatar sm t1">AM</span>
+            </div>
+            <div class="mini-days">
+              @for (d of demoDays; track d.n) {
+                <span class="mini-day" [class.on]="d.on"><span class="dn">{{ d.name }}</span><span class="dd">{{ d.n }}</span></span>
+              }
+            </div>
+            <div class="due-list">
+              @for (r of demoRows; track r.title) {
+                <div class="due-row" [attr.style]="tone(r.course)">
+                  <span class="tile"><span>{{ r.mon }}</span><b>{{ r.day }}</b></span>
+                  <div class="grow"><div class="title truncate">{{ r.title }}</div><div class="meta">{{ r.code }} · {{ r.when }}</div></div>
+                  <span class="status {{ r.css }}">{{ r.status }}</span>
+                </div>
+              }
+            </div>
+            <div class="grade-row">
+              <span class="code-chip" style="--c:#d9ccff">CS301</span>
+              <span class="grow small">Routing &amp; Tag Helpers Quiz</span>
+              <span class="serif strong">18<span class="muted small">/20</span></span>
+            </div>
           </div>
-        </lh-scroller>
+        </div>
       </section>
-    }
 
-    <section class="section">
-      <div class="section-head"><div><div class="kicker">One platform</div><h2>Built for the whole classroom</h2></div></div>
-      <div class="roles stagger">
-        @for (r of roles; track r.title) {
-          <div class="card card-lg tone role-card" [style.--tone]="r.tone">
-            <div class="role-ico"><lh-icon [name]="r.icon" class="lg" /></div>
-            <h3>{{ r.title }}</h3>
-            <ul>@for (p of r.points; track p) { <li><lh-icon name="check" class="sm" /> {{ p }}</li> }</ul>
+      @if (featured().length) {
+        <section class="section" aria-labelledby="open-title">
+          <div class="section-head">
+            <h2 id="open-title">Open for enrollment</h2>
+            <a routerLink="/catalog" class="btn btn-ghost btn-sm">Full catalog <lh-icon name="arrow-right" class="sm" /></a>
           </div>
-        }
-      </div>
-    </section>
+          <lh-scroller class="cards-scroller">
+            @for (c of featured(); track c.id) { <lh-course-card class="fcard" [c]="c" /> }
+          </lh-scroller>
+        </section>
+      }
 
-    <section class="cta card card-lg ink">
-      <div>
-        <h2 class="serif">Ready when you are.</h2>
-        <p class="muted mt-1">Create a free account and enroll in your first course in under a minute.</p>
-      </div>
-      <div class="row wrap">
-        <a routerLink="/register" class="btn btn-lemon btn-lg">Create account</a>
-        <a routerLink="/login" class="btn btn-lg ghost-dark">Sign in</a>
-      </div>
-    </section>
+      <section class="section" aria-labelledby="roles-title">
+        <h2 id="roles-title">What each account can do</h2>
+        <div class="roles">
+          @for (r of roles; track r.title) {
+            <div class="role-col">
+              <h3><lh-icon [name]="r.icon" /> {{ r.title }}</h3>
+              <ul>@for (p of r.points; track p) { <li>{{ p }}</li> }</ul>
+            </div>
+          }
+        </div>
+      </section>
 
-    <footer class="foot">
-      <lh-logo [size]="28" />
-      <span class="small muted">© {{ year }} LearnHub · ASP.NET Core · Angular · Entity Framework Core</span>
-    </footer>
+      <section class="cta card card-lg">
+        <div>
+          <h2>Your first course is a minute away</h2>
+          <p class="muted mt-1">Create a student account, pick a course from the catalog and enroll — no invite needed.</p>
+        </div>
+        <div class="row wrap">
+          <a routerLink="/register" class="btn btn-ink btn-lg">Create account</a>
+          <a routerLink="/catalog" class="btn btn-secondary btn-lg">Browse catalog</a>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <lh-logo [size]="26" />
+        <span class="small muted">© {{ year }} LearnHub · ASP.NET Core, Angular and Entity Framework Core</span>
+      </footer>
+    </div>
   `,
   styles: [`
-    :host { display: block; max-width: 1240px; margin: 0 auto; padding: 16px 20px 40px; }
-    .nav { position: sticky; top: 14px; z-index: 20; display: flex; align-items: center; justify-content: space-between; padding: 10px 12px 10px 18px; border-radius: 999px; }
-    .plink { font-weight: 700; color: var(--ink-2); padding: 0 .5rem; }
+    :host { display: block; overflow-x: clip; }
+    .top { position: sticky; top: 0; z-index: 20; border-bottom: 1px solid var(--line); }
+    .top-in { max-width: 1200px; margin: 0 auto; height: 64px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; }
+    .brand { text-decoration: none !important; }
+    .plink { font-weight: 600; color: var(--ink-2); padding: 0 .5rem; }
+    .wrap-in { max-width: 1200px; margin: 0 auto; padding: 0 20px 40px; }
 
-    .hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 2rem; align-items: center; padding: 4.5rem 0 3rem; }
-    .eyebrow { display: inline-flex; align-items: center; gap: .55rem; height: 34px; padding: 0 14px; border-radius: 999px; font-size: .8rem; font-weight: 700; color: var(--ink-2); }
-    .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--violet); box-shadow: 0 0 0 0 var(--violet); animation: ping 2s infinite; }
-    @keyframes ping { 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
-    h1 { font-size: clamp(2.6rem, 6vw, 4.6rem); line-height: 1.02; margin: 1.1rem 0 1rem; }
-    h1 em { font-style: italic; color: var(--violet); }
-    .lead { font-size: 1.15rem; color: var(--muted); max-width: 34rem; }
-    .hero-search { display: flex; align-items: center; gap: .7rem; margin-top: 1.8rem; max-width: 34rem; padding: 7px 7px 7px 18px; border-radius: 999px; color: var(--muted); }
-    .hero-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 1rem; color: var(--ink); }
+    .hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 3rem; align-items: center; padding: 4rem 0 3rem; }
+    .copy { min-width: 0; }
+    h1 { font-size: clamp(2.4rem, 5vw, 3.9rem); line-height: 1.05; }
+    .lead { font-size: 1.1rem; color: var(--ink-2); max-width: 36rem; margin-top: 1.1rem; }
+    .search { display: flex; align-items: center; gap: .6rem; margin-top: 1.7rem; max-width: 36rem; padding: 5px 5px 5px 14px;
+      border-radius: var(--r-ctl); background: var(--surface); border: 1px solid var(--line-strong); color: var(--muted); }
+    .search:focus-within { border-color: var(--violet); box-shadow: 0 0 0 3px var(--violet-soft); }
+    .search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 1rem; color: var(--ink); }
+    .search input::placeholder { color: var(--faint); }
+    .chips-row { max-width: 36rem; }
+    .cta-row { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1.6rem; }
+    .slide-cta { display: none; }
 
-    .showcase { position: relative; height: 470px; contain: layout; }
-    .float { position: absolute; animation: rise .8s var(--ease) both, float 7s ease-in-out infinite;
-      will-change: transform; backface-visibility: hidden; }
-    .f1 { top: 20px; left: 8%; width: 250px; animation-delay: .1s, 0s; }
-    .f2 { top: 0; right: 4%; animation-delay: .25s, -2s; }
-    .f3 { bottom: 26px; right: 0; width: 250px; animation-delay: .4s, -4s; }
-    .f4 { bottom: 70px; left: 0; width: 260px; animation-delay: .55s, -1s; }
-    .f5 { top: 250px; left: 30%; animation-delay: .7s, -3s; }
-    .mini-banner { position: relative; height: 96px; background: var(--c); overflow: hidden; }
-    .mini-art { position: absolute; right: -4px; bottom: -12px; width: 130px; height: 100px; }
-    .tag { position: absolute; top: 10px; left: 10px; font-size: .7rem; font-weight: 800; background: #16151c; color: #fff; padding: 3px 9px; border-radius: 999px; }
-    .mini-body { padding: .8rem 1rem 1rem; }
-    .ok-dot { width: 34px; height: 34px; border-radius: 50%; background: #16151c; color: #e9e58e; display: grid; place-items: center; }
+    .preview-wrap { position: relative; min-width: 0; }
+    .arcs { display: none; }
+    .preview { padding: 1.1rem; box-shadow: var(--shadow-float); }
+    .mini-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; margin: .9rem 0 .4rem; }
+    .mini-day { display: flex; flex-direction: column; align-items: center; padding: 5px 0; border-radius: 10px; border: 1px solid var(--line); line-height: 1.2; }
+    .mini-day .dn { font-size: .7rem; color: var(--muted); }
+    .mini-day .dd { font-size: .95rem; font-weight: 700; }
+    .mini-day.on { background: var(--btn-bg); color: var(--btn-fg); border-color: var(--btn-bg); }
+    .mini-day.on .dn { color: inherit; opacity: .75; }
+    .tile { width: 42px; height: 46px; flex-shrink: 0; border-radius: 11px; background: var(--c); color: #17161d; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; line-height: 1; font-size: .7rem; }
+    .tile b { font-size: 1.15rem; margin-top: 2px; }
+    .grade-row { display: flex; align-items: center; gap: .6rem; margin-top: .4rem; padding: .7rem .5rem 0; border-top: 1px solid var(--line); }
 
     .section { padding: 2.5rem 0; }
-    .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1.4rem; }
-    .kicker { font-size: .78rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--violet); }
-    h2 { font-family: var(--serif); font-size: clamp(1.7rem, 3vw, 2.4rem); margin-top: .3rem; }
-    .roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
-    .role-card h3 { font-size: 1.35rem; margin: 1rem 0 .8rem; }
-    .role-card ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .55rem; font-weight: 600; font-size: .95rem; }
-    .role-card li { display: flex; gap: .5rem; align-items: center; }
-    .role-ico { width: 52px; height: 52px; border-radius: 16px; background: #16151c; color: #fff; display: grid; place-items: center; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+    h2 { font-size: 1.45rem; font-weight: 700; }
+    .cards-scroller ::ng-deep .track { gap: 1rem; padding-bottom: 4px; }
+    .fcard { flex: 0 0 290px; }
 
-    .cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; margin: 2rem 0; padding: 2.4rem; }
-    .cta h2 { color: #fff; margin: 0; }
-    .ghost-dark { color: #fff; border-color: rgba(255,255,255,.25); }
-    .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.5rem 0; }
+    .roles { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 1.25rem; border-top: 1px solid var(--line); }
+    .role-col { padding: 1.25rem 1.5rem 0 0; }
+    .role-col + .role-col { padding-left: 1.5rem; border-left: 1px solid var(--line); }
+    .role-col h3 { font-size: 1.05rem; display: flex; align-items: center; gap: .5rem; margin-bottom: .6rem; }
+    .role-col ul { margin: 0; padding-left: 1.1rem; color: var(--ink-2); display: flex; flex-direction: column; gap: .35rem; }
 
-    :host { overflow-x: clip; }
-    .copy { min-width: 0; }
-    .chips-row { max-width: 34rem; }
-    .arcs, .slide-cta { display: none; }
+    .cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem; margin: 1.5rem 0 1rem; }
+    .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.5rem 0; border-top: 1px solid var(--line); }
 
     @media (max-width: 960px) {
-      .hero { grid-template-columns: 1fr; padding-top: 2.5rem; }
-      .showcase { height: 400px; }
-      .roles { grid-template-columns: 1fr; }
+      .hero { grid-template-columns: 1fr; gap: 2rem; padding-top: 2.5rem; }
+      .preview-wrap { max-width: 520px; }
+    }
+    @media (max-width: 760px) {
+      .roles { grid-template-columns: 1fr; border-top: 0; }
+      .role-col, .role-col + .role-col { padding: 1rem 0; border-left: 0; border-top: 1px solid var(--line); }
     }
 
-    /* Featured cards: horizontal scroll on mobile */
-    .cards-scroller { display: block; }
+    /* ---------- Phones: onboarding layout (preview with arcs on top, copy and slider below) ---------- */
     @media (max-width: 640px) {
-      .cards-scroller .cards-grid { display: flex; flex-wrap: nowrap; gap: .9rem; padding: 4px 2px 8px; }
-      .cards-scroller .cards-grid > * { min-width: 260px; flex-shrink: 0; }
-    }
-
-    /* ---------- Phones: onboarding-style hero ---------- */
-    @media (max-width: 640px) {
-      :host { padding: 12px 16px 32px; }
-      .nav { padding: 8px 8px 8px 14px; }
+      .top-in { padding: 0 12px 0 16px; height: 58px; }
       .plink, .getstarted { display: none; }
-
-      .hero { display: flex; flex-direction: column-reverse; gap: .5rem; padding: 1.2rem 0 1.5rem; }
-      .copy { display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; }
-      .copy > * { max-width: 100%; }
-      .chips-row { width: 100%; }
-      .showcase { width: 100%; }
-      .eyebrow { font-size: .74rem; }
-      h1 { font-size: 2.6rem; margin: .8rem 0 .7rem; }
+      .wrap-in { padding: 0 16px 32px; }
+      .hero { display: flex; flex-direction: column-reverse; align-items: stretch; gap: 1.5rem; padding: 1.25rem 0 1.5rem; }
+      .hero > * { min-width: 0; max-width: 100%; }
+      h1 { font-size: 2.35rem; }
       .lead { font-size: 1rem; }
-      .hero-search { width: 100%; margin-top: 1.3rem; }
-      .hero-search .btn { padding: 0 .9rem; }
-      .chips { max-width: 100%; }
+      .search { margin-top: 1.3rem; }
+      .search .btn { padding: 0 .9rem; }
+      .cta-row { display: none; }
 
-      .slide-cta { display: flex; align-items: center; gap: .8rem; width: 100%; height: 64px; margin-top: 1.2rem; padding: 7px 18px 7px 7px;
-        border-radius: 999px; color: var(--ink); font-weight: 700; font-size: 1.05rem;
+      .preview-wrap { padding: 46px 6px 0; }
+      .arcs { display: block; position: absolute; left: -16px; right: -16px; top: 0; width: calc(100% + 32px); height: 210px; }
+      .arcs path { fill: none; stroke-width: 30; stroke-linecap: round; }
+      .preview { position: relative; }
+      .preview .status { display: none; }
+
+      .slide-cta { display: flex; align-items: center; gap: .75rem; height: 60px; margin-top: 1.4rem; padding: 6px 16px 6px 6px;
+        border-radius: 999px; background: var(--surface); border: 1px solid var(--line-strong); font-weight: 700; color: var(--ink);
         cursor: grab; user-select: none; touch-action: pan-y; overflow: hidden; }
-      .slide-cta:active { cursor: grabbing; }
-      .knob { width: 50px; height: 50px; border-radius: 50%; background: var(--btn-bg); color: var(--btn-fg); display: grid; place-items: center;
-        box-shadow: 0 8px 18px -8px rgba(22,21,28,.6); will-change: transform; flex-shrink: 0;
-        animation: nudge 2.4s var(--ease) infinite; }
-      .chev { display: flex; color: var(--muted); flex-shrink: 0; }
-      .chev lh-icon { margin-left: -8px; animation: chev 1.6s ease-in-out infinite; }
-      .chev lh-icon:nth-child(1) { animation-delay: 0s; opacity: .3; }
-      .chev lh-icon:nth-child(2) { animation-delay: .15s; opacity: .6; }
-      .chev lh-icon:nth-child(3) { animation-delay: .3s; }
-
-      /* Showcase: rainbow arcs with the course card and two chips floating in front. */
-      .showcase { height: 300px; }
-      .arcs { display: block; position: absolute; inset: auto 0 0 0; width: 100%; height: 100%; }
-      .arcs path { fill: none; stroke-width: 30; stroke-linecap: round; stroke-dasharray: 600; animation: arc 1.4s var(--ease) both; }
-      .arcs path:nth-child(2) { animation-delay: .1s; } .arcs path:nth-child(3) { animation-delay: .2s; } .arcs path:nth-child(4) { animation-delay: .3s; }
-      .f1 { top: 58px; left: 50%; width: 210px; margin-left: -105px; }
-      .f2 { display: none; }
-      .f3 { display: none; }
-      .f4 { bottom: 0; left: -4px; width: 215px; padding: .8rem; }
-      .f5 { top: 0; left: auto; right: -4px; padding: .7rem .9rem; }
+      .slide-cta:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+      .knob { width: 48px; height: 48px; border-radius: 50%; background: var(--btn-bg); color: var(--btn-fg); display: grid; place-items: center; flex-shrink: 0; }
+      .chev { display: flex; color: var(--faint); }
+      .chev lh-icon + lh-icon { margin-left: -8px; }
+      .fcard { flex-basis: 260px; }
     }
-    @keyframes arc { from { stroke-dashoffset: 600; } }
-    @keyframes nudge { 0%, 60%, 100% { transform: translateX(0); } 30% { transform: translateX(6px); } }
-    @keyframes chev { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
   `]
 })
 export class LandingComponent {
@@ -241,63 +238,61 @@ export class LandingComponent {
   protected theme = inject(Theme);
   protected q = '';
   protected year = new Date().getFullYear();
+  protected tone = toneStyle;
 
   private catalog = toSignal(this.api.catalog());
+  protected total = computed(() => this.catalog()?.totalPublished ?? '');
   protected subjects = computed(() => this.catalog()?.subjects ?? []);
-  protected featured = computed(() => [...(this.catalog()?.courses ?? [])].sort((a, b) => b.studentCount - a.studentCount).slice(0, 3));
+  protected featured = computed(() => [...(this.catalog()?.courses ?? [])].sort((a, b) => b.studentCount - a.studentCount).slice(0, 6));
 
-  protected demoBars = ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((label, i) => ({ label, value: [2, 4, 3, 5, 2, 6, 3][i], highlight: i === 5 }));
+  // Static preview content (mirrors the seeded demo term).
+  protected demoDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((name, i) => ({ name, n: 14 + i, on: i === 1 }));
+  protected demoRows = [
+    { course: 2, code: 'DB201', title: 'EF Core Relationships', mon: 'Oct', day: 15, when: 'Tue 11:59 PM', status: 'Handed in', css: 'submitted' },
+    { course: 3, code: 'WD101', title: 'Responsive Portfolio Page', mon: 'Oct', day: 16, when: 'Wed 11:59 PM', status: 'Not submitted', css: 'open' },
+    { course: 1, code: 'CS301', title: 'Authentication with Cookies', mon: 'Oct', day: 17, when: 'Thu 11:59 PM', status: 'Not submitted', css: 'open' },
+  ];
 
   protected roles = [
-    { title: 'Students', icon: 'backpack', tone: 'var(--lilac)', points: ['Enroll from the catalog', 'Every due date on one calendar', 'Submit text or files', 'Feedback & live grades'] },
-    { title: 'Instructors', icon: 'presenter', tone: 'var(--lemon)', points: ['Create & publish courses', 'Set assignments with due dates', 'Grade one after another', 'Gradebook with CSV export'] },
-    { title: 'Administrators', icon: 'admin', tone: 'var(--mint)', points: ['Manage every account', 'Oversee all courses', 'Reassign instructors', 'Platform activity at a glance'] },
+    { title: 'Students', icon: 'backpack', points: ['Enroll from the catalog', 'See every due date on one calendar', 'Submit text or files, and resubmit until graded', 'Read grades and written feedback'] },
+    { title: 'Instructors', icon: 'presenter', points: ['Create and publish courses', 'Set assignments with due dates and points', 'Grade one submission after another', 'Keep a gradebook and export it to CSV'] },
+    { title: 'Administrators', icon: 'admin', points: ['Manage student and instructor accounts', 'Oversee every course', 'Reassign courses to instructors', 'See what is waiting to be graded'] },
   ];
 
   search() { this.router.navigate(['/catalog'], { queryParams: { q: this.q || null } }); }
+  go() { this.router.navigate(['/register']); }
 
-  // ---------- Swipe-to-start knob ----------
+  // ---------- Slide-to-start (phones). Tap or Enter also works. ----------
   @ViewChild('knob') private knobEl!: ElementRef<HTMLElement>;
   protected knobX = 0;
   protected dragging = false;
-  private dragStartX = 0;
+  protected moved = false;
+  private startX = 0;
   private trackWidth = 0;
-  private readonly THRESHOLD = 0.6; // 60% of track = navigate
 
   swipeStart(e: PointerEvent) {
     const target = e.currentTarget as HTMLElement;
     target.setPointerCapture(e.pointerId);
     this.dragging = true;
-    this.dragStartX = e.clientX;
-    this.trackWidth = target.clientWidth - 64; // track minus knob width
-    // Stop the nudge animation while dragging
-    this.knobEl?.nativeElement.style.setProperty('animation', 'none');
+    this.moved = false;
+    this.startX = e.clientX;
+    this.trackWidth = target.clientWidth - 60;
   }
 
   swipeMove(e: PointerEvent) {
     if (!this.dragging) return;
-    const raw = e.clientX - this.dragStartX;
-    // Clamp between 0 and trackWidth; add rubber-band resistance beyond 80%
-    const max = this.trackWidth;
-    if (raw < 0) { this.knobX = 0; return; }
-    if (raw > max * 0.8) {
-      this.knobX = max * 0.8 + (raw - max * 0.8) * 0.2; // rubber-band
-    } else {
-      this.knobX = raw;
-    }
+    const dx = Math.max(0, e.clientX - this.startX);
+    if (dx > 6) this.moved = true;
+    this.knobX = Math.min(dx, this.trackWidth);
   }
 
   swipeEnd() {
     if (!this.dragging) return;
     this.dragging = false;
-    const pct = this.knobX / this.trackWidth;
-    this.knobEl?.nativeElement.style.removeProperty('animation');
-    if (pct >= this.THRESHOLD) {
-      // Snap fully right then navigate
+    if (this.knobX >= this.trackWidth * 0.6) {
       this.knobX = this.trackWidth;
-      setTimeout(() => this.router.navigate(['/register']), 280);
+      setTimeout(() => this.go(), 200);
     } else {
-      // Rubber-band back
       this.knobX = 0;
     }
   }

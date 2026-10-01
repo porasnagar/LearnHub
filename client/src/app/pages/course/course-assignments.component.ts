@@ -23,40 +23,43 @@ import { CourseStore } from './course.routes';
     @if (!loaded()) {
       <div class="stack">@for (i of [1,2,3]; track i) { <div class="skeleton" style="height:84px"></div> }</div>
     } @else {
-      <div class="list stagger">
-        @for (a of shown(); track a.id) {
-          <a class="card item link-card" [routerLink]="[a.id]">
-            <lh-date-tile [date]="a.dueDate" />
-            <div class="grow">
-              <div class="strong title">{{ a.title }}</div>
-              <div class="small muted">Due {{ a.dueDate | date: 'EEE, MMM d · h:mm a' }} · {{ a.maxPoints }} pts · {{ due(a.dueDate) }}</div>
-            </div>
-            <div class="side">
-              @if (store.course()?.canManage) {
-                <div class="mini-meter"><div class="meter" [style.--fill]="'var(--c-deep)'"><span [style.width.%]="pct(a)"></span></div>
-                  <span class="tiny muted">{{ a.submissionCount }}/{{ store.course()!.studentCount }} submitted</span></div>
-                @if (a.ungradedCount) { <span class="status pending">{{ a.ungradedCount }} to grade</span> }
-              } @else {
-                @if (a.mySubmission?.score != null) { <span class="score serif">{{ fmt(a.mySubmission!.score!) }}<small>/{{ a.maxPoints }}</small></span> }
-                <span class="status {{ st(a).css }}">{{ st(a).label }}</span>
-              }
-              <lh-icon name="chevron-right" class="sm muted" />
-            </div>
-          </a>
-        } @empty {
-          <div class="card"><lh-empty icon="assignment" [title]="tab() === 'upcoming' ? 'Nothing upcoming' : 'No assignments here'" /></div>
-        }
-      </div>
+      <section class="card list-card">
+        <div class="due-list">
+          @for (a of shown(); track a.id) {
+            <a class="due-row" [routerLink]="[a.id]">
+              <lh-date-tile [date]="a.dueDate" />
+              <div class="grow">
+                <div class="title">{{ a.title }}</div>
+                <div class="meta">{{ a.dueDate | date: 'EEE, MMM d · h:mm a' }} · {{ a.maxPoints }} pts · {{ due(a.dueDate) }}</div>
+              </div>
+              <div class="end side">
+                @if (store.course()?.canManage) {
+                  <div class="mini-meter"><div class="meter" [style.--fill]="'var(--c-deep)'"><span [style.width.%]="pct(a)"></span></div>
+                    <span class="tiny muted tabnum">{{ a.submissionCount }}/{{ store.course()!.studentCount }} handed in</span></div>
+                  @if (a.ungradedCount) { <span class="status pending">{{ a.ungradedCount }} to grade</span> }
+                } @else {
+                  @if (a.mySubmission?.score != null) { <span class="score serif tabnum">{{ fmt(a.mySubmission!.score!) }}<small>/{{ a.maxPoints }}</small></span> }
+                  <span class="status {{ st(a).css }}">{{ st(a).label }}</span>
+                }
+              </div>
+            </a>
+          } @empty {
+            <lh-empty icon="assignment" [title]="tab() === 'upcoming' ? 'Nothing upcoming' : 'No assignments here'" />
+          }
+        </div>
+      </section>
     }`,
   styles: [`
     :host { display: flex; flex-direction: column; gap: 1rem; }
-    .list { display: flex; flex-direction: column; gap: .75rem; }
-    .item { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.1rem; color: inherit; text-decoration: none !important; }
-    .title { font-size: 1.02rem; }
-    .side { display: flex; align-items: center; gap: .8rem; flex-shrink: 0; }
-    .mini-meter { width: 150px; display: flex; flex-direction: column; gap: 4px; }
-    .score { font-size: 1.25rem; font-weight: 700; } .score small { font-size: .8rem; color: var(--muted); }
-    @media (max-width: 640px) { .item { flex-wrap: wrap; } .side { width: 100%; justify-content: flex-end; } }
+    .list-card { padding: .5rem .75rem; }
+    .side { gap: .8rem; }
+    .mini-meter { width: 140px; display: flex; flex-direction: column; gap: 4px; }
+    .score { font-size: 1.15rem; font-weight: 700; } .score small { font-size: .8rem; color: var(--muted); }
+    @media (max-width: 640px) {
+      .due-row { flex-wrap: wrap; }
+      .side { width: 100%; margin-left: 0; padding-left: calc(46px + .85rem); justify-content: flex-start; }
+      .mini-meter { width: 120px; }
+    }
   `]
 })
 export class CourseAssignmentsComponent {

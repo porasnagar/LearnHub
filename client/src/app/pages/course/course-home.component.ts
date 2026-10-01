@@ -15,29 +15,33 @@ import { CourseStore } from './course.routes';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (store.course(); as c) {
-      <div class="bento stagger">
+      <div class="bento">
         <div class="span-8 stack">
-          <section class="card card-lg">
-            <div class="card-head"><div class="card-title">About this course</div></div>
-            <p class="pre desc">{{ c.description }}</p>
-          </section>
-
           @if (store.canSeeContent()) {
-            <section class="card card-lg">
+            <section class="card" aria-labelledby="up-title">
               <div class="card-head">
-                <div><div class="card-title">Upcoming</div><div class="card-sub">{{ upcoming().length }} due soon</div></div>
-                <a routerLink="assignments" class="btn btn-glass btn-sm">All assignments</a>
+                <div><h2 id="up-title" class="card-title">Upcoming</h2><p class="card-sub">{{ upcoming().length ? upcoming().length + ' not yet due' : 'Nothing due soon' }}</p></div>
+                <a routerLink="assignments" class="btn btn-ghost btn-sm">All assignments</a>
               </div>
-              @for (a of upcoming(); track a.id) {
-                <a class="row-link" [routerLink]="['assignments', a.id]">
-                  <lh-date-tile [date]="a.dueDate" />
-                  <div class="grow"><div class="strong">{{ a.title }}</div><div class="tiny muted">{{ due(a.dueDate) }} · {{ a.maxPoints }} pts</div></div>
-                  @if (c.canManage) { <span class="small muted nowrap">{{ a.submissionCount }}/{{ c.studentCount }} in</span> }
-                  @else { <span class="status {{ status(a).css }}">{{ status(a).label }}</span> }
-                </a>
-              } @empty { <lh-empty icon="calendar" title="Nothing due soon" /> }
+              <div class="due-list">
+                @for (a of upcoming(); track a.id) {
+                  <a class="due-row" [routerLink]="['assignments', a.id]">
+                    <lh-date-tile [date]="a.dueDate" />
+                    <div class="grow"><div class="title truncate">{{ a.title }}</div><div class="meta">{{ due(a.dueDate) }} · {{ a.maxPoints }} pts</div></div>
+                    <div class="end">
+                      @if (c.canManage) { <span class="small muted nowrap tabnum">{{ a.submissionCount }}/{{ c.studentCount }} handed in</span> }
+                      @else { <span class="status {{ status(a).css }}">{{ status(a).label }}</span> }
+                    </div>
+                  </a>
+                } @empty { <lh-empty icon="calendar" title="Nothing due soon" text="New assignments for this course will appear here." /> }
+              </div>
             </section>
           }
+
+          <section class="card card-lg" aria-labelledby="about-title">
+            <h2 id="about-title" class="card-title mb-2">About this course</h2>
+            <p class="pre desc">{{ c.description }}</p>
+          </section>
         </div>
 
         <aside class="span-4 stack">
@@ -56,20 +60,19 @@ import { CourseStore } from './course.routes';
               </div>
             </section>
           } @else if (c.canManage) {
-            <section class="card card-lg tone" style="--tone: var(--lemon)">
-              <div class="row between"><div class="card-title">Course status</div><span class="status {{ c.isPublished ? 'published' : 'draft' }}">{{ c.isPublished ? 'Published' : 'Draft' }}</span></div>
-              <div class="stats mt-3">
-                <div><div class="n serif">{{ c.studentCount }}</div><div class="tiny">Students</div></div>
-                <div><div class="n serif">{{ c.assignmentCount }}</div><div class="tiny">Assignments</div></div>
-                <div><div class="n serif">{{ toGrade() }}</div><div class="tiny">To grade</div></div>
-              </div>
-              <div class="row mt-3"><a routerLink="grades" class="btn btn-ink btn-sm grow">Open gradebook</a><a routerLink="settings" class="btn btn-glass btn-sm">Edit</a></div>
+            <section class="card card-lg">
+              <div class="row between"><h2 class="card-title">Course status</h2><span class="status {{ c.isPublished ? 'published' : 'draft' }}">{{ c.isPublished ? 'Published' : 'Draft' }}</span></div>
+              <dl class="stats mt-3">
+                <div><dt class="tiny muted">Students</dt><dd class="n serif tabnum">{{ c.studentCount }}</dd></div>
+                <div><dt class="tiny muted">Assignments</dt><dd class="n serif tabnum">{{ c.assignmentCount }}</dd></div>
+                <div><dt class="tiny muted">To grade</dt><dd class="n serif tabnum" [class.warn]="toGrade() > 0">{{ toGrade() }}</dd></div>
+              </dl>
+              <div class="row mt-3"><a routerLink="grades" class="btn btn-ink btn-sm grow">Open gradebook</a><a routerLink="settings" class="btn btn-secondary btn-sm">Settings</a></div>
             </section>
           } @else {
-            <section class="card card-lg tone" style="--tone: var(--lilac)">
-              <div class="lock"><lh-icon name="lock" class="lg" /></div>
-              <div class="card-title mt-2">{{ c.assignmentCount }} assignments inside</div>
-              <p class="small mt-1">Enroll to see the coursework, hand in your work and get feedback from {{ c.instructor.fullName }}.</p>
+            <section class="card card-lg">
+              <h2 class="card-title row"><lh-icon name="lock" class="sm" /> {{ c.assignmentCount }} assignments</h2>
+              <p class="small muted mt-1">Enroll to see the coursework, hand in your work and get feedback from {{ c.instructor.fullName }}.</p>
             </section>
           }
 
@@ -91,14 +94,13 @@ import { CourseStore } from './course.routes';
       </div>
     }`,
   styles: [`
-    .desc { font-size: 1.02rem; line-height: 1.75; color: var(--ink-2); }
-    .row-link { display: flex; align-items: center; gap: .9rem; padding: .7rem .5rem; border-radius: 16px; color: inherit; text-decoration: none !important; transition: background .2s; }
-    .row-link:hover { background: var(--glass-strong); }
+    .desc { font-size: 1rem; line-height: 1.7; color: var(--ink-2); max-width: 68ch; }
     .center { display: flex; flex-direction: column; align-items: center; text-align: center; }
     .w100 { width: 100%; }
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
-    .n { font-size: 1.9rem; font-weight: 600; line-height: 1; }
-    .lock { width: 52px; height: 52px; border-radius: 16px; background: #16151c; color: #e9e58e; display: grid; place-items: center; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin: 0; }
+    .stats dd { margin: .2rem 0 0; }
+    .n { font-size: 1.8rem; font-weight: 600; line-height: 1; }
+    .n.warn { color: var(--warn); }
     .facts { display: grid; grid-template-columns: auto 1fr; gap: .45rem 1rem; margin: 0; font-size: .92rem; }
     .facts dt { color: var(--muted); font-weight: 600; } .facts dd { margin: 0; font-weight: 600; }
   `]

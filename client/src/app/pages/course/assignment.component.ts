@@ -16,7 +16,7 @@ import { CourseStore } from './course.routes';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (a(); as a) {
-      <div class="bento stagger">
+      <div class="bento">
         <div class="span-8 stack">
           <section class="card card-lg">
             <div class="row between wrap">
@@ -31,7 +31,7 @@ import { CourseStore } from './course.routes';
               <div class="fact"><lh-icon name="calendar" class="sm" /><span><b>Due</b> {{ a.dueDate | date: 'EEE, MMM d · h:mm a' }}</span></div>
               <div class="fact"><lh-icon name="award" class="sm" /><span><b>{{ a.maxPoints }}</b> points</span></div>
               <div class="fact"><lh-icon name="upload" class="sm" /><span>Text entry or file upload</span></div>
-              <span class="status {{ overdue() ? 'missing' : 'info' }}">{{ due(a.dueDate) }}</span>
+              <span class="status {{ overdue() && !a.canManage && !a.mySubmission ? 'missing' : 'open' }}">{{ due(a.dueDate) }}</span>
             </div>
             <div class="instructions pre">{{ a.instructions }}</div>
           </section>
@@ -43,8 +43,8 @@ import { CourseStore } from './course.routes';
                   <span class="status {{ s.isLate ? 'late' : 'ok' }}">{{ s.isLate ? 'Late' : 'On time' }}</span></div>
                 @if (s.textAnswer) { <div class="doc pre">{{ s.textAnswer }}</div> }
                 @if (s.originalFileName) {
-                  <a class="file glass" [href]="'/api/assignments/download/' + s.id" download>
-                    <span class="fi"><lh-icon name="file" /></span><span class="grow truncate strong">{{ s.originalFileName }}</span><lh-icon name="download" class="sm" />
+                  <a class="file" [href]="'/api/assignments/download/' + s.id" download>
+                    <lh-icon name="file" /><span class="grow truncate strong">{{ s.originalFileName }}</span><span class="small">Download</span><lh-icon name="download" class="sm" />
                   </a>
                 }
                 @if (canSubmit() && !composer()) {
@@ -60,7 +60,7 @@ import { CourseStore } from './course.routes';
                 <textarea class="textarea" rows="7" [(ngModel)]="text" placeholder="Write your answer here, or attach a file below…" maxlength="8000"></textarea>
                 <label class="drop" [class.over]="dragging()" (dragover)="$event.preventDefault(); dragging.set(true)" (dragleave)="dragging.set(false)" (drop)="onDrop($event)">
                   <input type="file" (change)="onPick($event)" [accept]="a.allowedExtensions.replaceAll(' ', '')" hidden />
-                  <span class="di"><lh-icon name="upload" class="lg" /></span>
+                  <lh-icon name="upload" class="lg" />
                   @if (file(); as f) { <span class="strong">{{ f.name }}</span><span class="tiny muted">{{ (f.size / 1024).toFixed(0) }} KB · click to change</span> }
                   @else { <span class="strong">Drop a file or click to browse</span><span class="tiny muted">Up to {{ a.maxFileSizeMB }} MB · {{ a.allowedExtensions }}</span> }
                 </label>
@@ -101,15 +101,14 @@ import { CourseStore } from './course.routes';
             <section class="card card-lg center">
               <div class="row between w100"><div class="card-title">Status</div><span class="status {{ st(a.mySubmission).css }}">{{ st(a.mySubmission).label }}</span></div>
               @if (a.mySubmission?.score != null) {
-                <lh-ring class="mt-3" [percent]="pct()" [center]="fmt(a.mySubmission!.score!) + '/' + a.maxPoints" [caption]="'Grade ' + letter(pct())" [size]="170" />
+                <lh-ring class="mt-3" [percent]="pct()" [center]="fmt(a.mySubmission!.score!) + '/' + a.maxPoints" [caption]="'Grade ' + letter(pct())" [size]="160" />
               } @else {
-                <div class="wait mt-3"><lh-icon [name]="a.mySubmission ? 'clock' : 'target'" class="lg" /></div>
-                <p class="small muted mt-2">{{ a.mySubmission ? 'Submitted — waiting for your instructor to grade it.' : 'Not handed in yet.' }}</p>
+                <p class="small muted mt-3 left">{{ a.mySubmission ? 'Handed in. Your instructor hasn\\'t graded it yet; the score and comments will appear here.' : 'Not handed in yet. Use the form to submit text, a file, or both.' }}</p>
               }
             </section>
             @if (a.mySubmission?.feedback) {
-              <section class="card card-lg tone" style="--tone: var(--lemon)">
-                <div class="card-title mb-2">Feedback</div>
+              <section class="card card-lg">
+                <h2 class="card-title mb-2">Comments</h2>
                 <div class="comment">
                   <lh-avatar [name]="store.course()?.instructor?.fullName ?? 'Instructor'" size="sm" />
                   <div><div class="small strong">{{ store.course()?.instructor?.fullName }} · {{ a.mySubmission!.gradedAt | date: 'MMM d' }}</div>
@@ -118,13 +117,13 @@ import { CourseStore } from './course.routes';
               </section>
             }
           } @else {
-            <section class="card card-lg tone" style="--tone: var(--lilac)">
-              <div class="card-title">Grading</div>
-              <div class="stats mt-3">
-                <div><div class="n serif">{{ submittedCount() }}</div><div class="tiny">Submitted</div></div>
-                <div><div class="n serif">{{ gradedCount() }}</div><div class="tiny">Graded</div></div>
-                <div><div class="n serif">{{ avg() === null ? '–' : fmt(avg()!) }}</div><div class="tiny">Average</div></div>
-              </div>
+            <section class="card card-lg">
+              <h2 class="card-title">Grading</h2>
+              <dl class="stats mt-3">
+                <div><dt class="tiny muted">Handed in</dt><dd class="n serif tabnum">{{ submittedCount() }}<span class="of">/{{ enrolledCount() }}</span></dd></div>
+                <div><dt class="tiny muted">Graded</dt><dd class="n serif tabnum">{{ gradedCount() }}</dd></div>
+                <div><dt class="tiny muted">Average</dt><dd class="n serif tabnum">{{ avg() === null ? '–' : fmt(avg()!) }}</dd></div>
+              </dl>
               @if (firstToGrade(); as id) {
                 <a class="btn btn-ink btn-block mt-3" [routerLink]="['/grade', id]"><lh-icon name="pencil" class="sm" /> {{ gradedCount() < submittedCount() ? 'Start grading' : 'Review grades' }}</a>
               }
@@ -137,29 +136,30 @@ import { CourseStore } from './course.routes';
     }`,
   styles: [`
     .back { display: inline-flex; align-items: center; gap: .35rem; color: var(--muted); }
-    .title { font-size: clamp(1.6rem, 3vw, 2.2rem); margin: 1rem 0 .8rem; }
+    .title { font-size: clamp(1.55rem, 3vw, 2.05rem); margin: .9rem 0 .75rem; }
     .facts { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
-    .fact { display: inline-flex; align-items: center; gap: .4rem; font-size: .9rem; color: var(--ink-2); }
-    .instructions { margin-top: 1.1rem; font-size: 1.02rem; line-height: 1.75; }
-    .doc { font-family: var(--serif); font-size: 1.02rem; line-height: 1.8; padding: 1.3rem 1.5rem; border-radius: 18px; background: var(--glass-strong); border: 1px solid var(--line); }
-    .file { display: flex; align-items: center; gap: .8rem; margin-top: .9rem; padding: .7rem .9rem; border-radius: 16px; color: var(--ink); text-decoration: none !important; }
-    .fi { width: 38px; height: 38px; border-radius: 12px; background: var(--violet-soft); color: var(--violet); display: grid; place-items: center; }
+    .fact { display: inline-flex; align-items: center; gap: .4rem; font-size: .92rem; color: var(--ink-2); }
+    .instructions { margin-top: 1.1rem; font-size: 1rem; line-height: 1.7; max-width: 70ch; }
+    .doc { font-family: var(--serif); font-size: 1.02rem; line-height: 1.75; padding: 1.2rem 1.35rem; border-radius: var(--r-ctl); background: var(--surface-2); border: 1px solid var(--line); }
+    .file { display: flex; align-items: center; gap: .7rem; margin-top: .9rem; padding: .65rem .85rem; border-radius: var(--r-ctl); border: 1px solid var(--line);
+      background: var(--surface); color: var(--ink); text-decoration: none !important; }
+    .file:hover { background: var(--surface-2); }
     .composer { display: flex; flex-direction: column; gap: 1rem; }
-    .note { display: flex; align-items: center; gap: .5rem; padding: .6rem .9rem; border-radius: 14px; background: var(--warn-soft); color: var(--warn); font-weight: 600; font-size: .88rem; }
-    .drop { display: flex; flex-direction: column; align-items: center; gap: .25rem; padding: 1.4rem; border-radius: 20px; border: 2px dashed var(--line);
-      background: var(--glass-strong); cursor: pointer; text-align: center; transition: border-color .2s, background .2s, transform .2s; }
+    .note { display: flex; align-items: center; gap: .5rem; padding: .6rem .85rem; border-radius: var(--r-ctl); background: var(--warn-soft); color: var(--warn); font-weight: 600; font-size: .9rem; }
+    .drop { display: flex; flex-direction: column; align-items: center; gap: .3rem; padding: 1.3rem; border-radius: var(--r-ctl); border: 1.5px dashed var(--line-strong);
+      background: var(--surface-2); color: var(--ink-2); cursor: pointer; text-align: center; transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease); }
     .drop:hover, .drop.over { border-color: var(--violet); background: var(--violet-soft); }
-    .drop.over { transform: scale(1.01); }
-    .di { width: 52px; height: 52px; border-radius: 16px; background: var(--btn-bg); color: var(--btn-fg); display: grid; place-items: center; margin-bottom: .4rem; }
     .pad { padding: 1.1rem 1.25rem .3rem; }
     .ml { margin-left: .3rem; }
     .center { display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .left { text-align: left; align-self: stretch; }
     .w100 { width: 100%; }
-    .wait { width: 70px; height: 70px; border-radius: 22px; display: grid; place-items: center; background: var(--violet-soft); color: var(--violet); animation: float 5s ease-in-out infinite; }
     .comment { display: flex; gap: .7rem; }
-    .bubble { margin-top: .35rem; padding: .75rem .9rem; border-radius: 4px 16px 16px 16px; background: rgba(255,255,255,.7); font-size: .94rem; }
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
-    .n { font-size: 1.9rem; font-weight: 600; line-height: 1; }
+    .bubble { margin-top: .35rem; padding: .7rem .85rem; border-radius: 4px var(--r-ctl) var(--r-ctl) var(--r-ctl); background: var(--surface-2); border: 1px solid var(--line); font-size: .95rem; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin: 0; }
+    .stats dd { margin: .2rem 0 0; }
+    .n { font-size: 1.8rem; font-weight: 600; line-height: 1; }
+    .of { font-size: 1rem; color: var(--muted); }
   `]
 })
 export class AssignmentComponent {

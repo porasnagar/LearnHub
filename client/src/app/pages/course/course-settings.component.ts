@@ -26,7 +26,7 @@ import { CourseStore } from './course.routes';
     }`,
   styles: [`
     .danger { border-color: color-mix(in srgb, var(--bad) 30%, transparent); }
-    .ic { width: 44px; height: 44px; border-radius: 14px; background: var(--bad-soft); color: var(--bad); display: grid; place-items: center; flex-shrink: 0; }
+    .ic { color: var(--bad); display: inline-flex; flex-shrink: 0; align-self: flex-start; margin-top: 2px; }
   `]
 })
 export class CourseSettingsComponent {

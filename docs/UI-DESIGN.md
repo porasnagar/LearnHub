@@ -1,18 +1,68 @@
 # LearnHub — UI & Product Design Plan
 
-> **Current design (Angular client).** The information architecture below still applies: course shell with
-> Home / Assignments / Grades / People / Settings, calendar, gradebook and grading screen. The visual language
-> has moved on from the navy-and-gold version described in §3. It now follows the reference shots:
-> - **Surfaces:** frosted-glass panels (`backdrop-filter`) over a slowly drifting pastel background, with 22–28px radii.
-> - **Controls:** black pill buttons and pill-shaped tabs.
-> - **Palette:** lilac, lemon, mint, peach and sky pastels, with a violet accent.
-> - **Typography:** the fonts are unchanged: Source Sans 3 for UI text and Source Serif 4 for display text and numbers.
-> - **Icons and art:** a custom duotone icon set, a new "L + hub dot" logo, and flat illustrations on course banners.
-> - **Themes:** light and dark.
-> - **Mobile:** a floating tab bar with an animated active pill.
-> - **Motion:** staggered card entrances, count-up numbers, bars and rings that draw themselves, and view transitions.
->
-> Tokens live in `client/src/styles.scss`, and the components in `client/src/app/shared/`.
+## 0. Current design brief (v3, Angular client)
+
+Sections 1–8 below record earlier iterations. The information architecture still applies: a course page with Home, Assignments, Grades, People and Settings tabs; a calendar; a gradebook; and a grading screen. This section is the contract for the current visual design. Tokens live in `client/src/styles.scss`.
+
+### Who uses it, where, and for how long
+- **Students:** on a phone, mostly in 30-second checks between classes ("what's due, did I get my grade?"), and for a few minutes when submitting work. So the to-do list is the hero, touch targets are at least 44px, and the bottom tab bar comes first.
+- **Instructors:** on a laptop, in 30–60 minute grading sessions. So tables are dense, surfaces are calm, and the grading screen has previous/next controls.
+- **Admins:** occasional use. Plain tables are enough.
+- **Theme:** light follows the system setting; dark mode is there for evening study.
+
+### References (conventions borrowed)
+| Reference | What we borrow |
+|---|---|
+| Canvas | The To-do list, the gradebook matrix, and SpeedGrader's next/previous grading flow |
+| Google Classroom app | The classwork list, course colour per class, and the bottom tab bar |
+| Things 3 / Apple Reminders | Calm due-date lists: one row per item, with the date on the left |
+| The owner's references (Mondly, Next Skill, the class-schedule app) | Pastel course colours, the day-pill week strip, and soft rounded shapes |
+
+### What each colour means
+| Hue | Meaning — and nothing else |
+|---|---|
+| Ink `#17161D` | Text, the primary action button, the active navigation item |
+| Violet `#5B45E0` | Links, focus ring, "today" and the current selection |
+| Eight course pastels | Which course something belongs to (date tile, course chip, banner). Never a status |
+| Red | Missing or overdue work |
+| Amber | Late, or waiting for the instructor to grade |
+| Green | Graded, or on time |
+| Blue | Submitted and waiting |
+| Greys | Everything else |
+
+Lemon is no longer used as decoration; it is only one of the course pastels.
+
+### The one layout primitive
+The **due row** is repeated everywhere: a course-coloured date tile, then the title, then course code and points, then a status or score on the right. It appears on the dashboard, the course assignment lists, the calendar agenda, grades and the grading queue.
+
+### Tells removed
+- The drifting aurora blobs.
+- Glass on content cards.
+- Coloured shadows and glows.
+- The badge pill above the hero headline.
+- The serif-italic accent word.
+- Gradient text and gradient hero backgrounds.
+- The row of four big KPI tiles.
+- ALL-CAPS labels.
+- Icons sitting in coloured squares.
+- Coloured left stripes on rows.
+- Floating, pulsing, blinking and count-up animations, and staggered card entrances.
+- Vague copy ("beautifully organised", "one calm workspace").
+
+### Tells kept on purpose (with reasons)
+- **Frosted glass on floating chrome only** — the top bar, mobile tab bar and dialog scrim. Content scrolls underneath these, and the owner asked for glass.
+- **Rounded shapes** — 16px on cards, 12px on controls, pills for chips and the tab bar. This is a consumer study app, not a dense tool, and the references are rounded.
+- **Source Serif 4 for page titles and big numbers only** — the owner chose these fonts.
+- **Flat course illustrations on course banners** — they let you tell courses apart at a glance.
+
+### Motion
+Motion is only for changes of state the user should notice:
+- the route fade (150ms, desktop only);
+- the tab pill expanding;
+- toasts and the confirm dialog appearing;
+- the press feedback on buttons.
+
+Nothing loops, and nothing animates just because the page loaded. All motion respects `prefers-reduced-motion`.
 
 ## 1. Why the first UI felt "AI-generated"
 
