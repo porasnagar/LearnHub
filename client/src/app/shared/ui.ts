@@ -383,7 +383,8 @@ export class EmptyComponent {
     .info .dot { color: var(--info); }
     .scrim { position: fixed; inset: 0; z-index: 1900; display: grid; place-items: center; padding: 1rem; background: rgba(17, 16, 22, .4); animation: fade 200ms var(--ease-out) backwards; }
     @keyframes fade { from { opacity: 0; } }
-    .dialog { width: min(440px, 100%); box-shadow: var(--shadow-float); animation: lh-sheet 260ms var(--ease-out) backwards; }
+    /* Solid: the dialog sits inside the frosted scrim, where its own blur can't reach the page. */
+    .dialog { width: min(440px, 100%); box-shadow: var(--shadow-float); background: var(--surface); animation: lh-sheet 260ms var(--ease-out) backwards; }
     .dialog h2 { font-size: 1.2rem; gap: .55rem; }
     .dialog h2.danger lh-icon { color: var(--bad); }
   `]

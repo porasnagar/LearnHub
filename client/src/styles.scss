@@ -50,7 +50,7 @@
   --info: #2f62b8;
   --info-soft: #e4ecfa;
 
-  --frost-bg: rgba(243, 242, 247, 0.78);
+  --frost-bg: rgba(243, 242, 247, 0.86);
   --frost-chip: rgba(255, 255, 255, 0.86);
   --shadow-float: 0 1px 2px rgba(23, 22, 29, 0.06), 0 12px 32px -12px rgba(23, 22, 29, 0.22);
 
@@ -75,7 +75,7 @@
     radial-gradient(45vmax 40vmax at 0% 100%, rgba(255, 186, 150, 0.22), transparent 62%);
   --glass-card: rgba(255, 255, 255, 0.66);
   --glass-side: rgba(255, 255, 255, 0.52);
-  --glass-panel: rgba(255, 255, 255, 0.78);
+  --glass-panel: rgba(255, 255, 255, 0.96);
   --glass-line: rgba(23, 22, 29, 0.07);
   --glass-edge: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.35) 36%, rgba(255, 255, 255, 0.06) 62%, rgba(155, 132, 255, 0.45));
   --card-shadow: 0 1px 2px rgba(40, 30, 90, 0.04), 0 16px 36px -24px rgba(60, 40, 140, 0.32);
@@ -121,7 +121,7 @@
   --bad-soft: rgba(255, 138, 158, 0.13);
   --info: #8fb1f5;
   --info-soft: rgba(143, 177, 245, 0.13);
-  --frost-bg: rgba(17, 16, 22, 0.78);
+  --frost-bg: rgba(17, 16, 22, 0.86);
   --frost-chip: rgba(34, 33, 42, 0.9);
   --nav-grad: linear-gradient(135deg, #a690ff 0%, #7a5ef6 52%, #5539dc 100%);
   --nav-glow: 0 10px 24px -10px rgba(122, 94, 246, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -132,7 +132,7 @@
     radial-gradient(45vmax 40vmax at 0% 100%, rgba(220, 90, 200, 0.10), transparent 62%);
   --glass-card: rgba(34, 32, 45, 0.6);
   --glass-side: rgba(24, 23, 32, 0.55);
-  --glass-panel: rgba(30, 29, 40, 0.8);
+  --glass-panel: rgba(28, 27, 37, 0.97);
   --glass-line: rgba(255, 255, 255, 0.07);
   --glass-edge: linear-gradient(160deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06) 36%, rgba(255, 255, 255, 0.02) 62%, rgba(171, 157, 255, 0.42));
   --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 18px 40px -22px rgba(0, 0, 0, 0.75);
@@ -250,7 +250,10 @@ img, svg { display: block; }
   -webkit-backdrop-filter: blur(16px) saturate(160%);
   backdrop-filter: blur(16px) saturate(160%);
 }
-/* Floating panels (bell, palette, dialogs, toasts): frosted glass with the same glowing edge. */
+/* Floating panels (bell, palette, dialogs, toasts): nearly solid, with a hint of frost.
+   They must stay readable even where the blur can't work: a backdrop-filter nested inside another
+   one (the bell sits in the frosted top bar, the dialog in the frosted scrim) only blurs its parent,
+   not the page, so a see-through panel would show the page text through it. */
 .glass-panel {
   background: var(--glass-panel);
   -webkit-backdrop-filter: blur(22px) saturate(170%);

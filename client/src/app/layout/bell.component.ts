@@ -69,7 +69,9 @@ const ICON: Record<NotificationKind, string> = {
       box-shadow: 0 0 0 2px var(--surface); font-variant-numeric: tabular-nums; animation: lh-pop 240ms var(--ease-out) backwards; }
 
     .panel { position: absolute; z-index: 60; top: calc(100% + 10px); right: -6px; width: 380px; max-height: min(520px, 72vh);
-      display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; }
+      display: flex; flex-direction: column; border-radius: 16px; overflow: hidden;
+      /* Solid: this panel lives inside the frosted top bar, where its own blur can't reach the page. */
+      background: var(--surface); }
     .head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .7rem .6rem .6rem 1rem; border-bottom: 1px solid var(--glass-line); }
     .list { overflow-y: auto; overscroll-behavior: contain; padding: .4rem; }
     .item { display: flex; align-items: flex-start; gap: .7rem; padding: .65rem .6rem; border-radius: 12px; color: inherit; text-decoration: none !important;
