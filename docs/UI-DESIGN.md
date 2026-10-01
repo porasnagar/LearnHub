@@ -21,7 +21,8 @@ Sections 1–8 below record earlier iterations. The information architecture sti
 ### What each colour means
 | Hue | Meaning — and nothing else |
 |---|---|
-| Ink `#17161D` | Text, the primary action button, the active navigation item |
+| Ink `#17161D` | Text and the primary action button |
+| Purple gradient `--nav-grad` (`#9B84FF` → `#4B31CF`) | The active navigation item (sidebar and phone tab bar) and the selected day in the landing preview. Owner's request |
 | Violet `#5B45E0` | Links, focus ring, "today" and the current selection |
 | Eight course pastels | Which course something belongs to (date tile, course chip, banner). Never a status |
 | Red | Missing or overdue work |
@@ -54,15 +55,24 @@ The **due row** is repeated everywhere: a course-coloured date tile, then the ti
 - **Rounded shapes** — 16px on cards, 12px on controls, pills for chips and the tab bar. This is a consumer study app, not a dense tool, and the references are rounded.
 - **Source Serif 4 for page titles and big numbers only** — the owner chose these fonts.
 - **Flat course illustrations on course banners** — they let you tell courses apart at a glance.
+- **A purple gradient on the active navigation item** — the owner asked for the nav highlight "purple, with shades", with the bar's border kept white. It is the only gradient in the interface, and it only ever means "you are here".
 
 ### Motion
-Motion is only for changes of state the user should notice:
-- the route fade (150ms, desktop only);
-- the tab pill expanding;
-- toasts and the confirm dialog appearing;
-- the press feedback on buttons.
+The owner asked for soft animation throughout (v3.1). The rules that keep it calm:
+- **Ease-out with no overshoot.** No bounce or elastic curves.
+- **Short.** About 200–400ms for movement. Chart fills (meters, rings, bars) take up to 1s, once, when they first appear.
+- **Only transform and opacity**, so nothing reflows. Entrance animations use `animation-fill-mode: backwards` so no transform stays behind afterwards, because a lingering transform would trap `position: fixed` children.
+- **Nothing loops.** The exceptions are loading indicators, and the bell rings once when there are unread items.
+- **`prefers-reduced-motion` turns all of it off.**
 
-Nothing loops, and nothing animates just because the page loaded. All motion respects `prefers-reduced-motion`.
+What moves:
+- Pages and course tabs rise 10px and fade in (340ms). The app shell is excluded because it holds the fixed sidebar and tab bar.
+- Rows in `.due-list`, cards in `.cards-grid` and tiles in `.bento` arrive 45ms apart (capped at 300ms).
+- Link cards lift 2px on hover. Buttons and calendar days press in slightly.
+- Meters, segment bars, rings and bar charts fill from zero.
+- The bell panel and the Ctrl+K palette drop in from their trigger. Dialogs rise in.
+- A calendar month slides in from the side you moved towards.
+- The phone tab pill widens to show its label.
 
 ## 1. Why the first UI felt "AI-generated"
 

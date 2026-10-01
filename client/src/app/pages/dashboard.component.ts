@@ -2,10 +2,11 @@ import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { of } from 'rxjs';
 import { Api } from '../core/api.service';
 import { AssignmentMini } from '../core/models';
 import { Auth } from '../core/services';
-import { artFor, dueText, firstName, greeting, isoDate, letterGrade, score, toneStyle } from '../core/util';
+import { ago, artFor, dueText, firstName, greeting, isoDate, letterGrade, score, toneStyle } from '../core/util';
 import { IconComponent } from '../shared/icon.component';
 import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent, DateTileComponent, EmptyComponent } from '../shared/ui';
 
@@ -117,6 +118,18 @@ import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent
                       </div>
                     </a>
                   } @empty { <lh-empty icon="chat" title="No grades yet" text="Scores and comments from your instructors appear here." /> }
+                </div>
+              </section>
+              <section class="card" aria-labelledby="news-title">
+                <div class="card-head"><h2 id="news-title" class="card-title">Announcements</h2></div>
+                <div class="due-list">
+                  @for (a of feed() ?? []; track a.id) {
+                    <a class="due-row" [routerLink]="['/courses', a.courseId]" [attr.style]="tone(a.courseId)">
+                      <span class="news-ic"><lh-icon name="megaphone" class="sm" /></span>
+                      <div class="grow"><div class="title truncate">{{ a.title }}</div><div class="meta"><span class="code-chip">{{ a.courseCode }}</span> · {{ ago(a.createdAt) }}</div></div>
+                      @if (a.isPinned) { <lh-icon name="pin" class="sm muted" aria-label="Pinned" /> }
+                    </a>
+                  } @empty { <lh-empty icon="megaphone" title="No announcements" text="News from your instructors shows up here." /> }
                 </div>
               </section>
             </div>
@@ -262,6 +275,7 @@ import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent
     .dots i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .55; }
     .empty-week { padding: .9rem .4rem; }
 
+    .news-ic { width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; display: grid; place-items: center; background: var(--c); color: #17161d; --duo: .3; }
     .score-tile { width: 68px; height: 52px; flex-shrink: 0; border-radius: var(--r-ctl); background: var(--c); color: #17161d;
       display: flex; align-items: baseline; justify-content: center; padding-top: 12px; line-height: 1; }
     .score-tile .serif { font-size: 1.3rem; font-weight: 700; }
@@ -287,6 +301,9 @@ export class DashboardComponent {
   private api = inject(Api);
   protected auth = inject(Auth);
   protected d = toSignal(this.api.dashboard());
+  // Only the student dashboard shows the announcements card.
+  protected feed = toSignal(this.auth.isStudent() ? this.api.announcementFeed(4) : of([]));
+  protected ago = ago;
   protected today = new Date();
   protected hello = greeting();
   protected selected = signal<string | null>(null);

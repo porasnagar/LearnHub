@@ -139,3 +139,24 @@ public record UserRowDto(UserDto User, int CoursesTaught, int Enrollments);
 public record AdminUsersDto(Dictionary<string, int> Counts, List<UserRowDto> Users);
 
 public record ChangeRoleRequest(UserRole Role);
+
+// ---------- Announcements, notifications, search, profile ----------
+
+public record AnnouncementDto(int Id, int CourseId, string CourseCode, string CourseTitle, string Title, string Body,
+    bool IsPinned, DateTime CreatedAt, PersonDto Author, bool CanManage);
+
+public record AnnouncementRequest(
+    [Required, StringLength(150)] string Title,
+    [Required, StringLength(4000)] string Body,
+    bool IsPinned);
+
+public record PinRequest(bool IsPinned);
+
+/// <param name="Kind">grade | due | missing | announcement | submission</param>
+public record NotificationDto(string Key, string Kind, string Title, string Detail, DateTime At, string Link, int? CourseId);
+
+public record SearchItem(int Id, string Title, string Subtitle, string Link, int? CourseId);
+
+public record SearchResultDto(List<SearchItem> Courses, List<SearchItem> Assignments, List<SearchItem> People);
+
+public record UpdateProfileRequest([Required, StringLength(100, MinimumLength = 2)] string FullName);

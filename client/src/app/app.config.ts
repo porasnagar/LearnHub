@@ -9,7 +9,15 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes,
       withComponentInputBinding(),
-      withViewTransitions({ skipInitialTransition: true }),
+      // An interrupted transition (quick double navigation, hidden tab) rejects its promises; that's expected, not an error.
+      withViewTransitions({
+        skipInitialTransition: true,
+        onViewTransitionCreated: ({ transition }) => {
+          const t = transition as unknown as { ready?: Promise<void>; finished?: Promise<void> };
+          t.ready?.catch(() => {});
+          t.finished?.catch(() => {});
+        }
+      }),
       withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
     // ASP.NET Core issues the XSRF-TOKEN cookie; Angular echoes it as X-XSRF-TOKEN on writes.
     provideHttpClient(

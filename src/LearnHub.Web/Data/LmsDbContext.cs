@@ -10,6 +10,7 @@ public class LmsDbContext(DbContextOptions<LmsDbContext> options) : DbContext(op
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
     public DbSet<Submission> Submissions => Set<Submission>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -53,6 +54,17 @@ public class LmsDbContext(DbContextOptions<LmsDbContext> options) : DbContext(op
              .HasForeignKey(s => s.AssignmentId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(s => s.Student).WithMany(u => u.Submissions)
              .HasForeignKey(s => s.StudentId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        b.Entity<Announcement>(e =>
+        {
+            e.HasIndex(a => new { a.CourseId, a.CreatedAt });
+            e.HasOne(a => a.Course).WithMany()
+             .HasForeignKey(a => a.CourseId).OnDelete(DeleteBehavior.Cascade);
+            // Restrict (not cascade) on the author for the same multiple-cascade-path reason as above;
+            // LmsService.DeleteUserAsync removes an author's posts explicitly.
+            e.HasOne(a => a.Author).WithMany()
+             .HasForeignKey(a => a.AuthorId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

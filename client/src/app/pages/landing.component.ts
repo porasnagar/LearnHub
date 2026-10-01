@@ -1,16 +1,17 @@
-import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, computed, inject } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, ElementRef, ViewChild, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Api } from '../core/api.service';
-import { Theme } from '../core/services';
-import { toneStyle } from '../core/util';
+import { Auth, Theme } from '../core/services';
+import { isoDate, toneStyle } from '../core/util';
 import { IconComponent, LogoComponent } from '../shared/icon.component';
 import { CourseCardComponent, ScrollerComponent } from '../shared/ui';
 
 @Component({
   selector: 'lh-landing',
-  imports: [RouterLink, FormsModule, IconComponent, LogoComponent, CourseCardComponent, ScrollerComponent],
+  imports: [DatePipe, RouterLink, FormsModule, IconComponent, LogoComponent, CourseCardComponent, ScrollerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="top frost">
@@ -64,38 +65,61 @@ import { CourseCardComponent, ScrollerComponent } from '../shared/ui';
             <span class="grow" [style.opacity]="1 - knobX / 140">Slide to create an account</span>
             <span class="chev" aria-hidden="true"><lh-icon name="chevron-right" class="sm" /><lh-icon name="chevron-right" class="sm" /></span>
           </div>
+
+          <!-- One tap into the seeded demo term, no typing. -->
+          <div class="try">
+            <span class="small muted strong">Or look around first:</span>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="demo('Student')" [disabled]="!!busy()">
+              <lh-icon name="backpack" class="sm" /> {{ busy() === 'Student' ? 'Opening…' : 'Student demo' }}
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="demo('Instructor')" [disabled]="!!busy()">
+              <lh-icon name="presenter" class="sm" /> {{ busy() === 'Instructor' ? 'Opening…' : 'Instructor demo' }}
+            </button>
+          </div>
         </div>
 
-        <!-- An honest preview of the product's main screen: the student's week. -->
-        <div class="preview-wrap" aria-hidden="true">
-          <svg class="arcs" viewBox="0 0 400 220" preserveAspectRatio="xMidYMax meet">
+        <!-- A working preview of the product's main screen: the student's week, starting today. Tap a day. -->
+        <div class="preview-wrap">
+          <svg class="arcs" viewBox="0 0 400 220" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
             <path d="M20 220a180 180 0 0 1 360 0" stroke="var(--sky)" />
             <path d="M60 220a140 140 0 0 1 280 0" stroke="var(--peach)" />
             <path d="M100 220a100 100 0 0 1 200 0" stroke="var(--mint)" />
             <path d="M140 220a60 60 0 0 1 120 0" stroke="var(--lemon)" />
           </svg>
-          <div class="preview card">
+          <div class="preview card" aria-label="Preview: a student's week">
             <div class="row between">
-              <div><div class="card-title">This week</div><div class="card-sub">3 due · 1 graded today</div></div>
-              <span class="avatar sm t1">AM</span>
+              <div><div class="card-title">This week</div><div class="card-sub">{{ demoRows.length }} due · tap a day</div></div>
+              <span class="avatar sm t1" aria-hidden="true">AM</span>
             </div>
-            <div class="mini-days">
-              @for (d of demoDays; track d.n) {
-                <span class="mini-day" [class.on]="d.on"><span class="dn">{{ d.name }}</span><span class="dd">{{ d.n }}</span></span>
+            <div class="mini-days" role="tablist" aria-label="Days this week">
+              @for (d of days; track d.key) {
+                <button type="button" role="tab" class="mini-day" [class.on]="d.key === sel()" [attr.aria-selected]="d.key === sel()"
+                        [attr.aria-label]="(d.date | date: 'EEEE d MMMM') + ', ' + d.count + ' due'" (click)="sel.set(d.key)">
+                  <span class="dn">{{ d.today ? 'Today' : (d.date | date: 'EEE') }}</span>
+                  <span class="dd">{{ d.date | date: 'd' }}</span>
+                  <span class="pip" [class.has]="d.count > 0"></span>
+                </button>
               }
             </div>
-            <div class="due-list">
-              @for (r of demoRows; track r.title) {
-                <div class="due-row" [attr.style]="tone(r.course)">
-                  <span class="tile"><span>{{ r.mon }}</span><b>{{ r.day }}</b></span>
-                  <div class="grow"><div class="title truncate">{{ r.title }}</div><div class="meta">{{ r.code }} · {{ r.when }}</div></div>
-                  <span class="status {{ r.css }}">{{ r.status }}</span>
-                </div>
-              }
-            </div>
+            @for (k of [sel()]; track k) {
+              <div class="due-list day-list">
+                @for (r of selRows(); track r.title) {
+                  <button type="button" class="due-row" [attr.style]="tone(r.course)" (click)="demo('Student')" title="Open the student demo">
+                    <span class="tile"><span>{{ r.due | date: 'MMM' }}</span><b>{{ r.due | date: 'd' }}</b></span>
+                    <div class="grow"><div class="title truncate">{{ r.title }}</div><div class="meta">{{ r.code }} · {{ r.due | date: 'EEE h:mm a' }}</div></div>
+                    <span class="status {{ r.css }}">{{ r.status }}</span>
+                  </button>
+                } @empty {
+                  <div class="free">
+                    <lh-icon name="check-circle" />
+                    <span><strong class="d-block">Nothing due</strong><span class="small muted">A free day. Tap another one.</span></span>
+                  </div>
+                }
+              </div>
+            }
             <div class="grade-row">
               <span class="code-chip" style="--c:#d9ccff">CS301</span>
-              <span class="grow small">Routing &amp; Tag Helpers Quiz</span>
+              <span class="grow small">Routing &amp; Tag Helpers Quiz <span class="muted">· graded</span></span>
               <span class="serif strong">18<span class="muted small">/20</span></span>
             </div>
           </div>
@@ -167,12 +191,26 @@ import { CourseCardComponent, ScrollerComponent } from '../shared/ui';
     .preview-wrap { position: relative; min-width: 0; }
     .arcs { display: none; }
     .preview { padding: 1.1rem; box-shadow: var(--shadow-float); }
+    .d-block { display: block; }
+    .try { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: 1rem; }
     .mini-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; margin: .9rem 0 .4rem; }
-    .mini-day { display: flex; flex-direction: column; align-items: center; padding: 5px 0; border-radius: 10px; border: 1px solid var(--line); line-height: 1.2; }
-    .mini-day .dn { font-size: .7rem; color: var(--muted); }
-    .mini-day .dd { font-size: .95rem; font-weight: 700; }
-    .mini-day.on { background: var(--btn-bg); color: var(--btn-fg); border-color: var(--btn-bg); }
-    .mini-day.on .dn { color: inherit; opacity: .75; }
+    .mini-day { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 0 5px; min-width: 0; border-radius: 12px; border: 1px solid var(--line);
+      background: var(--surface); color: var(--ink); line-height: 1.2; cursor: pointer; font: inherit;
+      transition: background 220ms var(--ease-out), border-color 220ms var(--ease-out), color 220ms var(--ease-out), transform 120ms var(--ease-out), box-shadow 220ms var(--ease-out); }
+    .mini-day:hover { border-color: var(--line-strong); }
+    .mini-day:active { transform: scale(.94); }
+    .mini-day .dn { font-size: .68rem; color: var(--muted); white-space: nowrap; }
+    .mini-day .dd { font-size: .95rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .pip { width: 5px; height: 5px; border-radius: 50%; background: transparent; }
+    .pip.has { background: var(--violet); }
+    /* Selected day: the same purple pill as the active navigation. */
+    .mini-day.on { background: var(--nav-grad); color: #fff; border-color: transparent; box-shadow: var(--nav-glow); }
+    .mini-day.on .dn { color: inherit; opacity: .85; }
+    .mini-day.on .pip.has { background: #fff; }
+    .day-list { min-height: 140px; }
+    button.due-row { width: 100%; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; }
+    .free { display: flex; align-items: center; gap: .7rem; padding: 1.1rem .5rem; color: var(--ok); animation: lh-enter 300ms var(--ease-out) backwards; }
+    .free strong { color: var(--ink); }
     .tile { width: 42px; height: 46px; flex-shrink: 0; border-radius: 11px; background: var(--c); color: #17161d; display: flex; flex-direction: column;
       align-items: center; justify-content: center; line-height: 1; font-size: .7rem; }
     .tile b { font-size: 1.15rem; margin-top: 2px; }
@@ -220,6 +258,8 @@ import { CourseCardComponent, ScrollerComponent } from '../shared/ui';
       .arcs path { fill: none; stroke-width: 30; stroke-linecap: round; }
       .preview { position: relative; }
       .preview .status { display: none; }
+      .try { justify-content: center; }
+      .try > span { width: 100%; text-align: center; }
 
       .slide-cta { display: flex; align-items: center; gap: .75rem; height: 60px; margin-top: 1.4rem; padding: 6px 16px 6px 6px;
         border-radius: 999px; background: var(--surface); border: 1px solid var(--line-strong); font-weight: 700; color: var(--ink);
@@ -239,19 +279,46 @@ export class LandingComponent {
   protected q = '';
   protected year = new Date().getFullYear();
   protected tone = toneStyle;
+  private auth = inject(Auth);
+  protected busy = signal<'Student' | 'Instructor' | null>(null);
 
   private catalog = toSignal(this.api.catalog());
   protected total = computed(() => this.catalog()?.totalPublished ?? '');
   protected subjects = computed(() => this.catalog()?.subjects ?? []);
   protected featured = computed(() => [...(this.catalog()?.courses ?? [])].sort((a, b) => b.studentCount - a.studentCount).slice(0, 6));
 
-  // Static preview content (mirrors the seeded demo term).
-  protected demoDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((name, i) => ({ name, n: 14 + i, on: i === 1 }));
+  // Preview content: the kind of week the seeded demo term has, laid out from today so the dates are always real.
+  private readonly start = new Date(new Date().setHours(0, 0, 0, 0));
+  private at(days: number, h: number, m = 0) { const d = new Date(this.start); d.setDate(d.getDate() + days); d.setHours(h, m); return d; }
   protected demoRows = [
-    { course: 2, code: 'DB201', title: 'EF Core Relationships', mon: 'Oct', day: 15, when: 'Tue 11:59 PM', status: 'Handed in', css: 'submitted' },
-    { course: 3, code: 'WD101', title: 'Responsive Portfolio Page', mon: 'Oct', day: 16, when: 'Wed 11:59 PM', status: 'Not submitted', css: 'open' },
-    { course: 1, code: 'CS301', title: 'Authentication with Cookies', mon: 'Oct', day: 17, when: 'Thu 11:59 PM', status: 'Not submitted', css: 'open' },
+    { course: 2, code: 'DB201', title: 'Normalization Worksheet', due: this.at(0, 17), status: 'Handed in', css: 'submitted' },
+    { course: 1, code: 'CS301', title: 'Authentication with Cookies', due: this.at(0, 23, 59), status: 'To do', css: 'open' },
+    { course: 3, code: 'WD101', title: 'Responsive Portfolio Page', due: this.at(1, 23, 59), status: 'To do', css: 'open' },
+    { course: 2, code: 'DB201', title: 'EF Core Relationships', due: this.at(2, 23, 59), status: 'To do', css: 'open' },
+    { course: 4, code: 'SE401', title: 'Sprint Retrospective Report', due: this.at(3, 18), status: 'To do', css: 'open' },
+    { course: 5, code: 'CS210', title: 'Linked Lists Lab', due: this.at(4, 23, 59), status: 'To do', css: 'open' },
+    { course: 6, code: 'UX220', title: 'Usability Test Plan', due: this.at(6, 9), status: 'To do', css: 'open' },
   ];
+  protected days = Array.from({ length: 7 }, (_, i) => {
+    const date = this.at(i, 0);
+    const key = isoDate(date);
+    return { key, date, today: i === 0, count: this.demoRows.filter(r => isoDate(r.due) === key).length };
+  });
+  protected sel = signal(this.days[0].key);
+  protected selRows = computed(() => this.demoRows.filter(r => isoDate(r.due) === this.sel()));
+
+  /** Signs in with a seeded demo account (the same ones listed on the sign-in page). */
+  demo(role: 'Student' | 'Instructor') {
+    if (this.busy()) return;
+    this.busy.set(role);
+    const account = role === 'Student'
+      ? { email: 'aarav@learnhub.local', password: 'Learn@123' }
+      : { email: 'priya@learnhub.local', password: 'Teach@123' };
+    this.auth.login(account.email, account.password, false).subscribe({
+      next: () => this.router.navigateByUrl('/dashboard'),
+      error: () => this.busy.set(null)
+    });
+  }
 
   protected roles = [
     { title: 'Students', icon: 'backpack', points: ['Enroll from the catalog', 'See every due date on one calendar', 'Submit text or files, and resubmit until graded', 'Read grades and written feedback'] },

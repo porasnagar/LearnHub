@@ -84,8 +84,12 @@ export class Theme {
       try { localStorage.setItem('lh-theme', next); } catch { /* private mode */ }
     };
     // Cross-fade the whole page when the browser supports view transitions.
-    const doc = document as Document & { startViewTransition?: (cb: () => void) => void };
-    doc.startViewTransition ? doc.startViewTransition(apply) : apply();
+    type Transition = { ready: Promise<void>; finished: Promise<void>; updateCallbackDone: Promise<void> };
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => Transition };
+    if (!doc.startViewTransition) { apply(); return; }
+    const t = doc.startViewTransition(apply);
+    // A skipped transition (e.g. the tab is hidden) rejects these; the theme still applies.
+    t.ready.catch(() => {}); t.finished.catch(() => {}); t.updateCallbackDone.catch(() => {});
   }
 }
 

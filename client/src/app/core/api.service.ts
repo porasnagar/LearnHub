@@ -2,8 +2,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
-  AdminUsers, AssignmentDetail, AssignmentForm, AssignmentRow, CalendarData, Catalog, CourseCard, CourseDetail,
-  CourseForm, CourseGrade, Dashboard, Gradebook, GradeResult, Grading, Person, Profile, Role, RosterRow, User
+  AdminUsers, Announcement, AppNotification, AssignmentDetail, AssignmentForm, AssignmentRow, CalendarData, Catalog, CourseCard, CourseDetail,
+  CourseForm, CourseGrade, Dashboard, Gradebook, GradeResult, Grading, Person, Profile, Role, RosterRow, SearchResult, User
 } from './models';
 
 /** Typed wrapper over the ASP.NET Core API (/api/*). */
@@ -18,6 +18,7 @@ export class Api {
   logout() { return this.http.post<void>('/api/auth/logout', {}); }
   profile() { return this.http.get<Profile>('/api/auth/profile'); }
   changePassword(currentPassword: string, newPassword: string) { return this.http.post<void>('/api/auth/password', { currentPassword, newPassword }); }
+  updateProfile(fullName: string) { return this.http.put<User>('/api/auth/profile', { fullName }); }
 
   // Courses
   catalog(q?: string | null, category?: string | null): Observable<Catalog> {
@@ -68,4 +69,15 @@ export class Api {
   instructors() { return this.http.get<Person[]>('/api/admin/instructors'); }
   changeRole(id: number, role: Role) { return this.http.post<void>(`/api/admin/users/${id}/role`, { role }); }
   deleteUser(id: number) { return this.http.delete<void>(`/api/admin/users/${id}`); }
+
+  // Announcements, notifications, search
+  announcements(courseId: number) { return this.http.get<Announcement[]>(`/api/courses/${courseId}/announcements`); }
+  announcementFeed(take = 5) { return this.http.get<Announcement[]>('/api/announcements/feed', { params: { take } }); }
+  postAnnouncement(courseId: number, body: { title: string; body: string; isPinned: boolean }) {
+    return this.http.post<Announcement>(`/api/courses/${courseId}/announcements`, body);
+  }
+  pinAnnouncement(id: number, isPinned: boolean) { return this.http.put<void>(`/api/announcements/${id}/pin`, { isPinned }); }
+  deleteAnnouncement(id: number) { return this.http.delete<void>(`/api/announcements/${id}`); }
+  notifications() { return this.http.get<AppNotification[]>('/api/notifications'); }
+  search(q: string) { return this.http.get<SearchResult>('/api/search', { params: { q } }); }
 }

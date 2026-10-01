@@ -104,7 +104,9 @@ using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<LmsDbContext>();
         await db.Database.EnsureCreatedAsync();
+        await DbSeeder.UpgradeSchemaAsync(db);          // add tables introduced after the DB was first created
         await DbSeeder.SeedAsync(scope.ServiceProvider);
+        await DbSeeder.SeedAnnouncementsAsync(db);      // demo posts for databases seeded before announcements existed
         logger.LogInformation("Database ready.");
     }
     catch (Exception ex)

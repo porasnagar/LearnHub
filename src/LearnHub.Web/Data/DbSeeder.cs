@@ -209,5 +209,61 @@ public static class DbSeeder
         }
 
         await db.SaveChangesAsync();
+        await SeedAnnouncementsAsync(db);
+    }
+
+    /// <summary>
+    /// Brings an existing database up to the current model without losing data: creates any table or index
+    /// that is missing (e.g. Announcements, added after the first release). EnsureCreated only acts on an
+    /// empty database, so without this a deployed SQLite file would never get new tables.
+    /// </summary>
+    public static async Task UpgradeSchemaAsync(LmsDbContext db)
+    {
+        if (!db.Database.IsSqlite()) return;
+        var script = db.Database.GenerateCreateScript();
+        foreach (var raw in script.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            string? sql = null;
+            if (raw.StartsWith("CREATE TABLE ", StringComparison.OrdinalIgnoreCase))
+                sql = "CREATE TABLE IF NOT EXISTS " + raw["CREATE TABLE ".Length..];
+            else if (raw.StartsWith("CREATE UNIQUE INDEX ", StringComparison.OrdinalIgnoreCase))
+                sql = "CREATE UNIQUE INDEX IF NOT EXISTS " + raw["CREATE UNIQUE INDEX ".Length..];
+            else if (raw.StartsWith("CREATE INDEX ", StringComparison.OrdinalIgnoreCase))
+                sql = "CREATE INDEX IF NOT EXISTS " + raw["CREATE INDEX ".Length..];
+            if (sql is not null) await db.Database.ExecuteSqlRawAsync(sql);
+        }
+    }
+
+    /// <summary>Adds a few demo announcements when a database has courses but none yet.</summary>
+    public static async Task SeedAnnouncementsAsync(LmsDbContext db)
+    {
+        if (await db.Announcements.AnyAsync()) return;
+        var courses = await db.Courses.Where(c => c.IsPublished).OrderBy(c => c.Id).ToListAsync();
+        if (courses.Count == 0) return;
+
+        var now = DateTime.Now;
+        (string Title, string Body, bool Pinned, int HoursAgo)[] posts =
+        [
+            ("Welcome — read this first", "Hi everyone, welcome to the course. The syllabus is on the course home page and every assignment lists its due date and points. Ask questions in class or by email; I reply within a working day.", true, 24 * 20),
+            ("Office hours moved to Thursday", "This week only, office hours move from Wednesday to Thursday, 2–4 PM in Room 214. Bring your drafts if you want early feedback.", false, 30),
+            ("Grades for the last assignment are out", "I've finished grading. Read the comments on your submission before starting the next task — most of the feedback carries over.", false, 6),
+        ];
+
+        foreach (var (course, i) in courses.Select((c, i) => (c, i)))
+        {
+            // Every course gets the pinned welcome; others rotate so each course looks a little different.
+            db.Announcements.Add(new Announcement
+            {
+                CourseId = course.Id, AuthorId = course.InstructorId, Title = posts[0].Title, Body = posts[0].Body,
+                IsPinned = true, CreatedAt = now.AddHours(-posts[0].HoursAgo - i * 5)
+            });
+            var extra = posts[1 + i % 2];
+            db.Announcements.Add(new Announcement
+            {
+                CourseId = course.Id, AuthorId = course.InstructorId, Title = extra.Title, Body = extra.Body,
+                IsPinned = false, CreatedAt = now.AddHours(-extra.HoursAgo - i * 3)
+            });
+        }
+        await db.SaveChangesAsync();
     }
 }

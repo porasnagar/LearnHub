@@ -1,4 +1,4 @@
-﻿# LearnHub â€” Online Learning Management System
+﻿# LearnHub — Online Learning Management System
 
 LearnHub is a learning management system with:
 - an **ASP.NET Core 8** back end (MVC controllers exposing a JSON Web API, **Entity Framework Core**, cookie authentication);
@@ -12,21 +12,23 @@ Instructors publish courses and assignments. Students enroll, submit their work,
 
 | Role | What they can do |
 |------|------------------|
-| **Visitor** | Landing page, course catalog (search and subject filters), public course overview |
-| **Student** | Register and sign in; enroll in and leave courses. Dashboard with an "Up next" card, a progress breakdown, a 7-day activity chart, current grade, a week strip with day pills, course cards and recent feedback. Calendar. Submit text and/or a file (drag and drop) and resubmit until the work is graded. Grades for each course, plus an overview across courses. |
-| **Instructor** | Create, edit, publish and delete their own courses, with a live preview card. Assignments; class list; gradebook matrix with CSV export. Grading screen (SpeedGrader-style) with a student switcher, a score slider, a live letter grade and "Save & next". Dashboard with figures, a submissions chart, a grading queue and assignment completion. |
+| **Visitor** | Landing page with a working preview of a student's week (real dates from today; tap a day to filter), one-tap student and instructor demos, course catalog (search and subject filters), public course overview |
+| **Student** | Register and sign in; enroll in and leave courses. Dashboard with an "Up next" card, a progress breakdown, a 7-day activity chart, current grade, a week strip with day pills, course cards and recent feedback. Calendar with month and list views, and an .ics export for Google Calendar, Apple Calendar or Outlook. Submit text and/or a file (drag and drop) and resubmit until the work is graded. Grades for each course, plus an overview across courses and a "what-if" calculator that projects the course grade and works out the average needed for a target letter. Course announcements. |
+| **Instructor** | Create, edit, publish and delete their own courses, with a live preview card. Assignments; class list; gradebook matrix with CSV export. Grading screen (SpeedGrader-style) with a student switcher, a score slider, a live letter grade and "Save & next". Dashboard with figures, a submissions chart, a grading queue and assignment completion. Course announcements: post, pin, delete. |
 | **Admin** | Everything an instructor can do, on every course, plus user administration (filter, change roles, delete accounts) |
 
-The interface uses frosted-glass panels over a soft animated background, with light and dark themes. On desktop there's a glass sidebar; on phones there's a floating glass tab bar with an animated pill for the active tab. The icon set and logo are LearnHub's own, and each course gets a pastel color and a flat illustration based on its subject. Motion includes staggered card entrances, counting numbers, bars and rings that draw themselves, and page transitions. All of it respects the system's reduced-motion setting.
+**Everyone signed in** gets a notifications bell (new grades, work due within 48 hours, missing work, announcements, and new hand-ins for staff), a Ctrl/Cmd+K search palette (pages, courses, assignments, and people for admins; also opens with "/"), and can change their display name.
+
+The interface has opaque cards on a soft canvas, with frosted glass only on the floating top bar, the phone tab bar and dialogs. It has light and dark themes. The active navigation item is a purple gradient pill. The icon set and logo are LearnHub's own, and each course gets a pastel colour and a flat illustration based on its subject. Motion is soft: pages rise in, lists arrive one row after another, and meters, rings and bars fill. All of it respects the system's reduced-motion setting.
 
 ## 2. Technology stack
 
 | Layer | Technology |
 |-------|------------|
 | Front end | Angular 19 (standalone components, signals, lazy-loaded routes), TypeScript, SCSS |
-| Back end | ASP.NET Core 8 MVC â€” API controllers returning JSON (C# 12) |
+| Back end | ASP.NET Core 8 MVC — API controllers returning JSON (C# 12) |
 | Data access | Entity Framework Core 8 (code-first) |
-| Database | SQLite (`App_Data/learnhub.db`); SQL Server supported (see Â§6) |
+| Database | SQLite (`App_Data/learnhub.db`); SQL Server supported (see §6) |
 | Security | Cookie auth + roles, PBKDF2 password hashing, anti-forgery (XSRF) tokens on every write |
 | Testing | xUnit (business rules) + an end-to-end API test script |
 
@@ -66,43 +68,45 @@ The seed is a realistic term: 7 courses, about 22 assignments and several weeks 
 dotnet test
 ```
 
-20 xUnit tests cover the business rules:
+24 xUnit tests cover the business rules:
 - registration, login and password change;
 - ownership checks;
 - enrollment;
 - submissions (enrollment required, resubmission, late detection, locked once graded);
 - grading range;
 - cascading deletes;
-- admin user management.
+- admin user management;
+- announcements (who can post, pin and delete; removed with their course) and display-name changes.
 
 ## 5. Architecture
 
 ```
 Angular SPA (client/)                          ASP.NET Core (src/LearnHub.Web)
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   JSON /api/*   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚ pages â†’ Api service      â”‚ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â–¶ â”‚ Api/*Controller (MVC, [ApiController]) â”‚
-â”‚ Auth / Theme / Toasts    â”‚  cookie + XSRF  â”‚   â†’ LmsService (business rules)        â”‚
-â”‚ guards, interceptor      â”‚ â—€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ â”‚   â†’ LmsDbContext (EF Core) â†’ SQLite    â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                 â”‚   â†’ FileStorageService (App_Data)      â”‚
-     built into wwwroot/  â”€â”€â”€ served by â”€â”€â”€â–¶ â”‚ static files + SPA fallback            â”‚
-                                             â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌──────────────────────────┐   JSON /api/*   ┌────────────────────────────────────────┐
+│ pages → Api service      │ ──────────────▶ │ Api/*Controller (MVC, [ApiController]) │
+│ Auth / Theme / Toasts    │  cookie + XSRF  │   → LmsService (business rules)        │
+│ guards, interceptor      │ ◀────────────── │   → LmsDbContext (EF Core) → SQLite    │
+└──────────────────────────┘                 │   → FileStorageService (App_Data)      │
+     built into wwwroot/  ─── served by ───▶ │ static files + SPA fallback            │
+                                             └────────────────────────────────────────┘
 ```
 
 **Back end**
-- `Models/` â€” entities.
-- `Data/` â€” `LmsDbContext` and the seeder.
-- `Services/` â€” `LmsService` (all business rules; unit-tested) and `FileStorageService`.
-- `Api/` â€” controllers and DTOs:
-  - `AuthController` â€” sign-in, registration, sign-out, profile, password;
-  - `CoursesController` â€” catalog, course pages, gradebook, CSV export, class list, enrollment, create/update/delete;
-  - `AssignmentsController` and `SubmissionsController` â€” assignment pages, submitting, downloads, grading;
-  - `DashboardController`, `CalendarController`, `GradesController`, `AdminController`.
+- `Models/` — entities.
+- `Data/` — `LmsDbContext` and the seeder.
+- `Services/` — `LmsService` (all business rules; unit-tested) and `FileStorageService`.
+- `Api/` — controllers and DTOs:
+  - `AuthController` — sign-in, registration, sign-out, profile, password;
+  - `CoursesController` — catalog, course pages, gradebook, CSV export, class list, enrollment, create/update/delete;
+  - `AssignmentsController` and `SubmissionsController` — assignment pages, submitting, downloads, grading;
+  - `DashboardController`, `CalendarController`, `GradesController`, `AdminController`;
+  - `FeaturesControllers.cs` — announcements, notifications, search and the calendar `.ics` export.
 
 **Front end**
-- `core/` â€” typed `Api` service, `models.ts` (mirrors the C# DTOs), `Auth` / `Toasts` / `Confirm` / `Theme` services, route guards, error interceptor.
-- `shared/` â€” icon set and logo; avatar, course illustration, ring and bar charts, count-up, course card, toasts and dialog.
-- `layout/shell` â€” sidebar, top bar and mobile tab bar.
-- `pages/` â€” one lazy-loaded component per screen. The course pages live under `pages/course/`, which has its own child routes and a shared `CourseStore`.
+- `core/` — typed `Api` service, `models.ts` (mirrors the C# DTOs), `Auth` / `Toasts` / `Confirm` / `Theme` services, route guards, error interceptor.
+- `shared/` — icon set and logo; avatar, course illustration, ring and bar charts, course card, announcements, toasts and dialog.
+- `layout/` — the shell (sidebar, top bar, phone tab bar), the notifications bell and the Ctrl+K search palette.
+- `pages/` — one lazy-loaded component per screen. The course pages live under `pages/course/`, which has its own child routes and a shared `CourseStore`.
 
 **Security**
 - The session cookie is HttpOnly and SameSite=Strict.
@@ -123,7 +127,7 @@ Runtime settings:
 - HTTPS is handled by the platform's proxy. The app trusts `X-Forwarded-Proto`.
 
 **Render** (simplest, deploys from GitHub):
-1. Go to render.com and choose **New â†’ Blueprint**.
+1. Go to render.com and choose **New → Blueprint**.
 2. Pick this repo. `render.yaml` creates the web service and a 1 GB disk mounted at `/data`.
 3. Every push to `main` redeploys.
 
@@ -159,12 +163,12 @@ Then open http://localhost:8080.
 
 ```
 LearnHub.sln
-â”œâ”€â”€ client/                    Angular 19 front end (npm start / npm run build)
-â”‚   â””â”€â”€ src/app/{core,shared,layout,pages}
-â”œâ”€â”€ src/LearnHub.Web/          ASP.NET Core back end
-â”‚   â”œâ”€â”€ Api/                   API controllers + DTOs
-â”‚   â”œâ”€â”€ Data/  Models/  Services/
-â”‚   â””â”€â”€ Program.cs             DI, EF Core, auth, XSRF, SPA hosting
-â”œâ”€â”€ tests/LearnHub.Tests/      xUnit tests
-â””â”€â”€ docs/                      DESIGN.md, UI-DESIGN.md
+├── client/                    Angular 19 front end (npm start / npm run build)
+│   └── src/app/{core,shared,layout,pages}
+├── src/LearnHub.Web/          ASP.NET Core back end
+│   ├── Api/                   API controllers + DTOs
+│   ├── Data/  Models/  Services/
+│   └── Program.cs             DI, EF Core, auth, XSRF, SPA hosting
+├── tests/LearnHub.Tests/      xUnit tests
+└── docs/                      DESIGN.md, UI-DESIGN.md
 ```

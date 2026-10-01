@@ -62,6 +62,17 @@ public class AuthController(LmsService lms, LmsDbContext db, IAntiforgery antifo
     public async Task<IActionResult> ChangePassword(ChangePasswordRequest request) =>
         FromResult(await lms.ChangePasswordAsync(UserId, request.CurrentPassword, request.NewPassword));
 
+    /// <summary>Change the display name; the cookie is re-issued so the new name shows everywhere at once.</summary>
+    [Authorize, HttpPut("profile")]
+    public async Task<ActionResult<UserDto>> UpdateProfile(UpdateProfileRequest request)
+    {
+        var result = await lms.UpdateNameAsync(UserId, request.FullName);
+        if (!result.Succeeded) return Fail(result.Error);
+        var current = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        await SignInAsync(result.Value!, current.Properties?.IsPersistent ?? false);
+        return UserDto.From(result.Value!);
+    }
+
     private async Task SignInAsync(AppUser user, bool persistent)
     {
         var principal = CreatePrincipal(user, CookieAuthenticationDefaults.AuthenticationScheme);

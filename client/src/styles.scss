@@ -9,6 +9,8 @@
      green   — graded / on time          blue  — submitted, waiting
    Surfaces are opaque. Frosted glass is only for floating chrome that content scrolls under
    (.frost: top bar, mobile tab bar, dialog scrim).
+   Owner's choices (kept on purpose): the active navigation item is a purple gradient (--nav-grad),
+   and content moves softly (see "Motion" at the end of this file).
    ========================================================================== */
 
 :root {
@@ -53,6 +55,11 @@
   --r-sm: 10px;
   --dur: 150ms;
   --ease: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.22, 0.8, 0.26, 1);
+
+  /* Active navigation (owner's choice): purple in shades, white text. */
+  --nav-grad: linear-gradient(135deg, #9b84ff 0%, #6e52f3 52%, #4b31cf 100%);
+  --nav-glow: 0 10px 20px -12px rgba(75, 49, 207, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 
   --sans: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
   --serif: "Source Serif 4", Georgia, serif;
@@ -93,6 +100,8 @@
   --info-soft: rgba(143, 177, 245, 0.13);
   --frost-bg: rgba(17, 16, 22, 0.78);
   --frost-chip: rgba(34, 33, 42, 0.9);
+  --nav-grad: linear-gradient(135deg, #a690ff 0%, #7a5ef6 52%, #5539dc 100%);
+  --nav-glow: 0 10px 22px -12px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 36px -12px rgba(0, 0, 0, 0.7);
   color-scheme: dark;
 }
@@ -172,8 +181,8 @@ img, svg { display: block; }
 .card.ink { background: #17161d; color: #fff; border-color: #17161d; }
 .card.ink .muted { color: rgba(255, 255, 255, 0.66); }
 .card.ink h2, .card.ink h3, .card.ink .card-title { color: #fff; }
-.link-card { transition: border-color var(--dur) var(--ease); cursor: pointer; color: inherit; }
-.link-card:hover { border-color: var(--line-strong); text-decoration: none; }
+.link-card, a.card { transition: border-color var(--dur) var(--ease), transform 220ms var(--ease-out), box-shadow 220ms var(--ease-out); cursor: pointer; color: inherit; }
+.link-card:hover, a.card:hover { border-color: var(--line-strong); text-decoration: none; transform: translateY(-2px); box-shadow: var(--shadow-float); }
 /* Floating chrome only — content scrolls under it. */
 .frost {
   background: var(--frost-bg);
@@ -187,9 +196,9 @@ img, svg { display: block; }
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
   height: 40px; padding: 0 1rem; border-radius: var(--r-ctl); border: 1px solid transparent;
   font-weight: 700; font-size: 0.92rem; cursor: pointer; white-space: nowrap; text-decoration: none !important;
-  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease), transform 120ms var(--ease-out);
 }
-.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:active:not(:disabled) { transform: translateY(1px) scale(0.98); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn-ink { background: var(--btn-bg); color: var(--btn-fg); }
 .btn-ink:hover:not(:disabled) { background: color-mix(in srgb, var(--btn-bg) 86%, var(--canvas)); }
@@ -270,11 +279,14 @@ img, svg { display: block; }
 
 /* ---------- Meters ---------- */
 .meter { height: 6px; border-radius: 999px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
-.meter > span { display: block; height: 100%; border-radius: 999px; background: var(--fill, var(--ink)); }
+.meter > span { display: block; height: 100%; border-radius: 999px; background: var(--fill, var(--ink));
+  transform-origin: left center; animation: lh-grow-x 800ms var(--ease-out) 120ms backwards; transition: width 400ms var(--ease-out); }
 /* Deep course tones are too dark on dark surfaces; use the pastel instead. */
 :root[data-theme="dark"] .meter { --c-deep: var(--c); }
 .segbar { display: flex; gap: 3px; height: 8px; }
-.segbar > span { border-radius: 999px; min-width: 0; }
+.segbar > span { border-radius: 999px; min-width: 0; transform-origin: left center; animation: lh-grow-x 700ms var(--ease-out) backwards; }
+.segbar > span:nth-child(2) { animation-delay: 80ms; } .segbar > span:nth-child(3) { animation-delay: 160ms; }
+.segbar > span:nth-child(4) { animation-delay: 240ms; } .segbar > span:nth-child(n+5) { animation-delay: 320ms; }
 
 /* ---------- Forms ---------- */
 .field { display: flex; flex-direction: column; gap: 0.35rem; }
@@ -325,6 +337,7 @@ img, svg { display: block; }
 }
 .due-row + .due-row { border-top: 1px solid var(--line); border-top-left-radius: 0; border-top-right-radius: 0; }
 a.due-row:hover, button.due-row:hover { background: var(--surface-2); }
+a.due-row:active, button.due-row:active { background: var(--violet-soft); }
 .due-row .title { font-weight: 700; color: var(--ink); line-height: 1.3; }
 .due-row .meta { font-size: 0.82rem; color: var(--muted); margin-top: 2px; }
 .due-row .end { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
@@ -363,13 +376,38 @@ a.due-row:hover, button.due-row:hover { background: var(--surface-2); }
 .ico.lg { width: 24px; height: 24px; }
 .ico.sm { width: 16px; height: 16px; }
 
-/* ---------- Motion: state changes only ---------- */
-/* .stagger / .fade-in are kept as hooks but no longer animate page content on load. */
-.fade-in { animation: appear var(--dur) var(--ease) both; }
+/* ---------- Motion ----------
+   Owner's request: soft motion throughout. Rules: ease-out with no overshoot, at most ~400ms,
+   transform and opacity only, and nothing moves under prefers-reduced-motion (guard below).
+   Entrance animations use fill-mode "backwards" so no transform is left behind afterwards —
+   a lingering transform would become the containing block for position:fixed children. */
+@keyframes lh-enter { from { opacity: 0; transform: translateY(10px); } }
+@keyframes lh-fade { from { opacity: 0; } }
+@keyframes lh-pop { from { opacity: 0; transform: translateY(-6px) scale(0.98); } }
+@keyframes lh-sheet { from { opacity: 0; transform: translateY(16px); } }
+@keyframes lh-grow-x { from { transform: scaleX(0); } }
+@keyframes lh-grow-y { from { transform: scaleY(0); } }
 @keyframes appear { from { opacity: 0; } }
 
+/* Every routed page (and nested course tab) rises in. Not the app shell: it holds the fixed sidebar and tab bar. */
+router-outlet + :not(lh-shell) { display: block; animation: lh-enter 340ms var(--ease-out) backwards; }
+
+/* Lists and grids arrive one item after another. */
+.stagger > *, .due-list > *, .cards-grid > *, .bento > *, .lh-stagger > * { animation: lh-enter 380ms var(--ease-out) backwards; }
+:is(.stagger, .due-list, .cards-grid, .bento, .lh-stagger) > :nth-child(2) { animation-delay: 45ms; }
+:is(.stagger, .due-list, .cards-grid, .bento, .lh-stagger) > :nth-child(3) { animation-delay: 90ms; }
+:is(.stagger, .due-list, .cards-grid, .bento, .lh-stagger) > :nth-child(4) { animation-delay: 135ms; }
+:is(.stagger, .due-list, .cards-grid, .bento, .lh-stagger) > :nth-child(5) { animation-delay: 180ms; }
+:is(.stagger, .due-list, .cards-grid, .bento, .lh-stagger) > :nth-child(6) { animation-delay: 225ms; }
+:is(.stagger, .due-list, .cards-grid, .bento, .lh-stagger) > :nth-child(7) { animation-delay: 270ms; }
+:is(.stagger, .due-list, .cards-grid, .bento, .lh-stagger) > :nth-child(n+8) { animation-delay: 300ms; }
+
+.fade-in { animation: lh-fade 240ms var(--ease-out) backwards; }
+/* Floating panels (notifications, menus) drop in from their trigger. */
+.pop { animation: lh-pop 200ms var(--ease-out) backwards; transform-origin: top right; }
+
 @view-transition { navigation: auto; }
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: 150ms; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 200ms; }
 @media (max-width: 1023px) { @view-transition { navigation: none; } }
 
 @media (prefers-reduced-motion: reduce) {

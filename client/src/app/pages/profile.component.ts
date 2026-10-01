@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Api } from '../core/api.service';
@@ -17,9 +17,22 @@ import { AvatarComponent } from '../shared/ui';
       <div class="page-head fade-in"><div><h1 class="page-title">Account</h1><p class="page-sub">Your profile, appearance and password.</p></div></div>
       <div class="bento stagger">
         <section class="card card-lg span-5 me">
-          @if (p(); as p) {
+          @if (p.value(); as p) {
             <lh-avatar [name]="p.user.fullName" size="lg" />
-            <h2 class="serif name">{{ p.user.fullName }}</h2>
+            @if (editing()) {
+              <form class="name-form" (ngSubmit)="saveName()">
+                <label class="sr-only" for="fullName">Full name</label>
+                <input id="fullName" class="input" name="fullName" [(ngModel)]="nameDraft" required minlength="2" maxlength="100"
+                       autocomplete="name" (keydown.escape)="editing.set(false)" />
+                <div class="row" style="justify-content:center">
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="editing.set(false)">Cancel</button>
+                  <button class="btn btn-ink btn-sm" [disabled]="nameBusy() || nameDraft.trim().length < 2 || nameDraft.trim() === p.user.fullName">Save name</button>
+                </div>
+              </form>
+            } @else {
+              <h2 class="serif name">{{ p.user.fullName }}</h2>
+              <button type="button" class="btn btn-ghost btn-sm edit" (click)="startEdit(p.user.fullName)"><lh-icon name="pencil" class="sm" /> Edit name</button>
+            }
             <span class="role {{ p.user.role }}">{{ p.user.role }}</span>
             <div class="stats">
               <div><div class="n serif">{{ p.courseCount }}</div><div class="tiny muted">{{ p.user.role === 'Student' ? 'Courses' : 'Teaching' }}</div></div>
@@ -59,7 +72,10 @@ import { AvatarComponent } from '../shared/ui';
     </div>`,
   styles: [`
     .me { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .8rem; }
-    .name { font-size: 1.7rem; }
+    .name { font-size: 1.7rem; animation: lh-fade 260ms var(--ease-out) backwards; }
+    .edit { margin-top: -.5rem; }
+    .name-form { display: flex; flex-direction: column; gap: .6rem; width: min(320px, 100%); animation: lh-pop 200ms var(--ease-out) backwards; }
+    .name-form .input { text-align: center; font-weight: 700; }
     .stats { display: flex; justify-content: center; gap: 2rem; padding: 1rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); width: 100%; }
     .n { font-size: 1.5rem; font-weight: 600; }
     .themes { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
@@ -78,7 +94,10 @@ export class ProfileComponent {
   private router = inject(Router);
   private toasts = inject(Toasts);
   protected theme = inject(Theme);
-  protected p = toSignal(this.api.profile());
+  protected p = rxResource({ loader: () => this.api.profile() });
+  protected editing = signal(false);
+  protected nameBusy = signal(false);
+  protected nameDraft = '';
   protected busy = signal(false);
   protected current = '';
   protected next = '';
@@ -89,6 +108,26 @@ export class ProfileComponent {
     this.api.changePassword(this.current, this.next).subscribe({
       next: () => { this.toasts.ok('Password updated.'); this.current = this.next = this.confirm = ''; this.busy.set(false); },
       error: () => this.busy.set(false)
+    });
+  }
+
+  startEdit(current: string) {
+    this.nameDraft = current;
+    this.editing.set(true);
+    setTimeout(() => (document.getElementById('fullName') as HTMLInputElement | null)?.select());
+  }
+
+  saveName() {
+    this.nameBusy.set(true);
+    this.api.updateProfile(this.nameDraft.trim()).subscribe({
+      next: user => {
+        this.auth.user.set(user);
+        this.p.value.update(p => p ? { ...p, user } : p);
+        this.editing.set(false);
+        this.nameBusy.set(false);
+        this.toasts.ok('Name updated.');
+      },
+      error: () => this.nameBusy.set(false)
     });
   }
 

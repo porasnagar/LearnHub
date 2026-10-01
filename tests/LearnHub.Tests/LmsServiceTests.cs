@@ -261,4 +261,51 @@ public sealed class LmsServiceTests : IDisposable
         Assert.False((await _lms.ChangeRoleAsync(_instructor.Id, UserRole.Student, _admin.Id)).Succeeded);
         Assert.True((await _lms.ChangeRoleAsync(_otherInstructor.Id, UserRole.Student, _admin.Id)).Succeeded);
     }
+
+    // ---------- Profile & announcements ----------
+
+    [Fact]
+    public async Task UpdateName_trims_and_validates_length()
+    {
+        var ok = await _lms.UpdateNameAsync(_student.Id, "  Samira Student  ");
+        Assert.True(ok.Succeeded);
+        Assert.Equal("Samira Student", (await _db.Users.FindAsync(_student.Id))!.FullName);
+
+        Assert.False((await _lms.UpdateNameAsync(_student.Id, " x ")).Succeeded);
+        Assert.False((await _lms.UpdateNameAsync(_student.Id, new string('a', 101))).Succeeded);
+    }
+
+    [Fact]
+    public async Task Only_the_course_instructor_or_admin_can_post_announcements()
+    {
+        Assert.True((await _lms.PostAnnouncementAsync(_course.Id, _instructor.Id, UserRole.Instructor, "Hi", "Welcome", true)).Succeeded);
+        Assert.True((await _lms.PostAnnouncementAsync(_course.Id, _admin.Id, UserRole.Admin, "Note", "From admin", false)).Succeeded);
+        Assert.False((await _lms.PostAnnouncementAsync(_course.Id, _otherInstructor.Id, UserRole.Instructor, "No", "Not mine", false)).Succeeded);
+        Assert.False((await _lms.PostAnnouncementAsync(_course.Id, _student.Id, UserRole.Student, "No", "Student", false)).Succeeded);
+        Assert.False((await _lms.PostAnnouncementAsync(_course.Id, _instructor.Id, UserRole.Instructor, " ", "Empty title", false)).Succeeded);
+        Assert.Equal(2, _db.Announcements.Count());
+    }
+
+    [Fact]
+    public async Task Pin_and_delete_announcement_respect_ownership()
+    {
+        var posted = (await _lms.PostAnnouncementAsync(_course.Id, _instructor.Id, UserRole.Instructor, "Hi", "Welcome", false)).Value!;
+
+        Assert.False((await _lms.SetAnnouncementPinnedAsync(posted.Id, _otherInstructor.Id, UserRole.Instructor, true)).Succeeded);
+        Assert.True((await _lms.SetAnnouncementPinnedAsync(posted.Id, _instructor.Id, UserRole.Instructor, true)).Succeeded);
+        Assert.True((await _db.Announcements.AsNoTracking().SingleAsync()).IsPinned);
+
+        Assert.False((await _lms.DeleteAnnouncementAsync(posted.Id, _student.Id, UserRole.Student)).Succeeded);
+        Assert.True((await _lms.DeleteAnnouncementAsync(posted.Id, _instructor.Id, UserRole.Instructor)).Succeeded);
+        Assert.Empty(_db.Announcements);
+    }
+
+    [Fact]
+    public async Task Deleting_course_removes_its_announcements()
+    {
+        await _lms.PostAnnouncementAsync(_course.Id, _instructor.Id, UserRole.Instructor, "Hi", "Welcome", false);
+        _db.Courses.Remove(_course);
+        await _db.SaveChangesAsync();
+        Assert.Empty(_db.Announcements);
+    }
 }

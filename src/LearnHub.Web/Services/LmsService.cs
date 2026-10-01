@@ -119,9 +119,62 @@ public class LmsService(LmsDbContext db, IPasswordHasher<AppUser> hasher)
 
         db.Submissions.RemoveRange(submissions);
         db.Enrollments.RemoveRange(db.Enrollments.Where(e => e.StudentId == userId));
+        db.Announcements.RemoveRange(db.Announcements.Where(a => a.AuthorId == userId));
         db.Users.Remove(user);
         await db.SaveChangesAsync();
         return ServiceResult<List<string>>.Ok(files);
+    }
+
+    public async Task<ServiceResult<AppUser>> UpdateNameAsync(int userId, string fullName)
+    {
+        var name = fullName?.Trim() ?? "";
+        if (name.Length < 2 || name.Length > 100) return ServiceResult<AppUser>.Fail("Name must be between 2 and 100 characters.");
+        var user = await db.Users.FindAsync(userId);
+        if (user is null) return ServiceResult<AppUser>.Fail("User not found.");
+        user.FullName = name;
+        await db.SaveChangesAsync();
+        return ServiceResult<AppUser>.Ok(user);
+    }
+
+    // ---------- Announcements ----------
+
+    public async Task<ServiceResult<Announcement>> PostAnnouncementAsync(
+        int courseId, int userId, UserRole role, string title, string body, bool pinned)
+    {
+        var course = await db.Courses.FindAsync(courseId);
+        if (course is null) return ServiceResult<Announcement>.Fail("Course not found.");
+        if (!CanManage(course, userId, role))
+            return ServiceResult<Announcement>.Fail("Only this course's instructor can post announcements.");
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(body))
+            return ServiceResult<Announcement>.Fail("An announcement needs a title and a message.");
+
+        var a = new Announcement
+        {
+            CourseId = courseId, AuthorId = userId, Title = title.Trim(), Body = body.Trim(), IsPinned = pinned, CreatedAt = DateTime.Now
+        };
+        db.Announcements.Add(a);
+        await db.SaveChangesAsync();
+        return ServiceResult<Announcement>.Ok(a);
+    }
+
+    public async Task<ServiceResult> SetAnnouncementPinnedAsync(int announcementId, int userId, UserRole role, bool pinned)
+    {
+        var a = await db.Announcements.Include(x => x.Course).SingleOrDefaultAsync(x => x.Id == announcementId);
+        if (a is null) return ServiceResult.Fail("Announcement not found.");
+        if (!CanManage(a.Course!, userId, role)) return ServiceResult.Fail("You can't change this announcement.");
+        a.IsPinned = pinned;
+        await db.SaveChangesAsync();
+        return ServiceResult.Ok();
+    }
+
+    public async Task<ServiceResult> DeleteAnnouncementAsync(int announcementId, int userId, UserRole role)
+    {
+        var a = await db.Announcements.Include(x => x.Course).SingleOrDefaultAsync(x => x.Id == announcementId);
+        if (a is null) return ServiceResult.Fail("Announcement not found.");
+        if (!CanManage(a.Course!, userId, role)) return ServiceResult.Fail("You can't delete this announcement.");
+        db.Announcements.Remove(a);
+        await db.SaveChangesAsync();
+        return ServiceResult.Ok();
     }
 
     // ---------- Enrollment ----------

@@ -57,6 +57,13 @@ const ICONS: Record<string, string> = {
   external: `<path d="M8 16L16 8M9.5 8H16v6.5"/>`,
   bolt: `<path ${D} d="M13 3L5 13.5h6L10.5 21 19 10h-6z"/><path d="M13 3L5 13.5h6L10.5 21 19 10h-6z"/>`,
   target: `<circle ${D} cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12h.01"/>`,
+  bell: `<path ${D} d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15zM10 20.5a2.2 2.2 0 0 0 4 0"/>`,
+  megaphone: `<path ${D} d="M4 10v4a1.5 1.5 0 0 0 1.5 1.5H8V8.5H5.5A1.5 1.5 0 0 0 4 10z"/><path d="M8 8.5l9.5-4.5v16L8 15.5zM8 8.5H5.5A1.5 1.5 0 0 0 4 10v4a1.5 1.5 0 0 0 1.5 1.5H8M9 15.8l1.3 4.2h2.5l-1.2-3.8M20.5 10.2v3.6"/>`,
+  pin: `<path ${D} d="M9 3.5h6l-.8 5.5 3.3 3.5h-11L9.8 9z"/><path d="M9 3.5h6l-.8 5.5 3.3 3.5h-11L9.8 9zM12 12.5v8"/>`,
+  list: `<rect ${D} x="3.5" y="4.5" width="4" height="4" rx="1.2"/><rect x="3.5" y="4.5" width="4" height="4" rx="1.2"/><rect x="3.5" y="15.5" width="4" height="4" rx="1.2"/><path d="M11 6.5h9.5M11 17.5h9.5M11 12h9.5"/>`,
+  grid: `<rect ${D} x="13" y="13" width="7.5" height="7.5" rx="2"/><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="2"/><rect x="13" y="13" width="7.5" height="7.5" rx="2"/>`,
+  keyboard: `<rect ${D} x="7.5" y="14.5" width="9" height="2.2" rx="1"/><rect x="2.5" y="6" width="19" height="12.5" rx="3"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7.5 15.5h9"/>`,
+  calculator: `<rect ${D} x="7.5" y="5.5" width="9" height="4" rx="1"/><rect x="5" y="3" width="14" height="18" rx="3"/><rect x="7.5" y="5.5" width="9" height="4" rx="1"/><path d="M8.5 13.5h.01M12 13.5h.01M15.5 13.5h.01M8.5 17h.01M12 17h.01M15.5 17h.01"/>`,
 };
 
 @Component({

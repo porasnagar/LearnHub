@@ -118,7 +118,10 @@ export class CourseArtComponent {
     svg { width: 100%; height: 100%; transform: rotate(-90deg); }
     circle { fill: none; stroke-width: 10; }
     .track { stroke: var(--surface-2); }
-    .bar { stroke-linecap: round; }
+    .bar { stroke-linecap: round; transition: stroke-dashoffset 500ms var(--ease-out);
+      animation: ring-draw 1000ms var(--ease-out) 150ms backwards; }
+    @keyframes ring-draw { from { stroke-dashoffset: calc(var(--len) * 1px); } }
+    .center { animation: lh-fade 400ms var(--ease-out) 250ms backwards; }
     .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
     .big { font-size: 1.8rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
     .cap { font-size: .8rem; color: var(--muted); margin-top: .3rem; font-weight: 600; }
@@ -147,7 +150,7 @@ export interface Bar { label: string; value: number; highlight?: boolean; }
         <div class="col" [attr.title]="b.label + ': ' + b.value">
           <span class="val">{{ b.value }}</span>
           <div class="track">
-            <div class="fill" [class.hl]="b.highlight" [style.height.%]="pct(b.value)"></div>
+            <div class="fill" [class.hl]="b.highlight" [style.height.%]="pct(b.value)" [style.--i]="i"></div>
           </div>
           <span class="lbl" [class.hl]="b.highlight">{{ b.label }}</span>
         </div>
@@ -157,7 +160,9 @@ export interface Bar { label: string; value: number; highlight?: boolean; }
     .bars { display: flex; align-items: stretch; gap: 8px; }
     .col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
     .track { flex: 1; width: 100%; display: flex; align-items: flex-end; border-radius: 8px; background: var(--surface-2); overflow: hidden; }
-    .fill { width: 100%; min-height: 3px; border-radius: 8px; background: var(--line-strong); }
+    .fill { width: 100%; min-height: 3px; border-radius: 8px; background: var(--line-strong);
+      transform-origin: bottom; animation: lh-grow-y 700ms var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 55ms + 100ms);
+      transition: height 400ms var(--ease-out); }
     /* Today is the current selection → violet; other days stay neutral. */
     .fill.hl { background: var(--violet); }
     .lbl { font-size: .78rem; font-weight: 600; color: var(--muted); }
@@ -359,14 +364,14 @@ export class EmptyComponent {
     @media (max-width: 640px) { .toasts { right: 16px; left: 16px; width: auto; top: calc(10px + env(safe-area-inset-top)); } }
     .toast { display: flex; align-items: center; gap: .65rem; padding: .55rem .4rem .55rem .85rem; border-radius: var(--r-ctl);
       background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-float); font-weight: 600; font-size: .92rem;
-      animation: in var(--dur) var(--ease) both; }
-    @keyframes in { from { opacity: 0; transform: translateY(-6px); } }
+      animation: in 280ms var(--ease-out) backwards; }
+    @keyframes in { from { opacity: 0; transform: translateY(-10px) scale(.98); } }
     .dot { color: var(--ok); }
     .error .dot { color: var(--bad); }
     .info .dot { color: var(--info); }
-    .scrim { position: fixed; inset: 0; z-index: 1900; display: grid; place-items: center; padding: 1rem; background: rgba(17, 16, 22, .4); animation: fade var(--dur) both; }
+    .scrim { position: fixed; inset: 0; z-index: 1900; display: grid; place-items: center; padding: 1rem; background: rgba(17, 16, 22, .4); animation: fade 200ms var(--ease-out) backwards; }
     @keyframes fade { from { opacity: 0; } }
-    .dialog { width: min(440px, 100%); box-shadow: var(--shadow-float); }
+    .dialog { width: min(440px, 100%); box-shadow: var(--shadow-float); animation: lh-sheet 260ms var(--ease-out) backwards; }
     .dialog h2 { font-size: 1.2rem; gap: .55rem; }
     .dialog h2.danger lh-icon { color: var(--bad); }
   `]

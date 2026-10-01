@@ -7,11 +7,12 @@ import { Confirm, Toasts } from '../../core/services';
 import { dueText, isPast, letterGrade, workStatus } from '../../core/util';
 import { IconComponent } from '../../shared/icon.component';
 import { AvatarComponent, DateTileComponent, EmptyComponent, RingComponent } from '../../shared/ui';
+import { AnnouncementsComponent } from '../../shared/announcements.component';
 import { CourseStore } from './course.routes';
 
 @Component({
   selector: 'lh-course-home',
-  imports: [RouterLink, DatePipe, IconComponent, AvatarComponent, DateTileComponent, EmptyComponent, RingComponent],
+  imports: [RouterLink, DatePipe, IconComponent, AvatarComponent, DateTileComponent, EmptyComponent, RingComponent, AnnouncementsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (store.course(); as c) {
@@ -38,6 +39,9 @@ import { CourseStore } from './course.routes';
             </section>
           }
 
+          @if (store.canSeeContent()) {
+            <lh-announcements [courseId]="c.id" [canManage]="c.canManage" />
+          }
           <section class="card card-lg" aria-labelledby="about-title">
             <h2 id="about-title" class="card-title mb-2">About this course</h2>
             <p class="pre desc">{{ c.description }}</p>

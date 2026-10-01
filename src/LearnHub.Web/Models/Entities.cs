@@ -134,6 +134,29 @@ public class Submission
     public bool IsLate => Assignment is not null && SubmittedAt > Assignment.DueDate;
 }
 
+/// <summary>A post from the course's instructor (or an admin) to everyone enrolled.</summary>
+public class Announcement
+{
+    public int Id { get; set; }
+
+    public int CourseId { get; set; }
+    public Course? Course { get; set; }
+
+    public int AuthorId { get; set; }
+    public AppUser? Author { get; set; }
+
+    [Required, StringLength(150)]
+    public string Title { get; set; } = string.Empty;
+
+    [Required, StringLength(4000)]
+    public string Body { get; set; } = string.Empty;
+
+    /// <summary>Pinned posts stay at the top of the course page.</summary>
+    public bool IsPinned { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+}
+
 public class ErrorViewModel
 {
     public string? RequestId { get; set; }

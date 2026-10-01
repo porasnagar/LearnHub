@@ -93,3 +93,14 @@ export interface CourseGrade {
 
 export interface UserRow { user: User; coursesTaught: number; enrollments: number; }
 export interface AdminUsers { counts: Record<string, number>; users: UserRow[]; }
+
+export interface Announcement {
+  id: number; courseId: number; courseCode: string; courseTitle: string; title: string; body: string;
+  isPinned: boolean; createdAt: string; author: Person; canManage: boolean;
+}
+
+export type NotificationKind = 'grade' | 'due' | 'missing' | 'announcement' | 'submission';
+export interface AppNotification { key: string; kind: NotificationKind; title: string; detail: string; at: string; link: string; courseId: number | null; }
+
+export interface SearchItem { id: number; title: string; subtitle: string; link: string; courseId: number | null; }
+export interface SearchResult { courses: SearchItem[]; assignments: SearchItem[]; people: SearchItem[]; }
