@@ -6,11 +6,12 @@ import { Router } from '@angular/router';
 import { Api } from '../core/api.service';
 import { Auth, Theme, Toasts } from '../core/services';
 import { IconComponent } from '../shared/icon.component';
+import { CountUpDirective } from '../shared/motion';
 import { AvatarComponent } from '../shared/ui';
 
 @Component({
   selector: 'lh-profile',
-  imports: [DatePipe, FormsModule, IconComponent, AvatarComponent],
+  imports: [CountUpDirective, DatePipe, FormsModule, IconComponent, AvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -35,8 +36,8 @@ import { AvatarComponent } from '../shared/ui';
             }
             <span class="role {{ p.user.role }}">{{ p.user.role }}</span>
             <div class="stats">
-              <div><div class="n serif">{{ p.courseCount }}</div><div class="tiny muted">{{ p.user.role === 'Student' ? 'Courses' : 'Teaching' }}</div></div>
-              @if (p.user.role === 'Student') { <div><div class="n serif">{{ p.submissionCount }}</div><div class="tiny muted">Submissions</div></div> }
+              <div><div class="n serif" [lhCountUp]="p.courseCount"></div><div class="tiny muted">{{ p.user.role === 'Student' ? 'Courses' : 'Teaching' }}</div></div>
+              @if (p.user.role === 'Student') { <div><div class="n serif" [lhCountUp]="p.submissionCount"></div><div class="tiny muted">Submissions</div></div> }
               <div><div class="n serif">{{ p.user.createdAt | date: 'MMM y' }}</div><div class="tiny muted">Joined</div></div>
             </div>
             <div class="row small muted"><lh-icon name="mail" class="sm" /> {{ p.user.email }}</div>
@@ -47,9 +48,9 @@ import { AvatarComponent } from '../shared/ui';
           <section class="card card-lg">
             <div class="card-title mb-2">Appearance</div>
             <div class="themes">
-              <button class="theme-opt" [class.on]="theme.mode() === 'light'" (click)="theme.mode() !== 'light' && theme.toggle()">
+              <button class="theme-opt" [class.on]="theme.mode() === 'light'" (click)="theme.mode() !== 'light' && theme.toggle($event)">
                 <span class="sw light"><span></span></span><span class="strong small">Light</span></button>
-              <button class="theme-opt" [class.on]="theme.mode() === 'dark'" (click)="theme.mode() !== 'dark' && theme.toggle()">
+              <button class="theme-opt" [class.on]="theme.mode() === 'dark'" (click)="theme.mode() !== 'dark' && theme.toggle($event)">
                 <span class="sw dark"><span></span></span><span class="strong small">Dark</span></button>
             </div>
           </section>

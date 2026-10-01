@@ -38,7 +38,7 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   template: `
     @if (palette.open()) {
       <div class="scrim frost" (click)="close()"></div>
-      <div class="panel" role="dialog" aria-modal="true" aria-label="Search LearnHub">
+      <div class="panel glass-panel" role="dialog" aria-modal="true" aria-label="Search LearnHub">
         <div class="bar">
           <lh-icon name="search" />
           <input #box class="q" [value]="q()" (input)="onInput($event)" (keydown)="onKey($event)"
@@ -82,10 +82,9 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   styles: [`
     .scrim { position: fixed; inset: 0; z-index: 1800; background: rgba(17, 16, 22, .32); animation: lh-fade 180ms var(--ease-out) backwards; }
     .panel { position: fixed; z-index: 1801; top: 12vh; left: 50%; width: min(640px, calc(100vw - 24px)); margin-left: max(-320px, calc(-50vw + 12px));
-      display: flex; flex-direction: column; max-height: min(560px, 76vh);
-      background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow-float);
+      display: flex; flex-direction: column; max-height: min(560px, 76vh); border-radius: 18px;
       animation: lh-pop 220ms var(--ease-out) backwards; transform-origin: top center; overflow: hidden; }
-    .bar { display: flex; align-items: center; gap: .7rem; padding: 0 .75rem 0 1rem; height: 60px; border-bottom: 1px solid var(--line); color: var(--muted); }
+    .bar { display: flex; align-items: center; gap: .7rem; padding: 0 .75rem 0 1rem; height: 60px; border-bottom: 1px solid var(--glass-line); color: var(--muted); }
     .q { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: 1.05rem; }
     .q::placeholder { color: var(--faint); }
     .esc { height: 28px; padding: 0 .55rem; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--muted);
@@ -94,7 +93,7 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
     .label { padding: .7rem .6rem .3rem; font-size: .78rem; font-weight: 700; color: var(--muted); }
     .res { display: flex; align-items: center; gap: .75rem; width: 100%; min-height: 50px; padding: .45rem .6rem; border: 0; border-radius: 12px;
       background: transparent; color: var(--ink); text-align: left; cursor: pointer; transition: background 120ms var(--ease); }
-    .res.active { background: var(--violet-soft); }
+    .res.active { background: var(--violet-soft); box-shadow: inset 0 0 0 1px rgba(155, 132, 255, .35); }
     .ic { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--surface-2); color: var(--ink-2); flex-shrink: 0; }
     .res.active .ic { background: var(--surface); color: var(--violet); }
     .code-chip { min-width: 52px; height: 26px; justify-content: center; flex-shrink: 0; }
@@ -103,7 +102,7 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
     .go { color: var(--violet); opacity: 0; transform: translateX(-4px); transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out); }
     .res.active .go { opacity: 1; transform: none; }
     .none { display: flex; flex-direction: column; gap: .25rem; padding: 1.25rem .75rem; }
-    .foot { display: flex; align-items: center; gap: 1rem; padding: .55rem 1rem; border-top: 1px solid var(--line); background: var(--surface-2);
+    .foot { display: flex; align-items: center; gap: 1rem; padding: .55rem 1rem; border-top: 1px solid var(--glass-line); background: transparent;
       font-size: .78rem; color: var(--muted); }
     .foot span { display: inline-flex; align-items: center; gap: .25rem; }
     .spin { margin-left: auto; }

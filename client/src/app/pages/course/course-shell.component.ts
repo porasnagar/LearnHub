@@ -5,11 +5,12 @@ import { Auth, Toasts } from '../../core/services';
 import { artFor, toneStyle } from '../../core/util';
 import { IconComponent } from '../../shared/icon.component';
 import { AvatarComponent, CourseArtComponent, EmptyComponent } from '../../shared/ui';
+import { GlideDirective } from '../../shared/motion';
 import { CourseStore } from './course.routes';
 
 @Component({
   selector: 'lh-course-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, AvatarComponent, CourseArtComponent, EmptyComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, AvatarComponent, CourseArtComponent, EmptyComponent, GlideDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (store.notFound()) {
@@ -50,7 +51,7 @@ import { CourseStore } from './course.routes';
         </header>
 
         @if (store.canSeeContent()) {
-          <nav class="seg tabs" aria-label="Course">
+          <nav class="seg tabs" lhGlide aria-label="Course">
             <a routerLink="." routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"><lh-icon name="home" class="sm" /> Home</a>
             <a routerLink="assignments" routerLinkActive="active"><lh-icon name="assignment" class="sm" /> Assignments</a>
             <a routerLink="grades" routerLinkActive="active"><lh-icon name="grades" class="sm" /> {{ c.canManage ? 'Gradebook' : 'Grades' }}</a>
@@ -68,7 +69,11 @@ import { CourseStore } from './course.routes';
   styles: [`
     /* Flat course pastel: the colour says which course. Text is dark ink in both themes. */
     .banner { position: relative; display: flex; justify-content: space-between; gap: 1rem; min-height: 210px; padding: 1.6rem 1.75rem;
-      border-radius: var(--r-card); background: var(--c); color: #17161d; overflow: hidden; }
+      border-radius: var(--r-card); background: var(--c); color: #17161d; overflow: hidden;
+      box-shadow: 0 26px 50px -32px var(--c-deep), inset 0 1px 0 rgba(255,255,255,.6); }
+    /* Glassy light across the course colour. */
+    .banner::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(90% 120% at 0% 0%, rgba(255,255,255,.5), transparent 55%), radial-gradient(60% 80% at 100% 100%, rgba(255,255,255,.25), transparent 60%); }
     .copy { position: relative; z-index: 1; display: flex; flex-direction: column; gap: .75rem; max-width: 640px; min-width: 0; }
     .code { height: 26px; padding: 0 9px; border-radius: 7px; background: #17161d; color: #fff; font-weight: 700; font-size: .8rem; display: inline-flex; align-items: center; }
     .pill { height: 26px; padding: 0 9px; border-radius: 7px; background: rgba(255,255,255,.7); font-weight: 600; font-size: .82rem; display: inline-flex; align-items: center; }
@@ -77,7 +82,10 @@ import { CourseStore } from './course.routes';
     .meta { display: flex; flex-wrap: wrap; gap: .5rem 1.3rem; font-weight: 600; font-size: .92rem; }
     .actions { margin-top: .2rem; }
     .enrolled { display: inline-flex; align-items: center; gap: .45rem; height: 40px; padding: 0 .9rem; border-radius: var(--r-ctl); background: rgba(255,255,255,.72); font-weight: 700; }
-    .art { position: relative; z-index: 1; width: 300px; height: 220px; align-self: flex-end; margin: 0 -18px -42px 0; flex-shrink: 0; }
+    .art { position: relative; z-index: 1; width: 300px; height: 220px; align-self: flex-end; margin: 0 -18px -42px 0; flex-shrink: 0;
+      animation: art-in 700ms var(--spring) 120ms backwards; transition: transform 500ms var(--spring); }
+    @keyframes art-in { from { opacity: 0; transform: translate(24px, 24px) rotate(6deg) scale(.92); } }
+    @media (hover: hover) { .banner:hover .art { transform: translate(-6px, -6px) rotate(-3deg); } }
     .tabs { align-self: flex-start; }
     @media (max-width: 860px) {
       .banner { flex-direction: column; padding: 1.25rem; min-height: 0; }

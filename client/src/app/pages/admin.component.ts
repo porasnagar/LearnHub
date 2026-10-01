@@ -6,17 +6,18 @@ import { Api } from '../core/api.service';
 import { Role, UserRow } from '../core/models';
 import { Auth, Confirm, Toasts } from '../core/services';
 import { IconComponent } from '../shared/icon.component';
+import { GlideDirective } from '../shared/motion';
 import { AvatarComponent, CourseCardComponent, EmptyComponent } from '../shared/ui';
 
 @Component({
   selector: 'lh-admin',
-  imports: [DatePipe, FormsModule, IconComponent, AvatarComponent, CourseCardComponent, EmptyComponent],
+  imports: [GlideDirective, DatePipe, FormsModule, IconComponent, AvatarComponent, CourseCardComponent, EmptyComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
       <div class="page-head fade-in">
         <div><h1 class="page-title">Administration</h1><p class="page-sub">Accounts, roles and every course on LearnHub.</p></div>
-        <div class="seg">
+        <div class="seg" lhGlide>
           <button [class.active]="tab() === 'users'" (click)="tab.set('users')"><lh-icon name="people" class="sm" /> Users</button>
           <button [class.active]="tab() === 'courses'" (click)="tab.set('courses')"><lh-icon name="courses" class="sm" /> Courses</button>
         </div>

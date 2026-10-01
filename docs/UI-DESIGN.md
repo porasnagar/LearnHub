@@ -55,7 +55,8 @@ The **due row** is repeated everywhere: a course-coloured date tile, then the ti
 - **Rounded shapes** — 16px on cards, 12px on controls, pills for chips and the tab bar. This is a consumer study app, not a dense tool, and the references are rounded.
 - **Source Serif 4 for page titles and big numbers only** — the owner chose these fonts.
 - **Flat course illustrations on course banners** — they let you tell courses apart at a glance.
-- **A purple gradient on the active navigation item** — the owner asked for the nav highlight "purple, with shades", with the bar's border kept white. It is the only gradient in the interface, and it only ever means "you are here".
+- **A purple gradient on the active navigation item** — the owner asked for the nav highlight "purple, with shades", with the bar's border kept white. The same gradient marks other "you are here / selected" states: segmented controls, active filter chips, today in the calendar, and the one glowing call to action per screen (`.btn-glow`).
+- **Glowing glass (v3.2, owner's request)** — cards are translucent (`--glass-card`) over a soft, static colour field (`--ambient` on `body::before`), with a 1px light-catching edge (a masked gradient ring) and a soft shadow. On desktop a faint light follows the cursor across cards. Cards have **no backdrop blur on purpose**: what's behind them is already a soft gradient, so blur would look the same and cost GPU time on every scroll frame (it made Android phones stutter before). Real blur is kept for things content scrolls under: the top bar, the phone tab bar, and floating panels (`.glass-panel`: notifications, search, dialogs, toasts). The colour field doesn't move, because animating it would make those frosted bars re-blur on every frame.
 
 ### Motion
 The owner asked for soft animation throughout (v3.1). The rules that keep it calm:
@@ -66,6 +67,13 @@ The owner asked for soft animation throughout (v3.1). The rules that keep it cal
 - **`prefers-reduced-motion` turns all of it off.**
 
 What moves:
+- One highlight glides between items in the sidebar, the phone tab bar and every segmented control (`GlideDirective`). It settles with a slight spring (about 4% overshoot) — the one place overshoot is allowed.
+- A soft ripple spreads from where you press buttons, tabs, rows and chips (`Interactions`).
+- Big numbers count up (`CountUpDirective`): the term grade, handed-in count, course stats, the what-if projection.
+- Switching theme spreads the new theme in a circle from the button you pressed (a view transition).
+- During page changes the sidebar, top bar and tab bar stay still (their own `view-transition-name`); only the content cross-fades.
+- Primary buttons lift and catch a light sheen on hover; course illustrations float up when you hover their card.
+- Loading placeholders shimmer.
 - Pages and course tabs rise 10px and fade in (340ms). The app shell is excluded because it holds the fixed sidebar and tab bar.
 - Rows in `.due-list`, cards in `.cards-grid` and tiles in `.bento` arrive 45ms apart (capped at 300ms).
 - Link cards lift 2px on hover. Buttons and calendar days press in slightly.

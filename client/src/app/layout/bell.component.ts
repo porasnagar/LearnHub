@@ -27,7 +27,7 @@ const ICON: Record<NotificationKind, string> = {
       @if (unread() > 0) { <span class="badge" aria-hidden="true">{{ unread() > 9 ? '9+' : unread() }}</span> }
     </button>
     @if (open()) {
-      <div class="panel pop" role="dialog" aria-label="Notifications">
+      <div class="panel glass-panel pop" role="dialog" aria-label="Notifications">
         <div class="head">
           <strong>Notifications</strong>
           <button type="button" class="btn btn-ghost btn-sm" (click)="markAll()" [disabled]="!unread()">Mark all as read</button>
@@ -69,13 +69,12 @@ const ICON: Record<NotificationKind, string> = {
       box-shadow: 0 0 0 2px var(--surface); font-variant-numeric: tabular-nums; animation: lh-pop 240ms var(--ease-out) backwards; }
 
     .panel { position: absolute; z-index: 60; top: calc(100% + 10px); right: -6px; width: 380px; max-height: min(520px, 72vh);
-      display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
-      box-shadow: var(--shadow-float); overflow: hidden; }
-    .head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .7rem .6rem .6rem 1rem; border-bottom: 1px solid var(--line); }
+      display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; }
+    .head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .7rem .6rem .6rem 1rem; border-bottom: 1px solid var(--glass-line); }
     .list { overflow-y: auto; overscroll-behavior: contain; padding: .4rem; }
     .item { display: flex; align-items: flex-start; gap: .7rem; padding: .65rem .6rem; border-radius: 12px; color: inherit; text-decoration: none !important;
       transition: background 120ms var(--ease); }
-    .item:hover { background: var(--surface-2); }
+    .item:hover { background: var(--violet-soft); }
     .item + .item { margin-top: 2px; }
     .kind { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; background: var(--surface-2); color: var(--ink-2); }
     .kind.grade { background: var(--ok-soft); color: var(--ok); }

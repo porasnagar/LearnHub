@@ -76,20 +76,36 @@ export class Confirm {
 export class Theme {
   readonly mode = signal<'light' | 'dark'>((document.documentElement.dataset['theme'] as 'light' | 'dark') ?? 'light');
 
-  toggle() {
+  /**
+   * Switch light/dark. With a click event, the new theme spreads out in a circle from the button;
+   * otherwise (keyboard, palette) it grows from the centre of the screen.
+   */
+  toggle(origin?: Event) {
     const next = this.mode() === 'dark' ? 'light' : 'dark';
     const apply = () => {
       document.documentElement.dataset['theme'] = next;
       this.mode.set(next);
       try { localStorage.setItem('lh-theme', next); } catch { /* private mode */ }
     };
-    // Cross-fade the whole page when the browser supports view transitions.
     type Transition = { ready: Promise<void>; finished: Promise<void>; updateCallbackDone: Promise<void> };
     const doc = document as Document & { startViewTransition?: (cb: () => void) => Transition };
-    if (!doc.startViewTransition) { apply(); return; }
+    if (!doc.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { apply(); return; }
+
+    const root = document.documentElement;
+    const target = origin?.currentTarget instanceof Element ? origin.currentTarget.getBoundingClientRect() : null;
+    const pe = origin as PointerEvent | undefined;
+    const x = pe?.clientX ? pe.clientX : target ? target.left + target.width / 2 : innerWidth / 2;
+    const y = pe?.clientY ? pe.clientY : target ? target.top + target.height / 2 : innerHeight / 2;
+    const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    root.style.setProperty('--vt-x', `${x}px`);
+    root.style.setProperty('--vt-y', `${y}px`);
+    root.style.setProperty('--vt-r', `${Math.ceil(r)}px`);
+    root.classList.add('theme-vt');
+
     const t = doc.startViewTransition(apply);
     // A skipped transition (e.g. the tab is hidden) rejects these; the theme still applies.
-    t.ready.catch(() => {}); t.finished.catch(() => {}); t.updateCallbackDone.catch(() => {});
+    t.ready.catch(() => {}); t.updateCallbackDone.catch(() => {});
+    t.finished.catch(() => {}).finally(() => root.classList.remove('theme-vt'));
   }
 }
 

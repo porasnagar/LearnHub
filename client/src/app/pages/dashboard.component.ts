@@ -8,11 +8,12 @@ import { AssignmentMini } from '../core/models';
 import { Auth } from '../core/services';
 import { ago, artFor, dueText, firstName, greeting, isoDate, letterGrade, score, toneStyle } from '../core/util';
 import { IconComponent } from '../shared/icon.component';
+import { CountUpDirective } from '../shared/motion';
 import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent, DateTileComponent, EmptyComponent } from '../shared/ui';
 
 @Component({
   selector: 'lh-dashboard',
-  imports: [RouterLink, DatePipe, NgTemplateOutlet, IconComponent, AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent,
+  imports: [CountUpDirective, RouterLink, DatePipe, NgTemplateOutlet, IconComponent, AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent,
     DateTileComponent, EmptyComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -64,11 +65,11 @@ import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent
               </div>
               <div class="term-top">
                 <div>
-                  <div class="big serif tabnum">{{ overall() === null ? '–' : overall()!.toFixed(0) + '%' }}</div>
+                  <div class="big serif tabnum"><span [lhCountUp]="overall()" suffix="%"></span></div>
                   <div class="small muted">{{ overall() === null ? 'No grades yet' : 'Current grade · ' + letter(overall()!) }}</div>
                 </div>
                 <div class="handed">
-                  <div class="big serif tabnum">{{ handedIn() }}<span class="of">/{{ totalWork() }}</span></div>
+                  <div class="big serif tabnum"><span [lhCountUp]="handedIn()"></span><span class="of">/{{ totalWork() }}</span></div>
                   <div class="small muted">handed in</div>
                 </div>
               </div>
@@ -248,7 +249,11 @@ import { AvatarComponent, BarsComponent, CourseArtComponent, CourseCardComponent
     .next:hover { text-decoration: none; }
     .next-copy { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
     .next-title { font-size: clamp(1.45rem, 2.4vw, 1.95rem); line-height: 1.15; margin: .3rem 0 .4rem; color: #17161d; }
-    .next-art { width: 230px; height: 176px; flex-shrink: 0; align-self: flex-end; margin: -10px -18px -28px 0; }
+    .next-art { width: 230px; height: 176px; flex-shrink: 0; align-self: flex-end; margin: -10px -18px -28px 0; transition: transform 500ms var(--spring); }
+    .next.card { box-shadow: 0 26px 50px -30px var(--c-deep), inset 0 1px 0 rgba(255,255,255,.6); }
+    .next::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+      background: radial-gradient(90% 120% at 0% 0%, rgba(255,255,255,.5), transparent 55%); }
+    @media (hover: hover) { .next:hover .next-art { transform: translate(-6px, -8px) rotate(-3deg); } }
     .due-pill { display: inline-flex; align-items: center; gap: .4rem; height: 28px; padding: 0 10px; border-radius: 999px; background: rgba(255,255,255,.72); font-size: .82rem; font-weight: 700; }
     .caught-up { display: flex; align-items: center; }
 

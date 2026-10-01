@@ -19,7 +19,7 @@ import { CourseCardComponent, ScrollerComponent } from '../shared/ui';
         <a routerLink="/" aria-label="LearnHub home" class="brand"><lh-logo [size]="32" /></a>
         <nav class="row">
           <a routerLink="/catalog" class="plink">Catalog</a>
-          <button class="btn btn-ghost btn-icon btn-sm" (click)="theme.toggle()" [attr.aria-label]="theme.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'">
+          <button class="btn btn-ghost btn-icon btn-sm" (click)="theme.toggle($event)" [attr.aria-label]="theme.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'">
             <lh-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" />
           </button>
           <a routerLink="/login" class="btn btn-ghost btn-sm">Sign in</a>
@@ -49,7 +49,7 @@ import { CourseCardComponent, ScrollerComponent } from '../shared/ui';
           </lh-scroller>
 
           <div class="cta-row">
-            <a routerLink="/register" class="btn btn-ink btn-lg">Create a free account</a>
+            <a routerLink="/register" class="btn btn-glow btn-lg">Create a free account</a>
             <a routerLink="/login" class="btn btn-secondary btn-lg">Sign in</a>
           </div>
 
@@ -156,7 +156,7 @@ import { CourseCardComponent, ScrollerComponent } from '../shared/ui';
           <p class="muted mt-1">Create a student account, pick a course from the catalog and enroll — no invite needed.</p>
         </div>
         <div class="row wrap">
-          <a routerLink="/register" class="btn btn-ink btn-lg">Create account</a>
+          <a routerLink="/register" class="btn btn-glow btn-lg">Create account</a>
           <a routerLink="/catalog" class="btn btn-secondary btn-lg">Browse catalog</a>
         </div>
       </section>
@@ -265,7 +265,7 @@ import { CourseCardComponent, ScrollerComponent } from '../shared/ui';
         border-radius: 999px; background: var(--surface); border: 1px solid var(--line-strong); font-weight: 700; color: var(--ink);
         cursor: grab; user-select: none; touch-action: pan-y; overflow: hidden; }
       .slide-cta:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
-      .knob { width: 48px; height: 48px; border-radius: 50%; background: var(--btn-bg); color: var(--btn-fg); display: grid; place-items: center; flex-shrink: 0; }
+      .knob { width: 48px; height: 48px; border-radius: 50%; background: var(--nav-grad); color: #fff; box-shadow: var(--nav-glow); display: grid; place-items: center; flex-shrink: 0; }
       .chev { display: flex; color: var(--faint); }
       .chev lh-icon + lh-icon { margin-left: -8px; }
       .fcard { flex-basis: 260px; }

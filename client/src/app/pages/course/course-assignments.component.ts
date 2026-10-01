@@ -5,16 +5,17 @@ import { Api } from '../../core/api.service';
 import { AssignmentRow } from '../../core/models';
 import { dueText, isPast, score, workStatus } from '../../core/util';
 import { IconComponent } from '../../shared/icon.component';
+import { GlideDirective } from '../../shared/motion';
 import { DateTileComponent, EmptyComponent } from '../../shared/ui';
 import { CourseStore } from './course.routes';
 
 @Component({
   selector: 'lh-course-assignments',
-  imports: [RouterLink, DatePipe, IconComponent, DateTileComponent, EmptyComponent],
+  imports: [GlideDirective, RouterLink, DatePipe, IconComponent, DateTileComponent, EmptyComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="row between wrap">
-      <div class="seg">
+      <div class="seg" lhGlide>
         @for (t of tabs; track t.key) { <button [class.active]="tab() === t.key" (click)="tab.set(t.key)">{{ t.label }} <span class="faint">{{ count(t.key) }}</span></button> }
       </div>
       @if (store.course()?.canManage) { <a routerLink="new" class="btn btn-ink btn-sm"><lh-icon name="plus" class="sm" /> Assignment</a> }

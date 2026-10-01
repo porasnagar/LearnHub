@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { Auth, Theme, Toasts } from '../core/services';
 import { AvatarComponent } from '../shared/ui';
 import { IconComponent, LogoComponent } from '../shared/icon.component';
+import { GlideDirective } from '../shared/motion';
 import { BellComponent } from './bell.component';
 import { Palette, PaletteComponent } from './palette.component';
 
@@ -15,13 +16,13 @@ interface NavItem { label: string; icon: string; link: string; exact?: boolean; 
  */
 @Component({
   selector: 'lh-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, LogoComponent, AvatarComponent, BellComponent, PaletteComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, LogoComponent, AvatarComponent, BellComponent, PaletteComponent, GlideDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (auth.user(); as user) {
       <aside class="sidebar" aria-label="Main navigation">
         <a routerLink="/dashboard" class="brand" aria-label="LearnHub dashboard"><lh-logo [size]="32" /></a>
-        <nav class="nav">
+        <nav class="nav" lhGlide>
           @for (item of nav(); track item.link) {
             <a [routerLink]="item.link" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: !!item.exact }" class="nav-link"
                ariaCurrentWhenActive="page">
@@ -30,7 +31,7 @@ interface NavItem { label: string; icon: string; link: string; exact?: boolean; 
           }
         </nav>
         <div class="side-foot">
-          <button class="nav-link" (click)="theme.toggle()">
+          <button class="nav-link" (click)="theme.toggle($event)">
             <lh-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" /><span>{{ theme.mode() === 'dark' ? 'Light theme' : 'Dark theme' }}</span>
           </button>
           <a routerLink="/profile" routerLinkActive="active" class="me">
@@ -51,7 +52,7 @@ interface NavItem { label: string; icon: string; link: string; exact?: boolean; 
         <div class="row top-actions">
           <button type="button" class="btn btn-ghost btn-icon search-btn" (click)="palette.show()" aria-label="Search"><lh-icon name="search" /></button>
           <lh-bell />
-          <button class="btn btn-ghost btn-icon theme-btn" (click)="theme.toggle()" [attr.aria-label]="theme.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'">
+          <button class="btn btn-ghost btn-icon theme-btn" (click)="theme.toggle($event)" [attr.aria-label]="theme.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'">
             <lh-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" />
           </button>
           <a routerLink="/profile" class="avatar-link" aria-label="Your account"><lh-avatar [name]="user.fullName" size="sm" /></a>
@@ -61,7 +62,7 @@ interface NavItem { label: string; icon: string; link: string; exact?: boolean; 
       <main class="main" id="main"><router-outlet /></main>
       <lh-palette />
 
-      <nav class="tabbar frost" aria-label="Main navigation">
+      <nav class="tabbar frost" aria-label="Main navigation" lhGlide>
         @for (item of tabs(); track item.link) {
           <a [routerLink]="item.link" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: !!item.exact }" class="tab"
              [attr.aria-label]="item.label" ariaCurrentWhenActive="page">
@@ -87,13 +88,14 @@ interface NavItem { label: string; icon: string; link: string; exact?: boolean; 
 
     /* Sidebar (desktop): opaque, docked to the left edge. */
     .sidebar { position: fixed; z-index: 30; inset: 0 auto 0 0; width: var(--side); display: flex; flex-direction: column;
-      padding: 1.1rem .75rem .9rem; background: var(--surface); border-right: 1px solid var(--line); }
+      padding: 1.1rem .75rem .9rem; background: var(--glass-side); border-right: 1px solid var(--glass-line);
+      box-shadow: inset -1px 0 0 rgba(255, 255, 255, .45); view-transition-name: lh-side; }
     .brand { padding: .15rem .55rem 1.1rem; text-decoration: none !important; }
-    .nav { display: flex; flex-direction: column; gap: 2px; }
+    .nav { display: flex; flex-direction: column; gap: 2px; --glide-ease: var(--spring); }
     .nav-link { display: flex; align-items: center; gap: .75rem; height: 42px; padding: 0 .75rem; border-radius: var(--r-ctl); border: 0; background: transparent; width: 100%;
       color: var(--ink-2); font-weight: 600; font-size: .95rem; cursor: pointer; text-decoration: none !important;
       transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
-    .nav-link:hover { background: var(--surface-2); color: var(--ink); }
+    .nav-link:hover { background: rgba(155, 132, 255, .12); color: var(--ink); }
     /* Active item: purple in shades (owner's choice), white text. */
     .nav-link.active { background: var(--nav-grad); color: #fff; box-shadow: var(--nav-glow); --duo: .4; }
     .nav-link.active:hover { color: #fff; }
@@ -101,11 +103,11 @@ interface NavItem { label: string; icon: string; link: string; exact?: boolean; 
     .nav-link:hover lh-icon { transform: translateX(2px); }
     .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 2px; padding-top: .75rem; border-top: 1px solid var(--line); }
     .me { display: flex; align-items: center; gap: .65rem; padding: .5rem .6rem; border-radius: var(--r-ctl); color: var(--ink); text-decoration: none !important; min-width: 0; }
-    .me:hover, .me.active { background: var(--surface-2); }
+    .me:hover, .me.active { background: rgba(155, 132, 255, .12); }
 
     /* Top bar: frosted, sticky. */
     .topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 1rem; height: 64px;
-      padding: 0 28px 0 calc(var(--side) + 28px); border-bottom: 1px solid var(--line); }
+      padding: 0 28px 0 calc(var(--side) + 28px); border-bottom: 1px solid var(--glass-line); view-transition-name: lh-top; }
     .mobile-brand { display: none; }
     .search { flex: 1; max-width: 460px; display: flex; align-items: center; gap: .55rem; height: 40px; padding: 0 .5rem 0 .85rem;
       border-radius: var(--r-ctl); background: var(--surface); border: 1px solid var(--line); color: var(--muted); cursor: pointer; text-align: left;
@@ -133,12 +135,15 @@ interface NavItem { label: string; icon: string; link: string; exact?: boolean; 
       /* Floating tab bar: frosted, icons only; the active tab expands into an ink pill with its label. */
       .tabbar { position: fixed; z-index: 40; left: 50%; bottom: calc(12px + env(safe-area-inset-bottom)); transform: translateX(-50%);
         display: flex; align-items: center; gap: 4px; padding: 5px; border-radius: 999px;
-        border: 1px solid #fff; box-shadow: var(--shadow-float); max-width: calc(100vw - 24px); }
+        border: 1px solid #fff; box-shadow: var(--shadow-float), inset 0 1px 0 rgba(255, 255, 255, .8); max-width: calc(100vw - 24px);
+        view-transition-name: lh-tabs; --glide-ease: var(--ease-out); }
       :host-context([data-theme="dark"]) .tabbar { border-color: rgba(255, 255, 255, .16); }
       .tab { display: flex; align-items: center; justify-content: center; gap: .4rem; height: 46px; min-width: 46px; padding: 0 12px; border-radius: 999px;
         color: var(--ink-2); text-decoration: none !important; font-weight: 700; font-size: .88rem;
         transition: background 260ms var(--ease-out), color 260ms var(--ease-out), padding 260ms var(--ease-out), box-shadow 260ms var(--ease-out), transform 120ms var(--ease-out); }
       .tab:active { transform: scale(.94); }
+      .tab lh-icon { transition: transform 300ms var(--spring); }
+      .tab.active lh-icon { transform: translateY(-1px) scale(1.06); }
       .tab span { max-width: 0; overflow: hidden; white-space: nowrap; transition: max-width 260ms var(--ease-out); }
       /* Active tab: the purple pill (owner's choice); the bar itself stays white. */
       .tab.active { background: var(--nav-grad); color: #fff; padding: 0 16px; box-shadow: var(--nav-glow); --duo: .4; }

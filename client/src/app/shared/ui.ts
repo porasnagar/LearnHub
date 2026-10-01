@@ -98,14 +98,21 @@ export class CourseArtComponent {
 
 // ---------- Donut ring ----------
 
+let ringIds = 0;
+
 @Component({
   selector: 'lh-ring',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="ring" [style.width.px]="size()" [style.height.px]="size()">
       <svg viewBox="0 0 120 120">
+        <defs>
+          <linearGradient [attr.id]="gid" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#a48dff" /><stop offset=".55" stop-color="#6e52f3" /><stop offset="1" stop-color="#4b31cf" />
+          </linearGradient>
+        </defs>
         <circle cx="60" cy="60" r="50" class="track" />
-        <circle cx="60" cy="60" r="50" class="bar" [style.stroke]="color()"
+        <circle cx="60" cy="60" r="50" class="bar" [style.stroke]="color() ?? 'url(#' + gid + ')'"
                 [attr.stroke-dasharray]="len" [attr.stroke-dashoffset]="offset()" [style.--len]="len" />
       </svg>
       <div class="center">
@@ -118,7 +125,7 @@ export class CourseArtComponent {
     svg { width: 100%; height: 100%; transform: rotate(-90deg); }
     circle { fill: none; stroke-width: 10; }
     .track { stroke: var(--surface-2); }
-    .bar { stroke-linecap: round; transition: stroke-dashoffset 500ms var(--ease-out);
+    .bar { stroke-linecap: round; transition: stroke-dashoffset 500ms var(--ease-out); filter: drop-shadow(0 4px 8px rgba(91, 69, 224, .35));
       animation: ring-draw 1000ms var(--ease-out) 150ms backwards; }
     @keyframes ring-draw { from { stroke-dashoffset: calc(var(--len) * 1px); } }
     .center { animation: lh-fade 400ms var(--ease-out) 250ms backwards; }
@@ -132,7 +139,9 @@ export class RingComponent {
   readonly center = input('');
   readonly caption = input<string | null>(null);
   readonly size = input(140);
-  readonly color = input('var(--ink)');
+  /** Defaults to the purple gradient; pass a colour to override. */
+  readonly color = input<string | null>(null);
+  protected readonly gid = `lh-ring-${++ringIds}`;
   readonly len = 2 * Math.PI * 50;
   readonly offset = computed(() => this.len * (1 - Math.max(0, Math.min(100, this.percent())) / 100));
 }
@@ -164,7 +173,7 @@ export interface Bar { label: string; value: number; highlight?: boolean; }
       transform-origin: bottom; animation: lh-grow-y 700ms var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 55ms + 100ms);
       transition: height 400ms var(--ease-out); }
     /* Today is the current selection → violet; other days stay neutral. */
-    .fill.hl { background: var(--violet); }
+    .fill.hl { background: var(--nav-grad); box-shadow: 0 6px 16px -6px rgba(91, 69, 224, .7); }
     .lbl { font-size: .78rem; font-weight: 600; color: var(--muted); }
     .lbl.hl { color: var(--ink); font-weight: 700; }
     .val { font-size: .78rem; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }
@@ -236,7 +245,10 @@ export class DateTileComponent {
     .tags { position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; z-index: 2; }
     .code { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 9px; border-radius: 7px; background: #17161d; color: #fff; font-size: .76rem; font-weight: 700; }
     .code.ghost { background: rgba(255,255,255,.78); color: #17161d; }
-    .art { position: absolute; right: -6px; bottom: -14px; width: 160px; height: 120px; }
+    .art { position: absolute; right: -6px; bottom: -14px; width: 160px; height: 120px; transition: transform 500ms var(--spring); }
+    @media (hover: hover) { .cc:hover .art { transform: translate(-6px, -8px) rotate(-4deg) scale(1.04); } }
+    .banner::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(120% 90% at 0% 0%, rgba(255,255,255,.45), transparent 55%); }
     .body { padding: .9rem 1rem 1rem; display: flex; flex-direction: column; gap: .25rem; flex: 1; }
     .title { font-size: 1.05rem; font-weight: 700; line-height: 1.3; }
     .sub { font-size: .86rem; color: var(--muted); }
@@ -340,7 +352,7 @@ export class EmptyComponent {
   template: `
     <div class="toasts" aria-live="polite">
       @for (t of toasts.items(); track t.id) {
-        <div class="toast" [class]="t.kind" role="status">
+        <div class="toast glass-panel" [class]="t.kind" role="status">
           <lh-icon class="dot" [name]="t.kind === 'error' ? 'alert' : t.kind === 'info' ? 'info' : 'check-circle'" />
           <span class="grow">{{ t.text }}</span>
           <button class="btn btn-ghost btn-icon btn-sm" (click)="toasts.dismiss(t.id)" aria-label="Dismiss"><lh-icon name="x" class="sm" /></button>
@@ -349,7 +361,7 @@ export class EmptyComponent {
     </div>
     @if (confirm.request(); as r) {
       <div class="scrim frost" (click)="confirm.close(false)">
-        <div class="dialog card card-lg" role="alertdialog" aria-modal="true" [attr.aria-label]="r.title" (click)="$event.stopPropagation()">
+        <div class="dialog card card-lg glass-panel" role="alertdialog" aria-modal="true" [attr.aria-label]="r.title" (click)="$event.stopPropagation()">
           <h2 class="row" [class.danger]="r.danger"><lh-icon [name]="r.danger ? 'alert' : 'info'" />{{ r.title }}</h2>
           <p class="muted mt-1">{{ r.message }}</p>
           <div class="row mt-3" style="justify-content:flex-end">
@@ -363,7 +375,7 @@ export class EmptyComponent {
     .toasts { position: fixed; z-index: 2000; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; width: min(380px, calc(100vw - 32px)); }
     @media (max-width: 640px) { .toasts { right: 16px; left: 16px; width: auto; top: calc(10px + env(safe-area-inset-top)); } }
     .toast { display: flex; align-items: center; gap: .65rem; padding: .55rem .4rem .55rem .85rem; border-radius: var(--r-ctl);
-      background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-float); font-weight: 600; font-size: .92rem;
+      font-weight: 600; font-size: .92rem;
       animation: in 280ms var(--ease-out) backwards; }
     @keyframes in { from { opacity: 0; transform: translateY(-10px) scale(.98); } }
     .dot { color: var(--ok); }

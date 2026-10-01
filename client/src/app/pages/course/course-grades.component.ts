@@ -6,12 +6,13 @@ import { AssignmentRow, Gradebook } from '../../core/models';
 import { Auth } from '../../core/services';
 import { isPast, letterGrade, score, workStatus } from '../../core/util';
 import { IconComponent } from '../../shared/icon.component';
+import { CountUpDirective } from '../../shared/motion';
 import { AvatarComponent, EmptyComponent, RingComponent } from '../../shared/ui';
 import { CourseStore } from './course.routes';
 
 @Component({
   selector: 'lh-course-grades',
-  imports: [RouterLink, DatePipe, IconComponent, AvatarComponent, EmptyComponent, RingComponent],
+  imports: [CountUpDirective, RouterLink, DatePipe, IconComponent, AvatarComponent, EmptyComponent, RingComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (store.course()?.canManage) {
@@ -88,7 +89,7 @@ import { CourseStore } from './course.routes';
             @if (pending().length) {
               <div class="wi-result mt-2">
                 <div>
-                  <div class="wi-big serif tabnum">{{ projected() === null ? '–' : projected()!.toFixed(1) + '%' }}</div>
+                  <div class="wi-big serif tabnum"><span [lhCountUp]="projected()" [decimals]="1" suffix="%"></span></div>
                   <div class="small muted">{{ projected() === null ? 'Move a slider to project' : 'Projected · ' + letter(projected()!) }}</div>
                 </div>
                 @if (delta() !== null && tried()) {

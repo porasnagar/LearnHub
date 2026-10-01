@@ -10,7 +10,11 @@
    Surfaces are opaque. Frosted glass is only for floating chrome that content scrolls under
    (.frost: top bar, mobile tab bar, dialog scrim).
    Owner's choices (kept on purpose): the active navigation item is a purple gradient (--nav-grad),
-   and content moves softly (see "Motion" at the end of this file).
+   content moves softly (see "Motion" at the end of this file), and cards are glowing glass:
+   translucent over a soft, static colour field, with a light-catching edge (v3.2).
+   Cards deliberately have NO backdrop blur: what's behind them is already a soft gradient, so blur
+   would only cost GPU time (it made Android phones stutter before). Real blur is kept for the
+   floating chrome and panels that content scrolls under.
    ========================================================================== */
 
 :root {
@@ -57,9 +61,28 @@
   --ease: cubic-bezier(0.2, 0, 0, 1);
   --ease-out: cubic-bezier(0.22, 0.8, 0.26, 1);
 
+  --spring: cubic-bezier(0.3, 1.25, 0.5, 1);
+
   /* Active navigation (owner's choice): purple in shades, white text. */
   --nav-grad: linear-gradient(135deg, #9b84ff 0%, #6e52f3 52%, #4b31cf 100%);
   --nav-glow: 0 10px 20px -12px rgba(75, 49, 207, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+
+  /* Glow glass */
+  --ambient:
+    radial-gradient(60vmax 50vmax at 0% 0%, rgba(155, 132, 255, 0.30), transparent 62%),
+    radial-gradient(50vmax 45vmax at 100% 6%, rgba(120, 186, 255, 0.24), transparent 62%),
+    radial-gradient(55vmax 50vmax at 88% 100%, rgba(110, 220, 175, 0.20), transparent 62%),
+    radial-gradient(45vmax 40vmax at 0% 100%, rgba(255, 186, 150, 0.22), transparent 62%);
+  --glass-card: rgba(255, 255, 255, 0.66);
+  --glass-side: rgba(255, 255, 255, 0.52);
+  --glass-panel: rgba(255, 255, 255, 0.78);
+  --glass-line: rgba(23, 22, 29, 0.07);
+  --glass-edge: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.35) 36%, rgba(255, 255, 255, 0.06) 62%, rgba(155, 132, 255, 0.45));
+  --card-shadow: 0 1px 2px rgba(40, 30, 90, 0.04), 0 16px 36px -24px rgba(60, 40, 140, 0.32);
+  --card-shadow-hover: 0 1px 2px rgba(40, 30, 90, 0.05), 0 22px 44px -22px rgba(91, 69, 224, 0.42);
+  --glow-violet: 0 10px 28px -10px rgba(91, 69, 224, 0.55);
+  --spot-rgb: 155 132 255;
+  --sheen: rgba(255, 255, 255, 0.26);
 
   --sans: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
   --serif: "Source Serif 4", Georgia, serif;
@@ -101,7 +124,22 @@
   --frost-bg: rgba(17, 16, 22, 0.78);
   --frost-chip: rgba(34, 33, 42, 0.9);
   --nav-grad: linear-gradient(135deg, #a690ff 0%, #7a5ef6 52%, #5539dc 100%);
-  --nav-glow: 0 10px 22px -12px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  --nav-glow: 0 10px 24px -10px rgba(122, 94, 246, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  --ambient:
+    radial-gradient(60vmax 50vmax at 0% 0%, rgba(124, 92, 255, 0.24), transparent 62%),
+    radial-gradient(50vmax 45vmax at 100% 6%, rgba(60, 120, 255, 0.15), transparent 62%),
+    radial-gradient(55vmax 50vmax at 88% 100%, rgba(40, 200, 160, 0.09), transparent 62%),
+    radial-gradient(45vmax 40vmax at 0% 100%, rgba(220, 90, 200, 0.10), transparent 62%);
+  --glass-card: rgba(34, 32, 45, 0.6);
+  --glass-side: rgba(24, 23, 32, 0.55);
+  --glass-panel: rgba(30, 29, 40, 0.8);
+  --glass-line: rgba(255, 255, 255, 0.07);
+  --glass-edge: linear-gradient(160deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06) 36%, rgba(255, 255, 255, 0.02) 62%, rgba(171, 157, 255, 0.42));
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 18px 40px -22px rgba(0, 0, 0, 0.75);
+  --card-shadow-hover: 0 1px 2px rgba(0, 0, 0, 0.3), 0 22px 48px -20px rgba(122, 94, 246, 0.45);
+  --glow-violet: 0 10px 30px -10px rgba(140, 115, 255, 0.6);
+  --spot-rgb: 171 157 255;
+  --sheen: rgba(155, 132, 255, 0.35);
   --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 36px -12px rgba(0, 0, 0, 0.7);
   color-scheme: dark;
 }
@@ -111,7 +149,13 @@
 /* Scrolling: only the viewport scrolls. Never put overflow-x:hidden on html/body — it turns body into
    its own scroll container and wheel/touch scroll can dead-end there. overflow-x:clip trims sideways
    overflow without creating a scroll container. */
-html { overflow-x: clip; overscroll-behavior-y: none; }
+html { overflow-x: clip; overscroll-behavior-y: none; scrollbar-gutter: stable; }
+/* Phones: no grey flash on tap; the ripple is the feedback. */
+* { -webkit-tap-highlight-color: transparent; }
+/* The soft colour field behind everything. Static on purpose: animating it would force the
+   frosted top bar and tab bar to re-blur on every frame. */
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: var(--ambient); }
+@property --spot { syntax: "<number>"; inherits: false; initial-value: 0; }
 body {
   min-height: 100vh;
   overflow-x: clip;
@@ -134,7 +178,7 @@ img, svg { display: block; }
 /* iOS Safari zooms into inputs below 16px. */
 @media (max-width: 768px) { input, select, textarea { font-size: 16px !important; } }
 ::selection { background: var(--violet-soft); color: var(--ink); }
-:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; border-radius: 6px; }
+:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; border-radius: 6px; box-shadow: 0 0 16px -2px rgba(91, 69, 224, 0.45); }
 
 .serif { font-family: var(--serif); }
 .muted { color: var(--muted); }
@@ -158,11 +202,24 @@ img, svg { display: block; }
 
 /* ---------- Surfaces ---------- */
 .card, .glass {
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background-color: var(--glass-card);
+  border: 1px solid var(--glass-line);
   border-radius: var(--r-card);
 }
-.card { padding: 1.25rem; position: relative; min-width: 0; }
+.card {
+  padding: 1.25rem; position: relative; min-width: 0; box-shadow: var(--card-shadow);
+  /* Desktop: a soft light follows the cursor (position set by Interactions in shared/motion.ts). */
+  background-image: radial-gradient(420px circle at var(--mx, -999px) var(--my, -999px), rgb(var(--spot-rgb) / calc(var(--spot) * 0.17)), transparent 70%);
+  transition: --spot 320ms var(--ease-out), box-shadow 260ms var(--ease-out);
+}
+/* The light-catching glass edge: a 1px gradient ring, masked to the border. */
+.card::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: var(--glass-edge);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+@media (hover: hover) { .card:hover { --spot: 1; } }
 .card-lg { padding: 1.5rem; }
 @media (max-width: 640px) {
   .card { padding: 1rem; }
@@ -181,13 +238,25 @@ img, svg { display: block; }
 .card.ink { background: #17161d; color: #fff; border-color: #17161d; }
 .card.ink .muted { color: rgba(255, 255, 255, 0.66); }
 .card.ink h2, .card.ink h3, .card.ink .card-title { color: #fff; }
-.link-card, a.card { transition: border-color var(--dur) var(--ease), transform 220ms var(--ease-out), box-shadow 220ms var(--ease-out); cursor: pointer; color: inherit; }
-.link-card:hover, a.card:hover { border-color: var(--line-strong); text-decoration: none; transform: translateY(-2px); box-shadow: var(--shadow-float); }
+.link-card, a.card { transition: border-color var(--dur) var(--ease), transform 260ms var(--ease-out), box-shadow 260ms var(--ease-out), --spot 320ms var(--ease-out); cursor: pointer; color: inherit; }
+.link-card:hover, a.card:hover { text-decoration: none; }
+@media (hover: hover) {
+  .link-card:hover, a.card:hover { transform: translateY(-3px); box-shadow: var(--card-shadow-hover); }
+}
+.link-card:active, a.card:active { transform: translateY(0) scale(0.99); }
 /* Floating chrome only — content scrolls under it. */
 .frost {
   background: var(--frost-bg);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+}
+/* Floating panels (bell, palette, dialogs, toasts): frosted glass with the same glowing edge. */
+.glass-panel {
+  background: var(--glass-panel);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+  border: 1px solid var(--glass-line);
+  box-shadow: var(--shadow-float), inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 .divider { height: 1px; background: var(--line); border: 0; margin: 0; }
 
@@ -202,6 +271,21 @@ img, svg { display: block; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn-ink { background: var(--btn-bg); color: var(--btn-fg); }
 .btn-ink:hover:not(:disabled) { background: color-mix(in srgb, var(--btn-bg) 86%, var(--canvas)); }
+/* The glowing primary: purple gradient, used for the one main call to action on a screen. */
+.btn-glow { background: var(--nav-grad); color: #fff; box-shadow: var(--nav-glow); border-color: transparent; }
+.btn-glow:hover:not(:disabled) { filter: brightness(1.06) saturate(1.05); }
+/* A light sheen sweeps across primary buttons on hover. */
+.btn-ink::before, .btn-glow::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 30%, var(--sheen) 50%, transparent 70%);
+  transform: translateX(-130%);
+}
+.btn-glow::before { background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%); }
+@media (hover: hover) {
+  .btn-ink:hover:not(:disabled), .btn-glow:hover:not(:disabled) { transform: translateY(-1px); box-shadow: var(--glow-violet); }
+  .btn-ink:hover:not(:disabled)::before, .btn-glow:hover:not(:disabled)::before { transform: translateX(130%); transition: transform 750ms var(--ease-out); }
+  .btn-ink:active:not(:disabled), .btn-glow:active:not(:disabled) { transform: translateY(1px) scale(0.98); }
+}
 .btn-glass, .btn-secondary { background: var(--surface); border-color: var(--line-strong); color: var(--ink); }
 .btn-glass:hover:not(:disabled), .btn-secondary:hover:not(:disabled) { background: var(--surface-2); }
 .btn-ghost { background: transparent; color: var(--ink-2); }
@@ -225,14 +309,15 @@ img, svg { display: block; }
   transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 .chip:hover { border-color: var(--line-strong); color: var(--ink); }
-.chip.active { background: var(--btn-bg); border-color: var(--btn-bg); color: var(--btn-fg); }
+.chip.active { background: var(--nav-grad); border-color: transparent; color: #fff; box-shadow: var(--nav-glow); }
 .chip .count { font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .chip.active .count { color: inherit; opacity: 0.7; }
 .chips { display: flex; gap: 0.5rem; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
 .chips::-webkit-scrollbar { display: none; }
 
 .seg {
-  display: inline-flex; padding: 3px; gap: 2px; border-radius: var(--r-ctl); background: var(--surface); border: 1px solid var(--line);
+  display: inline-flex; padding: 3px; gap: 2px; border-radius: var(--r-ctl); background: var(--glass-card); border: 1px solid var(--glass-line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
   overflow-x: auto; max-width: 100%; scrollbar-width: none;
 }
 .seg::-webkit-scrollbar { display: none; }
@@ -242,7 +327,7 @@ img, svg { display: block; }
   text-decoration: none !important; transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 .seg a:hover, .seg button:hover { color: var(--ink); background: var(--surface-2); }
-.seg .active, .seg .active:hover { background: var(--btn-bg); color: var(--btn-fg) !important; }
+.seg .active, .seg .active:hover { background: var(--nav-grad); color: #fff !important; }
 
 .status {
   display: inline-flex; align-items: center; gap: 0.38rem; height: 24px; padding: 0 0.6rem; border-radius: 999px;
@@ -304,7 +389,7 @@ img, svg { display: block; }
   background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
   background-position: calc(100% - 20px) 50%, calc(100% - 15px) 50%; background-size: 5px 5px; background-repeat: no-repeat;
 }
-.input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--violet); box-shadow: 0 0 0 3px var(--violet-soft); }
+.input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--violet); box-shadow: 0 0 0 3px var(--violet-soft), 0 0 22px -6px rgba(91, 69, 224, 0.5); }
 .input.sm, .select.sm { height: 36px; font-size: 0.9rem; border-radius: var(--r-sm); }
 .input-wrap { position: relative; }
 .input-wrap .ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); }
@@ -367,9 +452,11 @@ a.due-row:active, button.due-row:active { background: var(--violet-soft); }
 .empty { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; padding: 1.25rem 0.5rem; color: var(--muted); }
 .empty .ico { width: 24px; height: 24px; color: var(--muted); }
 .empty strong { color: var(--ink); font-size: 1rem; }
-.skeleton { border-radius: var(--r-card); background: var(--surface); border: 1px solid var(--line); position: relative; overflow: hidden; }
-.skeleton::after { content: ""; position: absolute; inset: 0; background: var(--surface-2); animation: pulse-bg 1.2s ease-in-out infinite alternate; }
-@keyframes pulse-bg { from { opacity: 0.2; } to { opacity: 1; } }
+.skeleton { border-radius: var(--r-card); background: var(--glass-card); border: 1px solid var(--glass-line); position: relative; overflow: hidden; }
+.skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.6) 50%, transparent 80%); animation: shimmer 1.4s var(--ease) infinite; }
+:root[data-theme="dark"] .skeleton::after { background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.06) 50%, transparent 80%); }
+@keyframes shimmer { to { transform: translateX(100%); } }
 
 /* ---------- Icons ---------- */
 .ico { width: 20px; height: 20px; flex-shrink: 0; }
@@ -405,6 +492,32 @@ router-outlet + :not(lh-shell) { display: block; animation: lh-enter 340ms var(-
 .fade-in { animation: lh-fade 240ms var(--ease-out) backwards; }
 /* Floating panels (notifications, menus) drop in from their trigger. */
 .pop { animation: lh-pop 200ms var(--ease-out) backwards; transform-origin: top right; }
+
+/* Press ripple (added by Interactions in shared/motion.ts). */
+:where(.btn, .tab, .nav-link, .chip, .seg > a, .seg > button, a.due-row, button.due-row, .mini-day, .day, .res, .item, .demo-row, .theme-opt, .legend, .me) {
+  position: relative; overflow: hidden;
+}
+/* overflow:hidden drops a flex item's automatic minimum width to 0; keep labels from being squeezed. */
+:where(.btn, .chip, .seg > a, .seg > button) { min-width: min-content; flex-shrink: 0; }
+.ripple { position: absolute; border-radius: 50%; pointer-events: none; background: currentColor; opacity: 0.16;
+  transform: scale(0); animation: lh-ripple 620ms var(--ease-out) forwards; }
+@keyframes lh-ripple { to { transform: scale(1); opacity: 0; } }
+
+/* The gliding highlight (GlideDirective): one pill that slides to the active item. */
+.glide-ind { position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; opacity: 0;
+  background: var(--glide-bg, var(--nav-grad)); box-shadow: var(--nav-glow); will-change: transform, width;
+  transition: transform 460ms var(--glide-ease, var(--spring)), width 460ms var(--glide-ease, var(--spring)),
+    height 460ms var(--glide-ease, var(--spring)), opacity 200ms var(--ease-out); }
+.glide > :not(.glide-ind) { position: relative; z-index: 1; }
+.glide.glide-ready > .active, .glide.glide-ready > .active:hover { background: transparent !important; box-shadow: none !important; }
+
+/* Theme switch: the new theme spreads in a circle from the button you pressed. */
+html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html.theme-vt::view-transition-new(root) { animation: lh-reveal 560ms var(--ease-out); }
+@keyframes lh-reveal {
+  from { clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%)); }
+  to { clip-path: circle(var(--vt-r, 150vmax) at var(--vt-x, 50%) var(--vt-y, 50%)); }
+}
 
 @view-transition { navigation: auto; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 200ms; }

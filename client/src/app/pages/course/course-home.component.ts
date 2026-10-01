@@ -6,13 +6,14 @@ import { AssignmentRow } from '../../core/models';
 import { Confirm, Toasts } from '../../core/services';
 import { dueText, isPast, letterGrade, workStatus } from '../../core/util';
 import { IconComponent } from '../../shared/icon.component';
+import { CountUpDirective } from '../../shared/motion';
 import { AvatarComponent, DateTileComponent, EmptyComponent, RingComponent } from '../../shared/ui';
 import { AnnouncementsComponent } from '../../shared/announcements.component';
 import { CourseStore } from './course.routes';
 
 @Component({
   selector: 'lh-course-home',
-  imports: [RouterLink, DatePipe, IconComponent, AvatarComponent, DateTileComponent, EmptyComponent, RingComponent, AnnouncementsComponent],
+  imports: [CountUpDirective, RouterLink, DatePipe, IconComponent, AvatarComponent, DateTileComponent, EmptyComponent, RingComponent, AnnouncementsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (store.course(); as c) {
@@ -67,9 +68,9 @@ import { CourseStore } from './course.routes';
             <section class="card card-lg">
               <div class="row between"><h2 class="card-title">Course status</h2><span class="status {{ c.isPublished ? 'published' : 'draft' }}">{{ c.isPublished ? 'Published' : 'Draft' }}</span></div>
               <dl class="stats mt-3">
-                <div><dt class="tiny muted">Students</dt><dd class="n serif tabnum">{{ c.studentCount }}</dd></div>
-                <div><dt class="tiny muted">Assignments</dt><dd class="n serif tabnum">{{ c.assignmentCount }}</dd></div>
-                <div><dt class="tiny muted">To grade</dt><dd class="n serif tabnum" [class.warn]="toGrade() > 0">{{ toGrade() }}</dd></div>
+                <div><dt class="tiny muted">Students</dt><dd class="n serif tabnum" [lhCountUp]="c.studentCount"></dd></div>
+                <div><dt class="tiny muted">Assignments</dt><dd class="n serif tabnum" [lhCountUp]="c.assignmentCount"></dd></div>
+                <div><dt class="tiny muted">To grade</dt><dd class="n serif tabnum" [class.warn]="toGrade() > 0" [lhCountUp]="toGrade()"></dd></div>
               </dl>
               <div class="row mt-3"><a routerLink="grades" class="btn btn-ink btn-sm grow">Open gradebook</a><a routerLink="settings" class="btn btn-secondary btn-sm">Settings</a></div>
             </section>

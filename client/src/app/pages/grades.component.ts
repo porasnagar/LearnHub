@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { Api } from '../core/api.service';
 import { letterGrade, score, toneStyle } from '../core/util';
 import { IconComponent } from '../shared/icon.component';
+import { CountUpDirective } from '../shared/motion';
 import { EmptyComponent, RingComponent } from '../shared/ui';
 
 @Component({
   selector: 'lh-grades',
-  imports: [RouterLink, IconComponent, EmptyComponent, RingComponent],
+  imports: [CountUpDirective, RouterLink, IconComponent, EmptyComponent, RingComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -39,7 +40,7 @@ import { EmptyComponent, RingComponent } from '../shared/ui';
               <div class="strong title">{{ r.title }}</div>
               <div class="tiny muted">{{ r.instructorName }}</div>
               <div class="row between mt-3">
-                <div class="big serif">{{ pct(r) === null ? '–' : pct(r)!.toFixed(0) }}<small>{{ pct(r) === null ? '' : '%' }}</small></div>
+                <div class="big serif"><span [lhCountUp]="pct(r)"></span><small>{{ pct(r) === null ? '' : '%' }}</small></div>
                 @if (pct(r) !== null) { <span class="letter serif">{{ letter(pct(r)!) }}</span> }
               </div>
               <div class="tiny muted">{{ fmt(r.earned) }} / {{ r.possible }} pts · {{ r.gradedCount }} of {{ r.assignmentCount }} graded</div>

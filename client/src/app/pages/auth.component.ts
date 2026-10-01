@@ -103,7 +103,7 @@ const authStyles = `
             </div>
           </div>
           <label class="check"><input type="checkbox" name="remember" [(ngModel)]="remember" /> Keep me signed in</label>
-          <button class="btn btn-ink btn-lg btn-block" type="submit" [disabled]="busy() || f.invalid">
+          <button class="btn btn-glow btn-lg btn-block" type="submit" [disabled]="busy() || f.invalid">
             {{ busy() ? 'Signing in…' : 'Sign in' }} <lh-icon name="arrow-right" class="sm" />
           </button>
         </form>
@@ -188,7 +188,7 @@ export class LoginComponent {
             <input id="password" class="input" type="password" name="password" [(ngModel)]="password" required minlength="6" autocomplete="new-password" />
             <span class="hint">At least 6 characters.</span>
           </div>
-          <button class="btn btn-ink btn-lg btn-block" type="submit" [disabled]="busy() || f.invalid">
+          <button class="btn btn-glow btn-lg btn-block" type="submit" [disabled]="busy() || f.invalid">
             {{ busy() ? 'Creating account…' : 'Create account' }} <lh-icon name="arrow-right" class="sm" />
           </button>
         </form>

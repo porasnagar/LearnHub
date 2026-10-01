@@ -4,13 +4,14 @@ import { RouterLink } from '@angular/router';
 import { Api } from '../core/api.service';
 import { Auth } from '../core/services';
 import { IconComponent } from '../shared/icon.component';
+import { GlideDirective } from '../shared/motion';
 import { CourseCardComponent, EmptyComponent } from '../shared/ui';
 
 type Filter = 'all' | 'active' | 'done' | 'published' | 'draft';
 
 @Component({
   selector: 'lh-my-courses',
-  imports: [RouterLink, IconComponent, CourseCardComponent, EmptyComponent],
+  imports: [GlideDirective, RouterLink, IconComponent, CourseCardComponent, EmptyComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -26,7 +27,7 @@ type Filter = 'all' | 'active' | 'done' | 'published' | 'draft';
         }
       </div>
 
-      <div class="seg" role="tablist">
+      <div class="seg" lhGlide role="tablist">
         @for (f of filters(); track f.key) {
           <button [class.active]="filter() === f.key" (click)="filter.set(f.key)" role="tab" [attr.aria-selected]="filter() === f.key">
             {{ f.label }} <span class="faint">{{ count(f.key) }}</span>

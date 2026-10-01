@@ -8,12 +8,13 @@ import { Auth } from '../core/services';
 import { isoDate, isPast, toneStyle } from '../core/util';
 import { IconComponent } from '../shared/icon.component';
 import { EmptyComponent } from '../shared/ui';
+import { GlideDirective } from '../shared/motion';
 
 type View = 'month' | 'list';
 
 @Component({
   selector: 'lh-calendar',
-  imports: [DatePipe, RouterLink, IconComponent, EmptyComponent],
+  imports: [DatePipe, RouterLink, IconComponent, EmptyComponent, GlideDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -23,7 +24,7 @@ type View = 'month' | 'list';
           <p class="page-sub">Due dates from {{ auth.isStudent() ? 'your enrolled courses' : auth.isAdmin() ? 'every course' : 'the courses you teach' }}.</p>
         </div>
         <div class="row wrap head-actions">
-          <div class="seg" role="tablist" aria-label="Calendar view">
+          <div class="seg" lhGlide role="tablist" aria-label="Calendar view">
             <button role="tab" [class.active]="view() === 'month'" [attr.aria-selected]="view() === 'month'" (click)="setView('month')"><lh-icon name="grid" class="sm" /> Month</button>
             <button role="tab" [class.active]="view() === 'list'" [attr.aria-selected]="view() === 'list'" (click)="setView('list')"><lh-icon name="list" class="sm" /> List</button>
           </div>
@@ -160,7 +161,7 @@ type View = 'month' | 'list';
     @keyframes cal-in-l { from { opacity: 0; transform: translateX(-18px); } }
     .dow { font-size: .8rem; font-weight: 600; color: var(--muted); text-align: center; padding-bottom: .3rem; min-width: 0; }
     .dow .short { display: none; }
-    .day { min-height: 104px; padding: 6px; border-radius: var(--r-sm); background: var(--surface-2); border: 1px solid transparent; cursor: pointer;
+    .day { min-height: 104px; padding: 6px; border-radius: var(--r-sm); background: rgba(255, 255, 255, .45); border: 1px solid transparent; cursor: pointer;
       display: flex; flex-direction: column; gap: 3px; min-width: 0; overflow: hidden;
       transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), transform 160ms var(--ease-out); }
     .day:hover { border-color: var(--line-strong); }
@@ -168,10 +169,12 @@ type View = 'month' | 'list';
     .day.other { background: transparent; }
     .day.other .num { color: var(--faint); }
     /* Selected day = current selection → violet outline; today = violet filled number. */
-    .day.sel { border-color: var(--violet); box-shadow: inset 0 0 0 1px var(--violet); background: var(--surface); }
+    .day.sel { border-color: var(--violet); box-shadow: inset 0 0 0 1px var(--violet), 0 8px 20px -12px rgba(91, 69, 224, .6); background: var(--surface); }
+    :host-context([data-theme="dark"]) .day { background: rgba(255, 255, 255, .04); }
+    :host-context([data-theme="dark"]) .day.sel { background: rgba(171, 157, 255, .1); }
     .num { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: .82rem; font-weight: 700; font-variant-numeric: tabular-nums;
       transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
-    .day.today .num { background: var(--violet); color: #fff; }
+    .day.today .num { background: var(--nav-grad); color: #fff; box-shadow: 0 6px 14px -4px rgba(91, 69, 224, .65); }
     .dots { display: none; }
     .evs { display: flex; flex-direction: column; gap: 3px; width: 100%; min-width: 0; }
     .ev { display: block; padding: 3px 8px; border-radius: 8px; background: var(--c); color: #16151c; font-size: .72rem; font-weight: 700;
@@ -185,7 +188,7 @@ type View = 'month' | 'list';
     .group.past { opacity: .78; }
     .g-head { display: flex; align-items: center; gap: .7rem; }
     .g-day { width: 44px; height: 44px; border-radius: 12px; background: var(--surface-2); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0; }
-    .g-day.today { background: var(--violet); color: #fff; }
+    .g-day.today { background: var(--nav-grad); color: #fff; box-shadow: var(--nav-glow); }
     .g-num { font-weight: 800; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
     .g-dow { font-size: .66rem; font-weight: 700; opacity: .7; margin-top: 2px; }
     .group .due-list { padding-left: calc(44px + .7rem); }

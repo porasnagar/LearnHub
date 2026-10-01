@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { Interactions } from './shared/motion';
 import { OverlaysComponent } from './shared/ui';
 
 @Component({
@@ -7,4 +8,6 @@ import { OverlaysComponent } from './shared/ui';
   imports: [RouterOutlet, OverlaysComponent],
   template: `<router-outlet /><lh-overlays />`
 })
-export class AppComponent {}
+export class AppComponent {
+  constructor() { inject(Interactions).start(); }
+}
