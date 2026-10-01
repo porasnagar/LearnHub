@@ -4,7 +4,8 @@ import { Router } from '@angular/router';
 import { catchError, debounceTime, distinctUntilChanged, map, of, startWith, switchMap } from 'rxjs';
 import { Api } from '../core/api.service';
 import { SearchResult } from '../core/models';
-import { Auth, Theme } from '../core/services';
+import { ACCENTS, Auth, Theme } from '../core/services';
+import { WhatsNew } from './whats-new.component';
 import { toneStyle } from '../core/util';
 import { IconComponent } from '../shared/icon.component';
 
@@ -24,6 +25,11 @@ interface Entry {
 
 const EMPTY: SearchResult = { courses: [], assignments: [], people: [] };
 const head = (s: string) => s.split(' · ')[0];
+/** A random preset accent that differs from the current one. */
+const randomHue = (current: number) => {
+  const others = ACCENTS.filter(a => a.hue !== current);
+  return others[Math.floor(Math.random() * others.length)].hue;
+};
 const rest = (s: string) => s.split(' · ').slice(1).join(' · ');
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -93,7 +99,7 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
     .label { padding: .7rem .6rem .3rem; font-size: .78rem; font-weight: 700; color: var(--muted); }
     .res { display: flex; align-items: center; gap: .75rem; width: 100%; min-height: 50px; padding: .45rem .6rem; border: 0; border-radius: 12px;
       background: transparent; color: var(--ink); text-align: left; cursor: pointer; transition: background 120ms var(--ease); }
-    .res.active { background: var(--violet-soft); box-shadow: inset 0 0 0 1px rgba(155, 132, 255, .35); }
+    .res.active { background: var(--violet-soft); box-shadow: inset 0 0 0 1px oklch(0.72 0.15 var(--hue) / .35); }
     .ic { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--surface-2); color: var(--ink-2); flex-shrink: 0; }
     .res.active .ic { background: var(--surface); color: var(--violet); }
     .code-chip { min-width: 52px; height: 26px; justify-content: center; flex-shrink: 0; }
@@ -120,6 +126,7 @@ export class PaletteComponent {
   private auth = inject(Auth);
   private theme = inject(Theme);
   private router = inject(Router);
+  private whatsNew = inject(WhatsNew);
   private box = viewChild<ElementRef<HTMLInputElement>>('box');
   private returnFocus: HTMLElement | null = null;
 
@@ -156,6 +163,11 @@ export class PaletteComponent {
     items.push(
       { key: 'a-theme', group: 'Actions', title: this.theme.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme',
         icon: this.theme.mode() === 'dark' ? 'sun' : 'moon', run: () => this.theme.toggle() },
+      { key: 'a-look', group: 'Actions', title: 'Appearance and accent colour', subtitle: `Now: ${this.theme.accentName()}, ${this.theme.pref()} theme`,
+        icon: 'palette', link: '/profile#appearance' },
+      { key: 'a-hue', group: 'Actions', title: 'Surprise me with a colour', subtitle: 'Picks a random accent', icon: 'gift',
+        run: () => this.theme.setHue(randomHue(this.theme.hue())) },
+      { key: 'a-whats', group: 'Actions', title: "What's new in LearnHub", icon: 'bolt', run: () => this.whatsNew.show() },
       { key: 'a-ics', group: 'Actions', title: 'Add due dates to my calendar', subtitle: 'Download an .ics file for Google, Apple or Outlook',
         icon: 'download', run: () => { window.location.href = '/api/calendar/export.ics'; } },
     );

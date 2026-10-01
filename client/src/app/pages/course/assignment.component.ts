@@ -7,6 +7,7 @@ import { AssignmentDetail } from '../../core/models';
 import { Confirm, Toasts } from '../../core/services';
 import { dueText, isPast, letterGrade, score, workStatus } from '../../core/util';
 import { IconComponent } from '../../shared/icon.component';
+import { Celebrate } from '../../shared/motion';
 import { AvatarComponent, EmptyComponent, RingComponent } from '../../shared/ui';
 import { CourseStore } from './course.routes';
 
@@ -66,7 +67,7 @@ import { CourseStore } from './course.routes';
                 </label>
                 <div class="row" style="justify-content:flex-end">
                   @if (a.mySubmission) { <button class="btn btn-ghost" (click)="composer.set(false)">Cancel</button> }
-                  <button class="btn btn-ink" (click)="submit()" [disabled]="busy() || (!text.trim() && !file() && !a.mySubmission?.originalFileName)">
+                  <button class="btn btn-glow submit-btn" (click)="submit()" [disabled]="busy() || (!text.trim() && !file() && !a.mySubmission?.originalFileName)">
                     {{ busy() ? 'Uploading…' : 'Submit assignment' }} <lh-icon name="arrow-right" class="sm" /></button>
                 </div>
               </section>
@@ -175,6 +176,7 @@ export class AssignmentComponent {
   protected file = signal<File | null>(null);
   protected dragging = signal(false);
   protected busy = signal(false);
+  private celebrate = inject(Celebrate);
   protected text = '';
   protected due = dueText;
   protected fmt = score;
@@ -209,7 +211,11 @@ export class AssignmentComponent {
   submit() {
     this.busy.set(true);
     this.api.submit(this.a()!.id, this.text, this.file()).subscribe({
-      next: () => { this.toasts.ok('Submission received — nice work!'); this.busy.set(false); this.load(this.a()!.id); this.store.reload(); },
+      next: () => {
+        this.celebrate.burst(document.querySelector('.submit-btn'));
+        this.toasts.ok('Handed in. Nice work!');
+        this.busy.set(false); this.load(this.a()!.id); this.store.reload();
+      },
       error: () => this.busy.set(false)
     });
   }

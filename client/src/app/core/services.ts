@@ -70,42 +70,122 @@ export class Confirm {
   }
 }
 
-// ---------- Theme ----------
+// ---------- Theme: light / dark / auto, plus an accent hue ----------
+
+export type ThemePref = 'light' | 'dark' | 'auto';
+export interface Accent { name: string; hue: number; }
+
+/** Preset accents (OKLCH hues). Any hue 0–359 is allowed via the slider. */
+export const ACCENTS: Accent[] = [
+  { name: 'Violet', hue: 283 }, { name: 'Indigo', hue: 264 }, { name: 'Ocean', hue: 245 }, { name: 'Sky', hue: 225 },
+  { name: 'Teal', hue: 190 }, { name: 'Emerald', hue: 155 }, { name: 'Amber', hue: 65 }, { name: 'Coral', hue: 35 },
+  { name: 'Rose', hue: 10 }, { name: 'Magenta', hue: 330 },
+];
+export const DEFAULT_HUE = 283;
+
+function readPref(): ThemePref {
+  try { const v = localStorage.getItem('lh-theme'); return v === 'light' || v === 'dark' ? v : 'auto'; } catch { return 'auto'; }
+}
+function readHue(): number {
+  try { const v = Number(localStorage.getItem('lh-hue')); return localStorage.getItem('lh-hue') !== null && Number.isFinite(v) ? v : DEFAULT_HUE; }
+  catch { return DEFAULT_HUE; }
+}
+function save(key: string, value: string) { try { localStorage.setItem(key, value); } catch { /* private mode */ } }
+
+type Transition = { ready: Promise<void>; finished: Promise<void>; updateCallbackDone: Promise<void> };
 
 @Injectable({ providedIn: 'root' })
 export class Theme {
+  private media = matchMedia('(prefers-color-scheme: dark)');
+  /** What the person chose. */
+  readonly pref = signal<ThemePref>(readPref());
+  /** What is showing right now. */
   readonly mode = signal<'light' | 'dark'>((document.documentElement.dataset['theme'] as 'light' | 'dark') ?? 'light');
+  readonly hue = signal<number>(readHue());
+  readonly accentName = computed(() => ACCENTS.find(a => a.hue === this.hue())?.name ?? 'Custom');
 
-  /**
-   * Switch light/dark. With a click event, the new theme spreads out in a circle from the button;
-   * otherwise (keyboard, palette) it grows from the centre of the screen.
-   */
-  toggle(origin?: Event) {
-    const next = this.mode() === 'dark' ? 'light' : 'dark';
-    const apply = () => {
+  constructor() {
+    // Auto follows the device setting live, e.g. when the phone switches to dark at sunset.
+    this.media.addEventListener('change', () => {
+      if (this.pref() === 'auto') this.applyMode(this.media.matches ? 'dark' : 'light', null);
+    });
+    queueMicrotask(() => this.syncBrowserBar());
+  }
+
+  /** The sun/moon button: flips between light and dark. */
+  toggle(origin?: Event) { this.setPref(this.mode() === 'dark' ? 'light' : 'dark', origin); }
+
+  setPref(pref: ThemePref, origin?: Event | null) {
+    this.pref.set(pref);
+    save('lh-theme', pref);
+    this.applyMode(pref === 'auto' ? (this.media.matches ? 'dark' : 'light') : pref, origin);
+  }
+
+  /** Pick an accent. `animate: false` is for dragging the slider (instant, no reveal). */
+  setHue(hue: number, origin?: Event | null, animate = true) {
+    const h = ((Math.round(hue) % 360) + 360) % 360;
+    if (h === this.hue()) return;
+    save('lh-hue', String(h));
+    this.reveal(() => {
+      document.documentElement.style.setProperty('--hue', String(h));
+      this.hue.set(h);
+    }, origin, animate);
+  }
+
+  private applyMode(next: 'light' | 'dark', origin?: Event | null) {
+    if (next === this.mode()) return;
+    this.reveal(() => {
       document.documentElement.dataset['theme'] = next;
       this.mode.set(next);
-      try { localStorage.setItem('lh-theme', next); } catch { /* private mode */ }
-    };
-    type Transition = { ready: Promise<void>; finished: Promise<void>; updateCallbackDone: Promise<void> };
+    }, origin, true);
+  }
+
+  /**
+   * Apply a change of look. When possible the new look spreads in a circle from where the person
+   * clicked (or the centre of the screen), led by a glowing ring.
+   */
+  private reveal(apply: () => void, origin: Event | null | undefined, animate: boolean) {
+    const done = () => { apply(); this.syncBrowserBar(); };
     const doc = document as Document & { startViewTransition?: (cb: () => void) => Transition };
-    if (!doc.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { apply(); return; }
+    if (!animate || !doc.startViewTransition || document.hidden || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      done();
+      return;
+    }
 
     const root = document.documentElement;
     const target = origin?.currentTarget instanceof Element ? origin.currentTarget.getBoundingClientRect() : null;
-    const pe = origin as PointerEvent | undefined;
+    const pe = origin as PointerEvent | null | undefined;
     const x = pe?.clientX ? pe.clientX : target ? target.left + target.width / 2 : innerWidth / 2;
     const y = pe?.clientY ? pe.clientY : target ? target.top + target.height / 2 : innerHeight / 2;
-    const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    const r = Math.ceil(Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)));
     root.style.setProperty('--vt-x', `${x}px`);
     root.style.setProperty('--vt-y', `${y}px`);
-    root.style.setProperty('--vt-r', `${Math.ceil(r)}px`);
+    root.style.setProperty('--vt-r', `${r}px`);
     root.classList.add('theme-vt');
 
-    const t = doc.startViewTransition(apply);
-    // A skipped transition (e.g. the tab is hidden) rejects these; the theme still applies.
-    t.ready.catch(() => {}); t.updateCallbackDone.catch(() => {});
-    t.finished.catch(() => {}).finally(() => root.classList.remove('theme-vt'));
+    const ring = document.createElement('div');
+    ring.className = 'vt-ring';
+    ring.setAttribute('aria-hidden', 'true');
+
+    const t = doc.startViewTransition(() => { done(); document.body.appendChild(ring); });
+    // A skipped transition (e.g. the tab is hidden) rejects these; the change still applies.
+    t.ready.catch(() => {});
+    t.updateCallbackDone.catch(() => {});
+    t.finished.catch(() => {}).finally(() => { root.classList.remove('theme-vt'); ring.remove(); });
+  }
+
+  /** Phones tint the browser's own bar with theme-color; keep it matching the canvas. */
+  private syncBrowserBar() {
+    try {
+      const c = document.createElement('canvas');
+      c.width = c.height = 1;
+      const ctx = c.getContext('2d')!;
+      ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
+      ctx.fillRect(0, 0, 1, 1);
+      const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+      const hex = '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+      document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute('content', hex));
+    } catch { /* not important */ }
   }
 }
 

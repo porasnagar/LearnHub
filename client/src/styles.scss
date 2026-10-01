@@ -1,37 +1,51 @@
 /* ============================================================================
-   LearnHub design system (v3) — see docs/UI-DESIGN.md §0 for the reasoning.
+   LearnHub design system (v3, "1.5") — see docs/UI-DESIGN.md §0 for the reasoning.
+
+   One number drives the accent: --hue (0–360, default 283 = violet). The person picks it in
+   Appearance; it's saved per device and applied before first paint (index.html). Every accent
+   colour, the glow behind the cards, the cursor light, focus rings and even the faint tint of the
+   neutral greys are OKLCH formulas of --hue, so changing it recolours the whole app at once.
+   Course pastels and status colours are NOT hue-driven: they carry meaning.
 
    Colour meaning (and nothing else):
-     ink     — text, primary action, active navigation
-     violet  — links, focus ring, "today", current selection
+     ink     — text, primary action
+     accent  (--violet, --nav-grad; the name is historical) — active navigation, links, focus ring,
+             "today", current selection, the one glowing call to action per screen
      course pastels (--c / --c-deep, set per course) — which course an item belongs to
      red     — missing / overdue        amber — late, or waiting to be graded
      green   — graded / on time          blue  — submitted, waiting
-   Surfaces are opaque. Frosted glass is only for floating chrome that content scrolls under
-   (.frost: top bar, mobile tab bar, dialog scrim).
-   Owner's choices (kept on purpose): the active navigation item is a purple gradient (--nav-grad),
-   content moves softly (see "Motion" at the end of this file), and cards are glowing glass:
-   translucent over a soft, static colour field, with a light-catching edge (v3.2).
+   Owner's choices (kept on purpose): accent gradients, soft motion everywhere, and glowing glass —
+   translucent cards over a soft, static colour field, with a light-catching edge.
    Cards deliberately have NO backdrop blur: what's behind them is already a soft gradient, so blur
    would only cost GPU time (it made Android phones stutter before). Real blur is kept for the
    floating chrome and panels that content scrolls under.
    ========================================================================== */
 
 :root {
-  --canvas: #f3f2f7;
+  --hue: 283;
+
+  --canvas: oklch(0.965 0.008 var(--hue));
   --surface: #ffffff;
-  --surface-2: #f8f7fb;
-  --line: #e6e4ed;
-  --line-strong: #d4d1de;
-  --ink: #17161d;
-  --ink-2: #3b3947;
-  --muted: #64617a;
-  --faint: #8f8ca1;
-  --btn-bg: #17161d;
+  --surface-2: oklch(0.982 0.005 var(--hue));
+  --line: oklch(0.925 0.01 var(--hue));
+  --line-strong: oklch(0.865 0.014 var(--hue));
+  --ink: oklch(0.2 0.012 var(--hue));
+  --ink-2: oklch(0.36 0.025 var(--hue));
+  --muted: oklch(0.49 0.028 var(--hue));
+  --faint: oklch(0.64 0.025 var(--hue));
+  --btn-bg: var(--ink);
   --btn-fg: #ffffff;
 
-  --violet: #5b45e0;
-  --violet-soft: #eeebfd;
+  /* Accent ("violet" is the historical name; it follows --hue). */
+  /* Lightness chosen so every hue passes WCAG AA: links ≥ 5.2:1 on white, white text ≥ 4.6:1 on the pill. */
+  --violet: oklch(0.48 0.19 var(--hue));
+  --violet-soft: oklch(0.95 0.03 var(--hue));
+  --accent: var(--violet);
+  --accent-tint: oklch(0.72 0.15 var(--hue) / 0.12);
+  --ring-a: oklch(0.76 0.14 var(--hue));
+  --ring-b: oklch(0.5 0.2 var(--hue));
+  --ring-c: oklch(0.44 0.2 var(--hue));
+  --logo-accent: oklch(0.84 0.1 var(--hue));
 
   /* Course pastels for avatars etc. (course tiles get --c/--c-deep from util.ts) */
   --lilac: #d9ccff;
@@ -50,7 +64,7 @@
   --info: #2f62b8;
   --info-soft: #e4ecfa;
 
-  --frost-bg: rgba(243, 242, 247, 0.86);
+  --frost-bg: oklch(0.965 0.008 var(--hue) / 0.86);
   --frost-chip: rgba(255, 255, 255, 0.86);
   --shadow-float: 0 1px 2px rgba(23, 22, 29, 0.06), 0 12px 32px -12px rgba(23, 22, 29, 0.22);
 
@@ -60,33 +74,35 @@
   --dur: 150ms;
   --ease: cubic-bezier(0.2, 0, 0, 1);
   --ease-out: cubic-bezier(0.22, 0.8, 0.26, 1);
-
   --spring: cubic-bezier(0.3, 1.25, 0.5, 1);
 
-  /* Active navigation (owner's choice): purple in shades, white text. */
-  --nav-grad: linear-gradient(135deg, #9b84ff 0%, #6e52f3 52%, #4b31cf 100%);
-  --nav-glow: 0 10px 20px -12px rgba(75, 49, 207, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  /* Active navigation and selection: the accent in shades, white text. */
+  --nav-grad: linear-gradient(135deg, oklch(0.62 0.17 var(--hue)) 0%, oklch(0.5 0.2 var(--hue)) 52%, oklch(0.4 0.19 var(--hue)) 100%);
+  --nav-glow: 0 10px 20px -12px oklch(0.44 0.2 var(--hue) / 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 
-  /* Glow glass */
+  /* Glow glass. The colour field uses the accent plus three companions spaced around the wheel. */
   --ambient:
-    radial-gradient(60vmax 50vmax at 0% 0%, rgba(155, 132, 255, 0.30), transparent 62%),
-    radial-gradient(50vmax 45vmax at 100% 6%, rgba(120, 186, 255, 0.24), transparent 62%),
-    radial-gradient(55vmax 50vmax at 88% 100%, rgba(110, 220, 175, 0.20), transparent 62%),
-    radial-gradient(45vmax 40vmax at 0% 100%, rgba(255, 186, 150, 0.22), transparent 62%);
+    radial-gradient(60vmax 50vmax at 0% 0%, oklch(0.78 0.13 var(--hue) / 0.34), transparent 62%),
+    radial-gradient(50vmax 45vmax at 100% 6%, oklch(0.8 0.1 calc(var(--hue) - 45) / 0.28), transparent 62%),
+    radial-gradient(55vmax 50vmax at 88% 100%, oklch(0.85 0.09 calc(var(--hue) - 125) / 0.24), transparent 62%),
+    radial-gradient(45vmax 40vmax at 0% 100%, oklch(0.86 0.08 calc(var(--hue) + 125) / 0.26), transparent 62%);
   --glass-card: rgba(255, 255, 255, 0.66);
   --glass-side: rgba(255, 255, 255, 0.52);
   --glass-panel: rgba(255, 255, 255, 0.96);
   --glass-line: rgba(23, 22, 29, 0.07);
-  --glass-edge: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.35) 36%, rgba(255, 255, 255, 0.06) 62%, rgba(155, 132, 255, 0.45));
-  --card-shadow: 0 1px 2px rgba(40, 30, 90, 0.04), 0 16px 36px -24px rgba(60, 40, 140, 0.32);
-  --card-shadow-hover: 0 1px 2px rgba(40, 30, 90, 0.05), 0 22px 44px -22px rgba(91, 69, 224, 0.42);
-  --glow-violet: 0 10px 28px -10px rgba(91, 69, 224, 0.55);
-  --spot-rgb: 155 132 255;
+  --glass-edge: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.35) 36%, rgba(255, 255, 255, 0.06) 62%, oklch(0.72 0.15 var(--hue) / 0.45));
+  --card-shadow: 0 1px 2px rgba(40, 30, 90, 0.04), 0 16px 36px -24px oklch(0.35 0.12 var(--hue) / 0.32);
+  --card-shadow-hover: 0 1px 2px rgba(40, 30, 90, 0.05), 0 22px 44px -22px oklch(0.52 0.2 var(--hue) / 0.42);
+  --glow-violet: 0 10px 28px -10px oklch(0.52 0.2 var(--hue) / 0.55);
+  --spot-l: 0.72;
+  --spot-c: 0.15;
   --sheen: rgba(255, 255, 255, 0.26);
 
   --sans: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
   --serif: "Source Serif 4", Georgia, serif;
   color-scheme: light;
+  accent-color: var(--violet);
+  caret-color: var(--violet);
 
   /* Legacy aliases used by older component styles — all resolve to opaque tokens now. */
   --glass: var(--surface);
@@ -100,19 +116,24 @@
 }
 
 :root[data-theme="dark"] {
-  --canvas: #111016;
-  --surface: #1a1921;
-  --surface-2: #22212a;
-  --line: #2d2c36;
-  --line-strong: #3b3a46;
-  --ink: #f2f1f6;
-  --ink-2: #d5d3de;
-  --muted: #a4a1b4;
-  --faint: #75728a;
-  --btn-bg: #f2f1f6;
-  --btn-fg: #17161d;
-  --violet: #ab9dff;
-  --violet-soft: rgba(171, 157, 255, 0.14);
+  --canvas: oklch(0.165 0.012 var(--hue));
+  --surface: oklch(0.205 0.014 var(--hue));
+  --surface-2: oklch(0.235 0.015 var(--hue));
+  --line: oklch(0.285 0.016 var(--hue));
+  --line-strong: oklch(0.34 0.018 var(--hue));
+  --ink: oklch(0.96 0.006 var(--hue));
+  --ink-2: oklch(0.88 0.012 var(--hue));
+  --muted: oklch(0.72 0.025 var(--hue));
+  --faint: oklch(0.56 0.028 var(--hue));
+  --btn-bg: var(--ink);
+  --btn-fg: oklch(0.2 0.012 var(--hue));
+  --violet: oklch(0.78 0.13 var(--hue));
+  --violet-soft: oklch(0.78 0.13 var(--hue) / 0.14);
+  --accent-tint: oklch(0.78 0.13 var(--hue) / 0.12);
+  --ring-a: oklch(0.82 0.12 var(--hue));
+  --ring-b: oklch(0.64 0.19 var(--hue));
+  --ring-c: oklch(0.52 0.2 var(--hue));
+  --logo-accent: oklch(0.8 0.11 var(--hue));
   --ok: #72d4a2;
   --ok-soft: rgba(114, 212, 162, 0.13);
   --warn: #f0b45f;
@@ -121,25 +142,26 @@
   --bad-soft: rgba(255, 138, 158, 0.13);
   --info: #8fb1f5;
   --info-soft: rgba(143, 177, 245, 0.13);
-  --frost-bg: rgba(17, 16, 22, 0.86);
-  --frost-chip: rgba(34, 33, 42, 0.9);
-  --nav-grad: linear-gradient(135deg, #a690ff 0%, #7a5ef6 52%, #5539dc 100%);
-  --nav-glow: 0 10px 24px -10px rgba(122, 94, 246, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  --frost-bg: oklch(0.165 0.012 var(--hue) / 0.86);
+  --frost-chip: oklch(0.24 0.015 var(--hue) / 0.9);
+  --nav-grad: linear-gradient(135deg, oklch(0.66 0.17 var(--hue)) 0%, oklch(0.52 0.2 var(--hue)) 52%, oklch(0.42 0.19 var(--hue)) 100%);
+  --nav-glow: 0 10px 24px -10px oklch(0.6 0.2 var(--hue) / 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   --ambient:
-    radial-gradient(60vmax 50vmax at 0% 0%, rgba(124, 92, 255, 0.24), transparent 62%),
-    radial-gradient(50vmax 45vmax at 100% 6%, rgba(60, 120, 255, 0.15), transparent 62%),
-    radial-gradient(55vmax 50vmax at 88% 100%, rgba(40, 200, 160, 0.09), transparent 62%),
-    radial-gradient(45vmax 40vmax at 0% 100%, rgba(220, 90, 200, 0.10), transparent 62%);
-  --glass-card: rgba(34, 32, 45, 0.6);
-  --glass-side: rgba(24, 23, 32, 0.55);
-  --glass-panel: rgba(28, 27, 37, 0.97);
+    radial-gradient(60vmax 50vmax at 0% 0%, oklch(0.55 0.2 var(--hue) / 0.26), transparent 62%),
+    radial-gradient(50vmax 45vmax at 100% 6%, oklch(0.55 0.17 calc(var(--hue) - 45) / 0.16), transparent 62%),
+    radial-gradient(55vmax 50vmax at 88% 100%, oklch(0.6 0.13 calc(var(--hue) - 125) / 0.1), transparent 62%),
+    radial-gradient(45vmax 40vmax at 0% 100%, oklch(0.6 0.17 calc(var(--hue) + 60) / 0.1), transparent 62%);
+  --glass-card: oklch(0.25 0.02 var(--hue) / 0.6);
+  --glass-side: oklch(0.2 0.016 var(--hue) / 0.55);
+  --glass-panel: oklch(0.22 0.016 var(--hue) / 0.97);
   --glass-line: rgba(255, 255, 255, 0.07);
-  --glass-edge: linear-gradient(160deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06) 36%, rgba(255, 255, 255, 0.02) 62%, rgba(171, 157, 255, 0.42));
+  --glass-edge: linear-gradient(160deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06) 36%, rgba(255, 255, 255, 0.02) 62%, oklch(0.78 0.13 var(--hue) / 0.42));
   --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 18px 40px -22px rgba(0, 0, 0, 0.75);
-  --card-shadow-hover: 0 1px 2px rgba(0, 0, 0, 0.3), 0 22px 48px -20px rgba(122, 94, 246, 0.45);
-  --glow-violet: 0 10px 30px -10px rgba(140, 115, 255, 0.6);
-  --spot-rgb: 171 157 255;
-  --sheen: rgba(155, 132, 255, 0.35);
+  --card-shadow-hover: 0 1px 2px rgba(0, 0, 0, 0.3), 0 22px 48px -20px oklch(0.6 0.2 var(--hue) / 0.45);
+  --glow-violet: 0 10px 30px -10px oklch(0.66 0.18 var(--hue) / 0.6);
+  --spot-l: 0.78;
+  --spot-c: 0.13;
+  --sheen: oklch(0.72 0.15 var(--hue) / 0.35);
   --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 36px -12px rgba(0, 0, 0, 0.7);
   color-scheme: dark;
 }
@@ -149,9 +171,11 @@
 /* Scrolling: only the viewport scrolls. Never put overflow-x:hidden on html/body — it turns body into
    its own scroll container and wheel/touch scroll can dead-end there. overflow-x:clip trims sideways
    overflow without creating a scroll container. */
-html { overflow-x: clip; overscroll-behavior-y: none; scrollbar-gutter: stable; }
+html { overflow-x: clip; overscroll-behavior-y: none; scrollbar-gutter: stable; scrollbar-color: oklch(0.7 0.12 var(--hue) / 0.55) transparent; }
 /* Phones: no grey flash on tap; the ripple is the feedback. */
 * { -webkit-tap-highlight-color: transparent; }
+/* Jumping to #anchors lands below the sticky top bar. */
+[id] { scroll-margin-top: 84px; }
 /* The soft colour field behind everything. Static on purpose: animating it would force the
    frosted top bar and tab bar to re-blur on every frame. */
 body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: var(--ambient); }
@@ -178,7 +202,7 @@ img, svg { display: block; }
 /* iOS Safari zooms into inputs below 16px. */
 @media (max-width: 768px) { input, select, textarea { font-size: 16px !important; } }
 ::selection { background: var(--violet-soft); color: var(--ink); }
-:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; border-radius: 6px; box-shadow: 0 0 16px -2px rgba(91, 69, 224, 0.45); }
+:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; border-radius: 6px; box-shadow: 0 0 16px -2px oklch(0.52 0.2 var(--hue) / 0.45); }
 
 .serif { font-family: var(--serif); }
 .muted { color: var(--muted); }
@@ -209,7 +233,7 @@ img, svg { display: block; }
 .card {
   padding: 1.25rem; position: relative; min-width: 0; box-shadow: var(--card-shadow);
   /* Desktop: a soft light follows the cursor (position set by Interactions in shared/motion.ts). */
-  background-image: radial-gradient(420px circle at var(--mx, -999px) var(--my, -999px), rgb(var(--spot-rgb) / calc(var(--spot) * 0.17)), transparent 70%);
+  background-image: radial-gradient(420px circle at var(--mx, -999px) var(--my, -999px), oklch(var(--spot-l) var(--spot-c) var(--hue) / calc(var(--spot) * 0.17)), transparent 70%);
   transition: --spot 320ms var(--ease-out), box-shadow 260ms var(--ease-out);
 }
 /* The light-catching glass edge: a 1px gradient ring, masked to the border. */
@@ -392,7 +416,7 @@ img, svg { display: block; }
   background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
   background-position: calc(100% - 20px) 50%, calc(100% - 15px) 50%; background-size: 5px 5px; background-repeat: no-repeat;
 }
-.input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--violet); box-shadow: 0 0 0 3px var(--violet-soft), 0 0 22px -6px rgba(91, 69, 224, 0.5); }
+.input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--violet); box-shadow: 0 0 0 3px var(--violet-soft), 0 0 22px -6px oklch(0.52 0.2 var(--hue) / 0.5); }
 .input.sm, .select.sm { height: 36px; font-size: 0.9rem; border-radius: var(--r-sm); }
 .input-wrap { position: relative; }
 .input-wrap .ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); }
@@ -514,9 +538,23 @@ router-outlet + :not(lh-shell) { display: block; animation: lh-enter 340ms var(-
 .glide > :not(.glide-ind) { position: relative; z-index: 1; }
 .glide.glide-ready > .active, .glide.glide-ready > .active:hover { background: transparent !important; box-shadow: none !important; }
 
-/* Theme switch: the new theme spreads in a circle from the button you pressed. */
+/* Theme and accent switch: the new look spreads in a circle from the button you pressed,
+   led by a glowing ring (.vt-ring, its own view-transition layer so it draws above both snapshots). */
+.vt-ring { position: fixed; z-index: 9999; pointer-events: none; border-radius: 50%;
+  left: var(--vt-x); top: var(--vt-y); width: calc(var(--vt-r) * 2); height: calc(var(--vt-r) * 2);
+  margin: calc(var(--vt-r) * -1) 0 0 calc(var(--vt-r) * -1);
+  box-shadow: 0 0 0 2px oklch(0.85 0.12 var(--hue) / 0.9), 0 0 36px 10px oklch(0.7 0.18 var(--hue) / 0.55),
+    inset 0 0 36px 6px oklch(0.75 0.16 var(--hue) / 0.4);
+  view-transition-name: lh-vt-ring; animation: lh-vt-ring 650ms var(--ease-out) forwards; }
+@keyframes lh-vt-ring { 0% { transform: scale(0); opacity: 1; } 75% { opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
+html.theme-vt::view-transition-group(lh-vt-ring) { animation: none; }
+html.theme-vt::view-transition-old(lh-vt-ring) { display: none; }
+html.theme-vt::view-transition-new(lh-vt-ring) { animation: none; }
+/* The sun/moon icon spins in when it changes. */
+.spin-in { animation: lh-spin-in 650ms var(--spring) backwards; }
+@keyframes lh-spin-in { from { transform: rotate(-140deg) scale(0.3); opacity: 0; } }
 html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
-html.theme-vt::view-transition-new(root) { animation: lh-reveal 560ms var(--ease-out); }
+html.theme-vt::view-transition-new(root) { animation: lh-reveal 650ms var(--ease-out); }
 @keyframes lh-reveal {
   from { clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%)); }
   to { clip-path: circle(var(--vt-r, 150vmax) at var(--vt-x, 50%) var(--vt-y, 50%)); }

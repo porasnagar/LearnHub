@@ -108,7 +108,7 @@ let ringIds = 0;
       <svg viewBox="0 0 120 120">
         <defs>
           <linearGradient [attr.id]="gid" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#a48dff" /><stop offset=".55" stop-color="#6e52f3" /><stop offset="1" stop-color="#4b31cf" />
+            <stop offset="0" style="stop-color: var(--ring-a)" /><stop offset=".55" style="stop-color: var(--ring-b)" /><stop offset="1" style="stop-color: var(--ring-c)" />
           </linearGradient>
         </defs>
         <circle cx="60" cy="60" r="50" class="track" />
@@ -125,7 +125,7 @@ let ringIds = 0;
     svg { width: 100%; height: 100%; transform: rotate(-90deg); }
     circle { fill: none; stroke-width: 10; }
     .track { stroke: var(--surface-2); }
-    .bar { stroke-linecap: round; transition: stroke-dashoffset 500ms var(--ease-out); filter: drop-shadow(0 4px 8px rgba(91, 69, 224, .35));
+    .bar { stroke-linecap: round; transition: stroke-dashoffset 500ms var(--ease-out); filter: drop-shadow(0 4px 8px oklch(0.52 0.2 var(--hue) / .35));
       animation: ring-draw 1000ms var(--ease-out) 150ms backwards; }
     @keyframes ring-draw { from { stroke-dashoffset: calc(var(--len) * 1px); } }
     .center { animation: lh-fade 400ms var(--ease-out) 250ms backwards; }
@@ -173,7 +173,7 @@ export interface Bar { label: string; value: number; highlight?: boolean; }
       transform-origin: bottom; animation: lh-grow-y 700ms var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 55ms + 100ms);
       transition: height 400ms var(--ease-out); }
     /* Today is the current selection → violet; other days stay neutral. */
-    .fill.hl { background: var(--nav-grad); box-shadow: 0 6px 16px -6px rgba(91, 69, 224, .7); }
+    .fill.hl { background: var(--nav-grad); box-shadow: 0 6px 16px -6px oklch(0.52 0.2 var(--hue) / .7); }
     .lbl { font-size: .78rem; font-weight: 600; color: var(--muted); }
     .lbl.hl { color: var(--ink); font-weight: 700; }
     .val { font-size: .78rem; font-weight: 700; color: var(--ink-2); font-variant-numeric: tabular-nums; }

@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Auth, Theme, Toasts } from '../core/services';
 import { AvatarComponent } from '../shared/ui';
 import { IconComponent, LogoComponent } from '../shared/icon.component';
 import { GlideDirective } from '../shared/motion';
+import { AppearanceMenuComponent } from '../shared/appearance.component';
 import { BellComponent } from './bell.component';
+import { APP_VERSION, WhatsNew, WhatsNewComponent } from './whats-new.component';
 import { Palette, PaletteComponent } from './palette.component';
 
 interface NavItem { label: string; icon: string; link: string; exact?: boolean; }
@@ -16,7 +18,7 @@ interface NavItem { label: string; icon: string; link: string; exact?: boolean; 
  */
 @Component({
   selector: 'lh-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, LogoComponent, AvatarComponent, BellComponent, PaletteComponent, GlideDirective],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, LogoComponent, AvatarComponent, BellComponent, PaletteComponent, GlideDirective, AppearanceMenuComponent, WhatsNewComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (auth.user(); as user) {
@@ -31,14 +33,17 @@ interface NavItem { label: string; icon: string; link: string; exact?: boolean; 
           }
         </nav>
         <div class="side-foot">
+          <lh-appearance-menu />
           <button class="nav-link" (click)="theme.toggle($event)">
-            <lh-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" /><span>{{ theme.mode() === 'dark' ? 'Light theme' : 'Dark theme' }}</span>
+            @for (m of [theme.mode()]; track m) { <lh-icon class="spin-in" [name]="m === 'dark' ? 'sun' : 'moon'" /> }
+            <span>{{ theme.mode() === 'dark' ? 'Light theme' : 'Dark theme' }}</span>
           </button>
           <a routerLink="/profile" routerLinkActive="active" class="me">
             <lh-avatar [name]="user.fullName" size="sm" />
             <span class="grow"><span class="truncate strong d-block">{{ user.fullName }}</span><span class="tiny muted">{{ user.role }}</span></span>
           </a>
           <button class="nav-link" (click)="signOut()"><lh-icon name="logout" /><span>Sign out</span></button>
+          <button type="button" class="version" (click)="whatsNew.show()">LearnHub {{ version }} · <span>What's new</span></button>
         </div>
       </aside>
 
@@ -53,7 +58,7 @@ interface NavItem { label: string; icon: string; link: string; exact?: boolean; 
           <button type="button" class="btn btn-ghost btn-icon search-btn" (click)="palette.show()" aria-label="Search"><lh-icon name="search" /></button>
           <lh-bell />
           <button class="btn btn-ghost btn-icon theme-btn" (click)="theme.toggle($event)" [attr.aria-label]="theme.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'">
-            <lh-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" />
+            @for (m of [theme.mode()]; track m) { <lh-icon class="spin-in" [name]="m === 'dark' ? 'sun' : 'moon'" /> }
           </button>
           <a routerLink="/profile" class="avatar-link" aria-label="Your account"><lh-avatar [name]="user.fullName" size="sm" /></a>
         </div>
@@ -61,6 +66,7 @@ interface NavItem { label: string; icon: string; link: string; exact?: boolean; 
 
       <main class="main" id="main"><router-outlet /></main>
       <lh-palette />
+      <lh-whats-new />
 
       <nav class="tabbar frost" aria-label="Main navigation" lhGlide>
         @for (item of tabs(); track item.link) {
@@ -95,15 +101,18 @@ interface NavItem { label: string; icon: string; link: string; exact?: boolean; 
     .nav-link { display: flex; align-items: center; gap: .75rem; height: 42px; padding: 0 .75rem; border-radius: var(--r-ctl); border: 0; background: transparent; width: 100%;
       color: var(--ink-2); font-weight: 600; font-size: .95rem; cursor: pointer; text-decoration: none !important;
       transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
-    .nav-link:hover { background: rgba(155, 132, 255, .12); color: var(--ink); }
+    .nav-link:hover { background: oklch(0.72 0.15 var(--hue) / .12); color: var(--ink); }
     /* Active item: purple in shades (owner's choice), white text. */
     .nav-link.active { background: var(--nav-grad); color: #fff; box-shadow: var(--nav-glow); --duo: .4; }
     .nav-link.active:hover { color: #fff; }
     .nav-link lh-icon { transition: transform 220ms var(--ease-out); }
     .nav-link:hover lh-icon { transform: translateX(2px); }
     .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 2px; padding-top: .75rem; border-top: 1px solid var(--line); }
+    .version { margin-top: .4rem; padding: .3rem .75rem; border: 0; background: none; text-align: left; font-size: .76rem; font-weight: 600; color: var(--faint); cursor: pointer; }
+    .version span { color: var(--violet); }
+    .version:hover span { text-decoration: underline; text-underline-offset: 3px; }
     .me { display: flex; align-items: center; gap: .65rem; padding: .5rem .6rem; border-radius: var(--r-ctl); color: var(--ink); text-decoration: none !important; min-width: 0; }
-    .me:hover, .me.active { background: rgba(155, 132, 255, .12); }
+    .me:hover, .me.active { background: oklch(0.72 0.15 var(--hue) / .12); }
 
     /* Top bar: frosted, sticky. */
     .topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 1rem; height: 64px;
@@ -174,6 +183,16 @@ export class ShellComponent {
   private router = inject(Router);
   private toasts = inject(Toasts);
   protected palette = inject(Palette);
+  protected whatsNew = inject(WhatsNew);
+  protected readonly version = APP_VERSION;
+  private announced = false;
+
+  constructor() {
+    // After an update, show "What's new" once to each signed-in person on this device.
+    effect(() => {
+      if (this.auth.user() && !this.announced) { this.announced = true; this.whatsNew.maybeShow(); }
+    });
+  }
   protected readonly mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 
   protected readonly nav = computed<NavItem[]>(() => {

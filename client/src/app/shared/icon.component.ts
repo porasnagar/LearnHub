@@ -63,6 +63,9 @@ const ICONS: Record<string, string> = {
   list: `<rect ${D} x="3.5" y="4.5" width="4" height="4" rx="1.2"/><rect x="3.5" y="4.5" width="4" height="4" rx="1.2"/><rect x="3.5" y="15.5" width="4" height="4" rx="1.2"/><path d="M11 6.5h9.5M11 17.5h9.5M11 12h9.5"/>`,
   grid: `<rect ${D} x="13" y="13" width="7.5" height="7.5" rx="2"/><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="2"/><rect x="13" y="13" width="7.5" height="7.5" rx="2"/>`,
   keyboard: `<rect ${D} x="7.5" y="14.5" width="9" height="2.2" rx="1"/><rect x="2.5" y="6" width="19" height="12.5" rx="3"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7.5 15.5h9"/>`,
+  palette: `<path ${D} d="M12 3.5a8.5 8.5 0 0 0 0 17c1.2 0 1.8-.8 1.8-1.7 0-1.2-1-1.6-1-2.6 0-.9.7-1.6 1.6-1.6h2.1a4 4 0 0 0 4-4C20.5 6.9 16.7 3.5 12 3.5z"/><path d="M12 3.5a8.5 8.5 0 0 0 0 17c1.2 0 1.8-.8 1.8-1.7 0-1.2-1-1.6-1-2.6 0-.9.7-1.6 1.6-1.6h2.1a4 4 0 0 0 4-4C20.5 6.9 16.7 3.5 12 3.5z"/><circle cx="7.8" cy="11.5" r="1.1"/><circle cx="10.5" cy="7.6" r="1.1"/><circle cx="15" cy="8" r="1.1"/>`,
+  contrast: `<path ${D} d="M12 3.5a8.5 8.5 0 0 1 0 17z" opacity="1"/><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17"/>`,
+  gift: `<rect ${D} x="4" y="8" width="16" height="4.5" rx="1.5"/><rect x="4" y="8" width="16" height="4.5" rx="1.5"/><path d="M5.5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-6.5M12 8v12.5M12 8c-1.5-3.5-5.5-4-5.5-1.5C6.5 8 9 8 12 8zm0 0c1.5-3.5 5.5-4 5.5-1.5C17.5 8 15 8 12 8z"/>`,
   calculator: `<rect ${D} x="7.5" y="5.5" width="9" height="4" rx="1"/><rect x="5" y="3" width="14" height="18" rx="3"/><rect x="7.5" y="5.5" width="9" height="4" rx="1"/><path d="M8.5 13.5h.01M12 13.5h.01M15.5 13.5h.01M8.5 17h.01M12 17h.01M15.5 17h.01"/>`,
 };
 
@@ -92,7 +95,7 @@ export class IconComponent {
   template: `
     <svg [attr.width]="size()" [attr.height]="size()" viewBox="0 0 40 40" aria-hidden="true">
       <rect width="40" height="40" rx="12" class="bg" />
-      <rect x="10" y="9" width="7.5" height="22" rx="3.75" fill="#cfc0ff" />
+      <rect x="10" y="9" width="7.5" height="22" rx="3.75" style="fill: var(--logo-accent)" />
       <rect x="10" y="23.5" width="20" height="7.5" rx="3.75" fill="#e9e58e" />
       <circle cx="26" cy="14" r="4" fill="#fff" class="dot" />
     </svg>

@@ -19,6 +19,8 @@ Instructors publish courses and assignments. Students enroll, submit their work,
 
 **Everyone signed in** gets a notifications bell (new grades, work due within 48 hours, missing work, announcements, and new hand-ins for staff), a Ctrl/Cmd+K search palette (pages, courses, assignments, and people for admins; also opens with "/"), and can change their display name.
 
+**Version 1.5** adds personal appearance: Light, Dark or Auto (follows the device), and an accent colour. Pick one of ten presets or any hue on a colour slider, and the whole interface follows it. The new look spreads across the screen from where you tapped. It also adds a "What's new" card and a small celebration when you hand in work.
+
 The interface is glowing glass: translucent cards with a light-catching edge over a soft colour field, frosted panels, and a purple gradient for whatever is active or selected. It has light and dark themes (switching spreads the new theme in a circle from the button). The icon set and logo are LearnHub's own, and each course gets a pastel colour and a flat illustration based on its subject. Motion is soft: pages rise in, lists arrive one row after another, a single highlight glides between navigation items, presses ripple, numbers count up, and meters, rings and bars fill. Cards are deliberately not blurred, so scrolling stays smooth on phones. All motion respects the system's reduced-motion setting.
 
 ## 2. Technology stack
@@ -104,7 +106,8 @@ Angular SPA (client/)                          ASP.NET Core (src/LearnHub.Web)
 
 **Front end**
 - `core/` — typed `Api` service, `models.ts` (mirrors the C# DTOs), `Auth` / `Toasts` / `Confirm` / `Theme` services, route guards, error interceptor.
-- `shared/` — icon set and logo; avatar, course illustration, ring and bar charts, course card, announcements, toasts and dialog; `motion.ts` (gliding highlight, count-up numbers, press ripples and the card spotlight).
+- `shared/` — icon set and logo; avatar, course illustration, ring and bar charts, course card, announcements, toasts and dialog; `appearance.component.ts` (theme and accent picker); `motion.ts` (gliding highlight, count-up numbers, press ripples, the card spotlight and the hand-in celebration).
+- `layout/whats-new.component.ts` — the version number and the "What's new" card.
 - `layout/` — the shell (sidebar, top bar, phone tab bar), the notifications bell and the Ctrl+K search palette.
 - `pages/` — one lazy-loaded component per screen. The course pages live under `pages/course/`, which has its own child routes and a shared `CourseStore`.
 

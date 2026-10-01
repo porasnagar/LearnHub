@@ -4,14 +4,15 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Api } from '../core/api.service';
-import { Auth, Theme, Toasts } from '../core/services';
+import { Auth, Toasts } from '../core/services';
 import { IconComponent } from '../shared/icon.component';
 import { CountUpDirective } from '../shared/motion';
 import { AvatarComponent } from '../shared/ui';
+import { AppearanceComponent } from '../shared/appearance.component';
 
 @Component({
   selector: 'lh-profile',
-  imports: [CountUpDirective, DatePipe, FormsModule, IconComponent, AvatarComponent],
+  imports: [AppearanceComponent, CountUpDirective, DatePipe, FormsModule, IconComponent, AvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -45,14 +46,10 @@ import { AvatarComponent } from '../shared/ui';
         </section>
 
         <div class="span-7 stack">
-          <section class="card card-lg">
-            <div class="card-title mb-2">Appearance</div>
-            <div class="themes">
-              <button class="theme-opt" [class.on]="theme.mode() === 'light'" (click)="theme.mode() !== 'light' && theme.toggle($event)">
-                <span class="sw light"><span></span></span><span class="strong small">Light</span></button>
-              <button class="theme-opt" [class.on]="theme.mode() === 'dark'" (click)="theme.mode() !== 'dark' && theme.toggle($event)">
-                <span class="sw dark"><span></span></span><span class="strong small">Dark</span></button>
-            </div>
+          <section class="card card-lg" id="appearance">
+            <div class="card-title">Appearance</div>
+            <p class="card-sub mb-2">Make LearnHub yours. Saved on this device.</p>
+            <lh-appearance />
           </section>
 
           <form class="card card-lg stack" (ngSubmit)="change()" #f="ngForm">
@@ -79,14 +76,6 @@ import { AvatarComponent } from '../shared/ui';
     .name-form .input { text-align: center; font-weight: 700; }
     .stats { display: flex; justify-content: center; gap: 2rem; padding: 1rem 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); width: 100%; }
     .n { font-size: 1.5rem; font-weight: 600; }
-    .themes { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-    .theme-opt { display: flex; flex-direction: column; gap: .5rem; padding: .6rem; border-radius: var(--r-ctl); border: 1px solid var(--line-strong); background: var(--surface); cursor: pointer; text-align: left; }
-    .theme-opt.on { border-color: var(--violet); box-shadow: 0 0 0 1px var(--violet); }
-    .sw { height: 64px; border-radius: 9px; padding: 9px; display: flex; }
-    .sw span { width: 40%; border-radius: 6px; }
-    /* Swatches show the real canvas + surface colours of each theme. */
-    .sw.light { background: #f3f2f7; border: 1px solid #e6e4ed; } .sw.light span { background: #fff; border: 1px solid #e6e4ed; }
-    .sw.dark { background: #111016; } .sw.dark span { background: #1a1921; border: 1px solid #2d2c36; }
   `]
 })
 export class ProfileComponent {
@@ -94,7 +83,6 @@ export class ProfileComponent {
   private auth = inject(Auth);
   private router = inject(Router);
   private toasts = inject(Toasts);
-  protected theme = inject(Theme);
   protected p = rxResource({ loader: () => this.api.profile() });
   protected editing = signal(false);
   protected nameBusy = signal(false);

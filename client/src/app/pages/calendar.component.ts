@@ -169,12 +169,12 @@ type View = 'month' | 'list';
     .day.other { background: transparent; }
     .day.other .num { color: var(--faint); }
     /* Selected day = current selection → violet outline; today = violet filled number. */
-    .day.sel { border-color: var(--violet); box-shadow: inset 0 0 0 1px var(--violet), 0 8px 20px -12px rgba(91, 69, 224, .6); background: var(--surface); }
+    .day.sel { border-color: var(--violet); box-shadow: inset 0 0 0 1px var(--violet), 0 8px 20px -12px oklch(0.52 0.2 var(--hue) / .6); background: var(--surface); }
     :host-context([data-theme="dark"]) .day { background: rgba(255, 255, 255, .04); }
-    :host-context([data-theme="dark"]) .day.sel { background: rgba(171, 157, 255, .1); }
+    :host-context([data-theme="dark"]) .day.sel { background: oklch(0.78 0.13 var(--hue) / .1); }
     .num { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: .82rem; font-weight: 700; font-variant-numeric: tabular-nums;
       transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
-    .day.today .num { background: var(--nav-grad); color: #fff; box-shadow: 0 6px 14px -4px rgba(91, 69, 224, .65); }
+    .day.today .num { background: var(--nav-grad); color: #fff; box-shadow: 0 6px 14px -4px oklch(0.52 0.2 var(--hue) / .65); }
     .dots { display: none; }
     .evs { display: flex; flex-direction: column; gap: 3px; width: 100%; min-width: 0; }
     .ev { display: block; padding: 3px 8px; border-radius: 8px; background: var(--c); color: #16151c; font-size: .72rem; font-weight: 700;

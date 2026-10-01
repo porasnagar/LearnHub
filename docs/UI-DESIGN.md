@@ -18,12 +18,31 @@ Sections 1–8 below record earlier iterations. The information architecture sti
 | Things 3 / Apple Reminders | Calm due-date lists: one row per item, with the date on the left |
 | The owner's references (Mondly, Next Skill, the class-schedule app) | Pastel course colours, the day-pill week strip, and soft rounded shapes |
 
+### Accent colour is the person's choice (1.5)
+One number, `--hue` (0–359, default 283 = violet), drives every accent colour. People pick it in
+**Appearance** (sidebar menu on desktop, the Account page everywhere): ten presets or any hue on
+a full-spectrum slider. It is saved per device and applied before first paint, so nothing flashes.
+
+- All accent tokens are OKLCH formulas of `--hue`: `--violet` (links, focus; the name is historical),
+  `--nav-grad`/`--nav-glow` (active navigation and selection), the card spotlight, the glass edge,
+  focus glows, ring and bar fills, the logo's accent bar, and the colour field behind the cards
+  (the accent plus three companions spaced around the wheel). Neutral greys carry a faint tint of it.
+- **Not** hue-driven, because they carry meaning: course pastels and status colours (red, amber,
+  green, blue).
+- Lightness is fixed so every hue passes WCAG AA: links are at least 5.2:1 on white, and white text
+  is at least 4.6:1 on the middle of the gradient pill. This was measured across all ten presets.
+- The theme can be Light, Dark or **Auto**, which follows the device setting live.
+- Changing the theme or the accent spreads the new look in a circle from the control you pressed,
+  led by a glowing ring (`.vt-ring`, its own view-transition layer). Dragging the slider recolours
+  live instead, without the reveal.
+- The browser's own bar colour (`theme-color`) is kept in sync with the canvas.
+
 ### What each colour means
 | Hue | Meaning — and nothing else |
 |---|---|
-| Ink `#17161D` | Text and the primary action button |
-| Purple gradient `--nav-grad` (`#9B84FF` → `#4B31CF`) | The active navigation item (sidebar and phone tab bar) and the selected day in the landing preview. Owner's request |
-| Violet `#5B45E0` | Links, focus ring, "today" and the current selection |
+| Ink | Text and the primary action button |
+| Accent gradient `--nav-grad` (the person's hue) | The active navigation item, segmented controls, selected chips and days, the one glowing call to action per screen |
+| Accent `--violet` (the person's hue) | Links, focus ring, "today" and the current selection |
 | Eight course pastels | Which course something belongs to (date tile, course chip, banner). Never a status |
 | Red | Missing or overdue work |
 | Amber | Late, or waiting for the instructor to grade |
@@ -80,6 +99,8 @@ What moves:
 - Meters, segment bars, rings and bar charts fill from zero.
 - The bell panel and the Ctrl+K palette drop in from their trigger. Dialogs rise in.
 - A calendar month slides in from the side you moved towards.
+- Handing in an assignment fires a short confetti burst in the accent colour (`Celebrate`).
+- "What's new" appears once per version after sign-in (and from the sidebar's version link).
 - The phone tab pill widens to show its label.
 
 ## 1. Why the first UI felt "AI-generated"

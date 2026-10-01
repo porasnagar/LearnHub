@@ -18,7 +18,7 @@ export const appConfig: ApplicationConfig = {
           t.finished?.catch(() => {});
         }
       }),
-      withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
+      withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })),
     // ASP.NET Core issues the XSRF-TOKEN cookie; Angular echoes it as X-XSRF-TOKEN on writes.
     provideHttpClient(
       withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' }),

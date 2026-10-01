@@ -20,7 +20,7 @@ import { CourseCardComponent, ScrollerComponent } from '../shared/ui';
         <nav class="row">
           <a routerLink="/catalog" class="plink">Catalog</a>
           <button class="btn btn-ghost btn-icon btn-sm" (click)="theme.toggle($event)" [attr.aria-label]="theme.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'">
-            <lh-icon [name]="theme.mode() === 'dark' ? 'sun' : 'moon'" />
+            @for (m of [theme.mode()]; track m) { <lh-icon class="spin-in" [name]="m === 'dark' ? 'sun' : 'moon'" /> }
           </button>
           <a routerLink="/login" class="btn btn-ghost btn-sm">Sign in</a>
           <a routerLink="/register" class="btn btn-ink btn-sm getstarted">Create account</a>
@@ -163,7 +163,7 @@ import { CourseCardComponent, ScrollerComponent } from '../shared/ui';
 
       <footer class="foot">
         <lh-logo [size]="26" />
-        <span class="small muted">© {{ year }} LearnHub · ASP.NET Core, Angular and Entity Framework Core</span>
+        <span class="small muted">© {{ year }} LearnHub 1.5 · ASP.NET Core, Angular and Entity Framework Core</span>
       </footer>
     </div>
   `,
