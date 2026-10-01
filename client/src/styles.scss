@@ -91,17 +91,16 @@
 
 /* ---------- Base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
+/* Scrolling: only the viewport scrolls. Never put overflow-x:hidden on html/body — it turns body into
+   its own scroll container, and with overscroll-behavior there the wheel/touch scroll dead-ends.
+   overflow-x:clip trims sideways overflow without creating a scroll container. */
 html {
-  overflow-x: hidden;
-  max-width: 100%;
-  width: 100%;
+  overflow-x: clip;
+  overscroll-behavior-y: none; /* no Android glow/bounce repaint; applies to the viewport, not a nested box */
 }
 body {
   min-height: 100vh;
-  overflow-x: hidden;
-  max-width: 100%;
-  width: 100%;
-  position: relative;
+  overflow-x: clip;
   background: var(--canvas);
   color: var(--ink);
   font-family: var(--sans);
@@ -109,7 +108,6 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
-  overscroll-behavior: none; /* kills Android glow-effect repaints on bounce */
   transition: background-color 0.4s var(--ease), color 0.4s var(--ease);
 }
 h1, h2, h3, h4 { margin: 0; line-height: 1.2; color: var(--ink); }
