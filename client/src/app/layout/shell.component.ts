@@ -203,7 +203,9 @@ export class ShellComponent {
     ];
     if (this.auth.isStudent()) items.push({ label: 'Grades', icon: 'grades', link: '/grades' });
     items.push({ label: 'Catalog', icon: 'explore', link: '/catalog' });
-    if (this.auth.isAdmin()) items.push({ label: 'Administration', icon: 'admin', link: '/admin' });
+    if (this.auth.isAdmin()) items.push(
+      { label: 'Administration', icon: 'admin', link: '/admin', exact: true },
+      { label: 'Database', icon: 'database', link: '/admin/database' });
     return items;
   });
 

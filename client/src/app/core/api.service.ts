@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
-  AdminUsers, Announcement, AppNotification, AssignmentDetail, AssignmentForm, AssignmentRow, CalendarData, Catalog, CourseCard, CourseDetail,
+  AdminUsers, Announcement, DbOverview, DbRows, AppNotification, AssignmentDetail, AssignmentForm, AssignmentRow, CalendarData, Catalog, CourseCard, CourseDetail,
   CourseForm, CourseGrade, Dashboard, Gradebook, GradeResult, Grading, Person, Profile, Role, RosterRow, SearchResult, User
 } from './models';
 
@@ -80,4 +80,11 @@ export class Api {
   deleteAnnouncement(id: number) { return this.http.delete<void>(`/api/announcements/${id}`); }
   notifications() { return this.http.get<AppNotification[]>('/api/notifications'); }
   search(q: string) { return this.http.get<SearchResult>('/api/search', { params: { q } }); }
+
+  // Database explorer (admin)
+  dbOverview() { return this.http.get<DbOverview>('/api/admin/database'); }
+  dbRows(table: string, page: number, pageSize = 25) {
+    return this.http.get<DbRows>(`/api/admin/database/tables/${encodeURIComponent(table)}`, { params: { page, pageSize } });
+  }
+  dbSchema() { return this.http.get('/api/admin/database/schema.sql', { responseType: 'text' }); }
 }

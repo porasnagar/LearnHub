@@ -104,3 +104,12 @@ export interface AppNotification { key: string; kind: NotificationKind; title: s
 
 export interface SearchItem { id: number; title: string; subtitle: string; link: string; courseId: number | null; }
 export interface SearchResult { courses: SearchItem[]; assignments: SearchItem[]; people: SearchItem[]; }
+
+// Database explorer (admin, read-only)
+export interface DbColumn {
+  name: string; storeType: string; clrType: string; nullable: boolean; primaryKey: boolean;
+  references: string | null; onDelete: string | null; unique: boolean; maxLength: number | null;
+}
+export interface DbTable { name: string; entity: string; rows: number; columns: DbColumn[]; indexes: string[]; }
+export interface DbOverview { provider: string; sizeBytes: number | null; totalRows: number; tables: DbTable[]; }
+export interface DbRows { table: string; page: number; pageSize: number; total: number; columns: string[]; rows: Record<string, unknown>[]; }

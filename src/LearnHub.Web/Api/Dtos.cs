@@ -160,3 +160,16 @@ public record SearchItem(int Id, string Title, string Subtitle, string Link, int
 public record SearchResultDto(List<SearchItem> Courses, List<SearchItem> Assignments, List<SearchItem> People);
 
 public record UpdateProfileRequest([Required, StringLength(100, MinimumLength = 2)] string FullName);
+
+// ---------- Database explorer (admin, read-only) ----------
+
+/// <param name="References">"Table.Column" this foreign key points at, or null.</param>
+/// <param name="OnDelete">What happens to this row when the referenced row is deleted (Cascade, Restrict…).</param>
+public record DbColumnDto(string Name, string StoreType, string ClrType, bool Nullable, bool PrimaryKey,
+    string? References, string? OnDelete, bool Unique, int? MaxLength);
+
+public record DbTableDto(string Name, string Entity, int Rows, List<DbColumnDto> Columns, List<string> Indexes);
+
+public record DbOverviewDto(string Provider, long? SizeBytes, int TotalRows, List<DbTableDto> Tables);
+
+public record DbRowsDto(string Table, int Page, int PageSize, int Total, List<string> Columns, List<Dictionary<string, object?>> Rows);

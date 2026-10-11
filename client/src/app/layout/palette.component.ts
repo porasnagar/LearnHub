@@ -156,7 +156,9 @@ export class PaletteComponent {
     ];
     if (this.auth.isStudent()) items.push({ key: 'p-grades', group: 'Pages', title: 'Grades', subtitle: 'Your scores in every course', icon: 'grades', link: '/grades' });
     items.push({ key: 'p-cat', group: 'Pages', title: 'Course catalog', icon: 'explore', link: '/catalog' });
-    if (this.auth.isAdmin()) items.push({ key: 'p-admin', group: 'Pages', title: 'Administration', subtitle: 'Users and roles', icon: 'admin', link: '/admin' });
+    if (this.auth.isAdmin()) items.push(
+      { key: 'p-admin', group: 'Pages', title: 'Administration', subtitle: 'Users and roles', icon: 'admin', link: '/admin' },
+      { key: 'p-db', group: 'Pages', title: 'Database', subtitle: 'Tables, columns, keys and live rows', icon: 'database', link: '/admin/database' });
     items.push({ key: 'p-profile', group: 'Pages', title: 'Account', subtitle: 'Name, password, sign out', icon: 'user', link: '/profile' });
 
     if (this.auth.isStaff()) items.push({ key: 'a-new', group: 'Actions', title: 'Create a course', icon: 'plus', link: '/courses/new' });

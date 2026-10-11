@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Api } from '../core/api.service';
 import { Role, UserRow } from '../core/models';
 import { Auth, Confirm, Toasts } from '../core/services';
@@ -11,7 +12,7 @@ import { AvatarComponent, CourseCardComponent, EmptyComponent } from '../shared/
 
 @Component({
   selector: 'lh-admin',
-  imports: [GlideDirective, DatePipe, FormsModule, IconComponent, AvatarComponent, CourseCardComponent, EmptyComponent],
+  imports: [RouterLink, GlideDirective, DatePipe, FormsModule, IconComponent, AvatarComponent, CourseCardComponent, EmptyComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -20,6 +21,7 @@ import { AvatarComponent, CourseCardComponent, EmptyComponent } from '../shared/
         <div class="seg" lhGlide>
           <button [class.active]="tab() === 'users'" (click)="tab.set('users')"><lh-icon name="people" class="sm" /> Users</button>
           <button [class.active]="tab() === 'courses'" (click)="tab.set('courses')"><lh-icon name="courses" class="sm" /> Courses</button>
+          <a routerLink="/admin/database"><lh-icon name="database" class="sm" /> Database</a>
         </div>
       </div>
 

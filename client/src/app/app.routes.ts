@@ -14,6 +14,7 @@ const page = {
   grades: () => import('./pages/grades.component').then(m => m.GradesComponent),
   grading: () => import('./pages/grading.component').then(m => m.GradingComponent),
   admin: () => import('./pages/admin.component').then(m => m.AdminComponent),
+  database: () => import('./pages/database.component').then(m => m.DatabaseComponent),
   profile: () => import('./pages/profile.component').then(m => m.ProfileComponent),
   notFound: () => import('./pages/not-found.component').then(m => m.NotFoundComponent),
 };
@@ -36,6 +37,7 @@ export const routes: Routes = [
       { path: 'calendar', canActivate: [authGuard], loadComponent: page.calendar, title: 'Calendar · LearnHub' },
       { path: 'grades', canActivate: [roleGuard('Student')], loadComponent: page.grades, title: 'Grades · LearnHub' },
       { path: 'admin', canActivate: [roleGuard('Admin')], loadComponent: page.admin, title: 'Administration · LearnHub' },
+      { path: 'admin/database', canActivate: [roleGuard('Admin')], loadComponent: page.database, title: 'Database · LearnHub' },
       { path: 'profile', canActivate: [authGuard], loadComponent: page.profile, title: 'Account · LearnHub' },
       { path: '**', loadComponent: page.notFound, title: 'Not found · LearnHub' },
     ]
